@@ -14,6 +14,80 @@ export type Database = {
   }
   public: {
     Tables: {
+      accounting_period_audit_log: {
+        Row: {
+          action: string
+          details: Json | null
+          id: string
+          performed_at: string
+          performed_by: string
+          period_id: string
+        }
+        Insert: {
+          action: string
+          details?: Json | null
+          id?: string
+          performed_at?: string
+          performed_by: string
+          period_id: string
+        }
+        Update: {
+          action?: string
+          details?: Json | null
+          id?: string
+          performed_at?: string
+          performed_by?: string
+          period_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accounting_period_audit_log_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_periods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      accounting_periods: {
+        Row: {
+          created_at: string
+          end_date: string
+          fiscal_year: number
+          id: string
+          is_locked: boolean
+          locked_at: string | null
+          locked_by: string | null
+          period_name: string
+          start_date: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          end_date: string
+          fiscal_year: number
+          id?: string
+          is_locked?: boolean
+          locked_at?: string | null
+          locked_by?: string | null
+          period_name: string
+          start_date: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string
+          fiscal_year?: number
+          id?: string
+          is_locked?: boolean
+          locked_at?: string | null
+          locked_by?: string | null
+          period_name?: string
+          start_date?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       activities: {
         Row: {
           activity_date: string

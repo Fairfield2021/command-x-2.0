@@ -43,6 +43,7 @@ import { useProducts } from "@/integrations/supabase/hooks/useProducts";
 import { useAddEstimate, useUpdateEstimate, EstimateWithLineItems } from "@/integrations/supabase/hooks/useEstimates";
 import { useCompanySettings } from "@/integrations/supabase/hooks/useCompanySettings";
 import { useQuickBooksConfig } from "@/integrations/supabase/hooks/useQuickBooks";
+import { useLockedPeriod } from "@/hooks/useLockedPeriod";
 import { useUnsavedChangesWarning } from "@/hooks/useUnsavedChangesWarning";
 import { Badge } from "@/components/ui/badge";
 import { z } from "zod";
@@ -97,6 +98,7 @@ export const EstimateForm = ({ initialData }: EstimateFormProps) => {
   const { data: companySettings } = useCompanySettings();
   const addEstimate = useAddEstimate();
   const updateEstimate = useUpdateEstimate();
+  const { validateDate: validateLockedDate } = useLockedPeriod();
 
   // Fetch current user's profile for sales rep name
   const [currentUserName, setCurrentUserName] = useState<string | null>(null);
@@ -460,6 +462,15 @@ export const EstimateForm = ({ initialData }: EstimateFormProps) => {
     if (!validateForm()) {
       toast.error("Please fix the validation errors before saving");
       return;
+    }
+
+    // Locked period validation
+    if (validUntil) {
+      const lockedCheck = validateLockedDate(validUntil, "estimate");
+      if (!lockedCheck.valid) {
+        toast.error((lockedCheck as { valid: false; message: string }).message);
+        return;
+      }
     }
 
     const customer = customers?.find((c) => c.id === selectedCustomerId);

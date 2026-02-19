@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { CalculatorInput } from "@/components/ui/calculator-input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +17,7 @@ import { useAddPurchaseOrder, usePurchaseOrder } from "@/integrations/supabase/h
 import { useProducts } from "@/integrations/supabase/hooks/useProducts";
 import { useAuth } from "@/contexts/AuthContext";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useLockedPeriod } from "@/hooks/useLockedPeriod";
 import { cn } from "@/lib/utils";
 import { z } from "zod";
 
@@ -54,6 +56,7 @@ export const PurchaseOrderForm = () => {
   const { data: prefillJobOrder, isLoading: prefillLoading } = useJobOrder(jobOrderIdFromUrl || "");
   const { data: duplicatePO, isLoading: duplicateLoading } = usePurchaseOrder(duplicateId || "");
   const addPurchaseOrder = useAddPurchaseOrder();
+  const { validateDate: validateLockedDate } = useLockedPeriod();
 
   const [selectedJobOrderId, setSelectedJobOrderId] = useState<string>("");
   const [selectedVendorId, setSelectedVendorId] = useState<string>("");
@@ -190,6 +193,15 @@ export const PurchaseOrderForm = () => {
 
     if (!validateForm()) {
       return;
+    }
+
+    // Locked period validation
+    if (dueDate) {
+      const lockedCheck = validateLockedDate(dueDate, "purchase order");
+      if (!lockedCheck.valid) {
+        toast.error((lockedCheck as { valid: false; message: string }).message);
+        return;
+      }
     }
 
     if (!selectedJobOrder || !selectedVendor) return;
