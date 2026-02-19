@@ -1,182 +1,162 @@
 
 
-# Step 4: Accounting Subledger System
+# Step 5: Financial Reporting Repair
 
 ## Summary
 
-Create the foundational double-entry bookkeeping subledger that serves as the authoritative source for all financial data. This system enforces immutability on posted transactions (corrections via reversals only), validates debit/credit balance, and provides QuickBooks sync mapping with a full audit trail.
+Refactor the project financial summary to clearly separate three financial metrics (Contract Value, Recognized Revenue, Actual Cost), add an accounting cutover date to `company_settings`, and label legacy vs. current data in the UI.
 
 ## Current State
 
-- **No subledger exists** -- financial data lives directly in operational tables (`invoices`, `vendor_bills`, etc.)
-- Two QuickBooks sync log tables already exist (`quickbooks_sync_log` and `quickbooks_sync_logs`) but are operational logs, not accounting sync maps
-- `expense_categories` exists but lacks account codes needed for a chart of accounts -- the new `accounting_lines` table will store `account_code` and `account_name` denormalized for immutability
-- The `accounting_periods` table and locked period triggers from Step 3 are already in place
+- `ProjectFinancialSummary.tsx` mixes contract value, invoicing, and costs into a single flat view with no data-source labeling
+- `ProjectDetail.tsx` calculates `financialData` in a single `useMemo` block pulling from operational tables (job orders, change orders, T&M tickets, POs, invoices, vendor bills, time entries, personnel payments)
+- `company_settings` has `locked_period_date` and `locked_period_enabled` but NO `accounting_cutover_date` column
+- The subledger (`accounting_transactions` / `accounting_lines`) exists but is not queried by any reporting component
+- No distinction between pre-cutover (legacy/QuickBooks) and post-cutover (CommandX subledger) data
 
-## What Will Be Created
+## What Will Change
 
-### 1. `accounting_transactions` table (append-only ledger)
+### 1. Database Migration
 
-The core transaction header table. Once posted, rows cannot be updated or deleted -- corrections are made via reversal transactions only.
+Add `accounting_cutover_date` column to `company_settings`:
 
-| Column | Type | Notes |
-|--------|------|-------|
-| `id` | UUID | Primary key |
-| `transaction_date` | DATE | Required |
-| `transaction_type` | TEXT | 'invoice', 'bill', 'payment', 'journal_entry', 'payroll' |
-| `reference_type` | TEXT | 'invoice', 'vendor_bill', 'personnel_payment', etc. |
-| `reference_id` | UUID | Source document ID (nullable) |
-| `reference_number` | TEXT | Display number (e.g., INV-2500001) |
-| `description` | TEXT | Transaction description |
-| `total_amount` | NUMERIC | Total transaction amount (absolute) |
-| `status` | TEXT | 'draft', 'posted', 'reversed' |
-| `posted_at` | TIMESTAMPTZ | When posted |
-| `posted_by` | UUID | Who posted |
-| `reversed_at` | TIMESTAMPTZ | When reversed |
-| `reversed_by` | UUID | Who reversed |
-| `reversal_transaction_id` | UUID | Self-reference to reversal |
-| `created_at` | TIMESTAMPTZ | Default now() |
-| `created_by` | UUID | Creator |
+| Column | Type | Default | Notes |
+|--------|------|---------|-------|
+| `accounting_cutover_date` | DATE | NULL | Transactions before this date are "legacy" |
 
-Indexes on: `transaction_date`, `status`, `reference_type + reference_id`, `reversal_transaction_id`.
+This is separate from `locked_period_date` (which blocks edits). The cutover date controls data source labeling only.
 
-### 2. `accounting_lines` table (debit/credit entries)
+### 2. New Hook: `useAccountingCutover`
 
-Double-entry line items. Each line is either a debit or a credit, never both.
+A small hook that reads `company_settings.accounting_cutover_date` and provides:
+- `cutoverDate: string | null`
+- `isLegacy(date: string): boolean` -- returns true if the date is before the cutover
+- `hasCutover: boolean` -- whether a cutover date is configured
 
-| Column | Type | Notes |
-|--------|------|-------|
-| `id` | UUID | Primary key |
-| `transaction_id` | UUID | FK to accounting_transactions (CASCADE) |
-| `line_number` | INTEGER | Ordering |
-| `account_id` | UUID | FK to expense_categories (nullable) |
-| `account_code` | TEXT | Denormalized for immutability |
-| `account_name` | TEXT | Denormalized for immutability |
-| `debit_amount` | NUMERIC(15,2) | Default 0 |
-| `credit_amount` | NUMERIC(15,2) | Default 0 |
-| `project_id` | UUID | FK to projects (nullable) |
-| `vendor_id` | UUID | FK to vendors (nullable) |
-| `customer_id` | UUID | FK to customers (nullable) |
-| `description` | TEXT | Line description |
-| `created_at` | TIMESTAMPTZ | Default now() |
+File: `src/hooks/useAccountingCutover.ts`
 
-CHECK constraint: exactly one of debit or credit must be positive, the other zero.
+### 3. New Hook: `useProjectSubledgerTotals`
 
-Indexes on: `transaction_id`, `account_id`, `project_id`.
+Queries `accounting_transactions` + `accounting_lines` for a given project to get subledger-sourced totals:
+- Recognized revenue (posted invoices in subledger)
+- Actual costs (posted bills, payroll entries in subledger)
 
-### 3. `accounting_sync_map` table
+Only returns data for post-cutover transactions. Falls back gracefully (returns zeros) if no subledger entries exist yet.
 
-Maps subledger transactions to QuickBooks entities. Ensures no duplicate syncs via UNIQUE constraints.
+File: `src/integrations/supabase/hooks/useProjectSubledgerTotals.ts`
 
-| Column | Type | Notes |
-|--------|------|-------|
-| `id` | UUID | Primary key |
-| `transaction_id` | UUID | FK to accounting_transactions (UNIQUE) |
-| `quickbooks_entity_type` | TEXT | 'Invoice', 'Bill', 'Payment', 'JournalEntry' |
-| `quickbooks_entity_id` | TEXT | QuickBooks ID (UNIQUE) |
-| `sync_status` | TEXT | 'pending', 'synced', 'error' |
-| `last_synced_at` | TIMESTAMPTZ | Last sync time |
-| `error_message` | TEXT | Last error (nullable) |
-| `created_at` | TIMESTAMPTZ | Default now() |
-| `updated_at` | TIMESTAMPTZ | Default now() |
+### 4. Refactored `ProjectFinancialSummary.tsx`
 
-UNIQUE on `transaction_id` (one QB entity per transaction).
-UNIQUE on `quickbooks_entity_type + quickbooks_entity_id` (no duplicate QB records).
+Restructure into three clearly labeled sections:
 
-### 4. `accounting_sync_audit_log` table (immutable)
+**Section 1: Contract / Forecast Value**
+- Original Contract (job orders total)
+- Change Orders (net additive/deductive)
+- T&M Tickets (approved)
+- Total Contract Value
 
-Every sync attempt is logged for audit trail. Append-only.
+**Section 2: Recognized Revenue**
+- Total Invoiced (from operational tables or subledger post-cutover)
+- Total Paid
+- Invoicing Progress bar
+- Payment Collection bar
+- If pre-cutover data exists, show a "Legacy" badge
 
-| Column | Type | Notes |
-|--------|------|-------|
-| `id` | UUID | Primary key |
-| `sync_map_id` | UUID | FK to accounting_sync_map |
-| `sync_direction` | TEXT | 'to_quickbooks', 'from_quickbooks' |
-| `sync_status` | TEXT | 'success', 'error' |
-| `request_payload` | JSONB | What was sent |
-| `response_payload` | JSONB | What was returned |
-| `error_message` | TEXT | Error details |
-| `synced_at` | TIMESTAMPTZ | Default now() |
-| `synced_by` | UUID | Who triggered the sync |
+**Section 3: Actual Costs**
+- WO / Sub Costs (PO commitments)
+- Internal Labor (time entries + personnel payments)
+- Vendor Payments progress bar
+- Total Costs
+- If pre-cutover data exists, show a "Legacy" badge
 
-## Database Functions
+**Section 4: Profitability (derived)**
+- Net Profit = Contract Value - Actual Costs
+- Margin %
+- Supervision cost impact (unchanged)
 
-### `enforce_posted_transaction_immutability()` -- BEFORE UPDATE trigger
+**Data Source Indicator:**
+- When a cutover date is configured, each section shows a small badge:
+  - "CommandX" (blue) for post-cutover data
+  - "Legacy" (amber) for pre-cutover data
+  - "Mixed" (gray) when both exist
 
-Prevents any UPDATE on `accounting_transactions` rows where `status = 'posted'`, EXCEPT:
-- Setting `status` from 'posted' to 'reversed' (with `reversed_at`, `reversed_by`, `reversal_transaction_id`)
+### 5. Updated `FinancialData` Interface
 
-This enforces the "corrections via reversals only" rule at the database level.
+Add new fields to support the three-metric separation:
 
-### `validate_transaction_balance()` -- trigger on status change to 'posted'
+```text
+// New fields added:
+recognizedRevenue: number       // Invoiced amount (subledger-sourced post-cutover)
+committedCosts: number          // PO commitments
+actualCosts: number             // Vendor bills paid + labor
+dataSource: 'legacy' | 'current' | 'mixed'
+```
 
-Before a transaction can be posted, validates that the sum of all `debit_amount` values equals the sum of all `credit_amount` values across its `accounting_lines`. If they don't balance, raises an exception.
+Existing fields are preserved for backward compatibility.
 
-### `prevent_posted_lines_modification()` -- BEFORE UPDATE/DELETE trigger on accounting_lines
+### 6. Updated `ProjectDetail.tsx` Financial Calculation
 
-Prevents modification or deletion of lines belonging to a posted transaction.
+The `financialData` useMemo will:
+- Check the cutover date from the new hook
+- For post-cutover projects: query subledger totals via `useProjectSubledgerTotals`
+- For pre-cutover projects: continue using operational tables (as today)
+- Set `dataSource` flag based on project dates vs. cutover date
+- Pass the enhanced data to `ProjectFinancialSummary`
 
-## RLS Policies
+### 7. Company Settings UI Update
 
-| Table | Policy | Roles |
-|-------|--------|-------|
-| `accounting_transactions` | SELECT | admin, manager, accounting |
-| `accounting_transactions` | INSERT | admin, accounting |
-| `accounting_transactions` | UPDATE (draft only) | admin, accounting |
-| `accounting_lines` | SELECT | admin, manager, accounting |
-| `accounting_lines` | INSERT | admin, accounting |
-| `accounting_sync_map` | SELECT | admin, manager, accounting |
-| `accounting_sync_map` | ALL | admin |
-| `accounting_sync_audit_log` | SELECT | admin, accounting |
-| `accounting_sync_audit_log` | INSERT | admin, accounting (for system logging) |
-
-No DELETE policies on any table -- accounting data is never deleted.
-
-## What Will NOT Change
-
-- Existing operational tables (`invoices`, `vendor_bills`, `purchase_orders`, etc.) remain unchanged
-- Existing `quickbooks_sync_log` and `quickbooks_sync_logs` tables are preserved (they serve operational logging)
-- No edge functions are modified in this step -- the subledger is schema-only, ready for future integration
-- No frontend changes -- admin UI for the subledger will be a future step
+Add the cutover date field to `CompanySettingsForm.tsx` in the accounting section, near the existing locked period controls. Admin-only, with a warning that changing it affects all financial reports.
 
 ## Files Created
 
 | File | Purpose |
 |------|---------|
-| Migration SQL | All 4 tables, 3 trigger functions, RLS policies, indexes |
+| Migration SQL | Add `accounting_cutover_date` to `company_settings` |
+| `src/hooks/useAccountingCutover.ts` | Cutover date hook |
+| `src/integrations/supabase/hooks/useProjectSubledgerTotals.ts` | Subledger totals query |
+
+## Files Modified
+
+| File | Change |
+|------|--------|
+| `src/components/project-hub/ProjectFinancialSummary.tsx` | Restructure into 3 sections + data source badges |
+| `src/pages/ProjectDetail.tsx` | Add cutover/subledger hooks, enhance `financialData` calculation |
+| `src/components/settings/CompanySettingsForm.tsx` | Add cutover date input field |
+
+## What Will NOT Change
+
+- The subledger tables themselves (created in Step 4)
+- The locked period mechanism (Step 3)
+- Edge functions or QuickBooks sync logic
+- Any other pages or components
 
 ## Risk Assessment
 
-- **No risk to existing data**: All new tables, no modifications to existing schema
-- **Forward-compatible**: The subledger sits alongside operational tables. Future steps will wire invoice/bill creation to also create subledger entries
-- **Immutability enforced at DB level**: Even if application code has bugs, posted transactions cannot be corrupted
+- **Low risk**: The cutover date is optional (NULL by default). Without it, everything behaves exactly as today -- all data shows as "current" with no legacy labels.
+- **No data loss**: This is additive -- existing calculations are preserved, just reorganized visually.
+- **Graceful fallback**: If no subledger entries exist yet, the component falls back to operational table data with no errors.
 
 ## Technical Details
 
-### Immutability Enforcement (Pseudocode)
+### Subledger Query (useProjectSubledgerTotals)
 
 ```text
-BEFORE UPDATE on accounting_transactions:
-  IF OLD.status = 'posted' THEN
-    -- Only allow: status -> 'reversed' with reversal fields
-    IF NEW.status = 'reversed' 
-       AND NEW.reversed_at IS NOT NULL 
-       AND NEW.reversed_by IS NOT NULL
-       AND NEW.reversal_transaction_id IS NOT NULL THEN
-      ALLOW
-    ELSE
-      RAISE EXCEPTION 'Posted transactions are immutable'
-    END IF
-  END IF
+SELECT 
+  SUM(CASE WHEN at.transaction_type = 'invoice' THEN al.debit_amount ELSE 0 END) as recognized_revenue,
+  SUM(CASE WHEN at.transaction_type IN ('bill','payroll') THEN al.debit_amount ELSE 0 END) as actual_costs
+FROM accounting_lines al
+JOIN accounting_transactions at ON al.transaction_id = at.id
+WHERE al.project_id = $projectId
+  AND at.status = 'posted'
+  AND at.transaction_date >= $cutoverDate
 ```
 
-### Balance Validation (Pseudocode)
+### Data Source Logic
 
 ```text
-BEFORE UPDATE on accounting_transactions (when status changes to 'posted'):
-  total_debits = SUM(debit_amount) FROM accounting_lines WHERE transaction_id = NEW.id
-  total_credits = SUM(credit_amount) FROM accounting_lines WHERE transaction_id = NEW.id
-  IF total_debits != total_credits OR total_debits = 0 THEN
-    RAISE EXCEPTION 'Transaction does not balance'
-  END IF
+IF no cutover date configured -> dataSource = 'current' (no labels shown)
+IF project created_at >= cutover date -> dataSource = 'current'  
+IF project created_at < cutover date AND has post-cutover transactions -> dataSource = 'mixed'
+IF project created_at < cutover date AND no post-cutover transactions -> dataSource = 'legacy'
 ```
+
