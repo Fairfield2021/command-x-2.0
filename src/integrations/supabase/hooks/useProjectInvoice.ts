@@ -37,7 +37,11 @@ export const useAddProjectInvoice = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (params: AddProjectInvoiceParams) => {
+    mutationFn: async (params: AddProjectInvoiceParams & { _lockedPeriodCheck?: { isDateLocked: (date: string) => boolean } }) => {
+      // Locked period validation (client-side pre-check)
+      if (params._lockedPeriodCheck?.isDateLocked(params.due_date)) {
+        throw new Error(`Cannot create invoice with due date ${params.due_date}. The accounting period is locked.`);
+      }
       const {
         line_items,
         job_order_ids,
