@@ -270,6 +270,36 @@ export const CompanySettingsForm = () => {
               </div>
             </div>
 
+            {/* Accounting Cutover Date */}
+            <div className="border-t pt-6 mt-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Lock className="h-5 w-5 text-muted-foreground" />
+                <h3 className="text-lg font-medium">Accounting Cutover Date</h3>
+              </div>
+              
+              <Alert className="mb-4">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  Transactions before this date are labeled as "Legacy" in financial reports. Post-cutover data uses the Command X subledger as the authoritative source. Changing this affects all financial reports.
+                </AlertDescription>
+              </Alert>
+
+              <div className="space-y-2">
+                <Label htmlFor="accounting_cutover_date">Cutover Date</Label>
+                <Input
+                  id="accounting_cutover_date"
+                  type="date"
+                  value={settings?.accounting_cutover_date || ""}
+                  onChange={(e) => {
+                    updateSettings.mutate({ accounting_cutover_date: e.target.value || null } as any);
+                  }}
+                />
+                <p className="text-sm text-muted-foreground">
+                  Leave empty to treat all data as current (no legacy labels)
+                </p>
+              </div>
+            </div>
+
             <div className="border-t pt-6 mt-6 space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="invoice_footer">Invoice Footer</Label>
