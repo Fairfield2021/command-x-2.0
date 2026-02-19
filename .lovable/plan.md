@@ -1,146 +1,90 @@
 
-## Project Financial Dashboard Cleanup
 
-Fix the double-counting issue in the Project Financial Summary and add margin color coding, negative profit alerts, and drill-down capability.
+# Step 1: Repository and Environment Security Lockdown
 
----
+## Summary
 
-### Root Cause: Double-Counting
+This plan hardens the project's environment security by updating `.gitignore`, adding a `.env.example` template, and documenting the setup. The client-side code is already clean (no service-role keys in the `src/` directory), and edge functions correctly use `SUPABASE_SERVICE_ROLE_KEY` server-side only.
 
-The current cost formula in `ProjectDetail.tsx` (line 211) is:
+## What's Already Secure
 
-```
-totalAllCosts = totalPOValue + totalLaborCost + totalOtherExpenses
-```
+- The Supabase client (`src/integrations/supabase/client.ts`) only uses the anon key -- no service-role keys are exposed to the browser.
+- All 77 edge functions that use `SUPABASE_SERVICE_ROLE_KEY` do so server-side (Deno runtime), which is the correct pattern.
 
-Where:
-- `totalPOValue` = sum of all PO face values (committed WO amounts to subs)
-- `totalLaborCost` = time entry costs + personnel payment allocations + vendor labor bills
-- `totalOtherExpenses` = non-labor vendor bill line items
+## What Needs Fixing
 
-The problem: **vendor bills are payments AGAINST POs**. So the same sub cost is counted twice -- once via the PO committed value (`totalPOValue`) and again via the vendor bill line items (`vendorLaborCost + vendorOtherTotal`). This causes inflated costs and false negative profit.
+### 1. Update `.gitignore` to block sensitive files
 
----
+The current `.gitignore` is missing rules for `.env`, keystores, and mobile platform secrets. We'll add:
 
-### Fix: Single Source of Truth Formula
+```text
+# Environment files
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
 
-**REVENUE:**
-- Job Order totals (original contract)
-- + Approved Change Orders (net additive/deductive)
-- + Approved T&M Tickets (net)
-- = **Total Contract Value**
-
-**COSTS:**
-- Work Order (PO) committed value + addendums (what we owe subs) -- this already includes all sub costs
-- + Internal Labor (time entry costs only -- direct hours x rate from time tracking)
-- + Other Expenses (non-PO expenses from `personnel_payment_allocations` only, NOT vendor bill line items which are PO payments)
-- = **Total Costs**
-
-**PROFIT** = Revenue - Costs
-**MARGIN** = Profit / Revenue x 100
-
-The key change: **remove vendor bill line item totals from the cost calculation** since they represent payments against POs already counted via `totalPOValue`. Personnel payment allocations stay if they represent non-PO labor costs (payroll).
-
----
-
-### Changes
-
-#### 1. Fix Cost Calculation in `ProjectDetail.tsx`
-
-Modify the `financialData` useMemo (lines 167-234):
-- Remove `vendorLaborCost` and `vendorOtherTotal` from cost calculation
-- Keep `totalPOValue` as the sub cost source (WO committed value)
-- Keep `timeEntryLaborCost` as internal labor (supervision + field)
-- Keep `personnelPaymentCost` as additional labor cost (payroll allocations not tied to POs)
-- `totalOtherExpenses` = personnel payments only (not vendor bills)
-- Add `totalSubCost` field (= totalPOValue) for clarity in display
-
-Updated formula:
-```
-totalCosts = totalPOValue + timeEntryLaborCost + personnelPaymentCost
-netProfit = totalContractValue - totalCosts
+# Secrets and keys
+*.keystore
+*.jks
+android/local.properties
+ios/App/GoogleService-Info.plist
 ```
 
-#### 2. Redesign Financial Summary Display in `ProjectFinancialSummary.tsx`
+Note: The `.env` file in this project is auto-managed by Lovable Cloud and cannot be deleted. Adding it to `.gitignore` prevents it from being committed if the project is pushed to GitHub.
 
-Replace the current layout with clear stat cards at top:
+### 2. Create `.env.example`
 
-**Top cards row (color-coded):**
-- Contract Value (original JO total)
-- Change Orders (net)
-- Total Contract Value
-- WO Costs (sub commitments)
-- Internal Labor
-- Total Costs
-- Net Profit
-- Margin % -- color: green if > 30%, yellow if 15-30%, red if < 15%
+A safe template file documenting what environment variables are needed, with placeholder values only:
 
-**Negative profit alert:**
-- Red banner when `netProfit < 0`: "This project is currently showing a loss of $X. Review costs and billing."
+```text
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=your-anon-key-here
+VITE_SUPABASE_PROJECT_ID=your-project-id
+VITE_BUILD_TIMESTAMP=auto-generated
+```
 
-**Supervision impact section** (existing, keep as-is)
+### 3. Add `verify_jwt = false` to `supabase/config.toml` for public endpoints
 
-**Progress bars** (existing, keep as-is)
+Currently `config.toml` only has the project ID. We need to add JWT verification settings for webhook/public endpoints that must accept unauthenticated requests (e.g., `quickbooks-webhook`, `twilio-webhook`, vendor onboarding acceptance). All other functions will use the default (JWT required) or validate in code.
 
-#### 3. Add Drill-Down Capability
+### 4. Update `README.md`
 
-Add collapsible detail sections under each summary card:
-- "WO Costs" expands to show each PO with number, vendor, and amount
-- "Internal Labor" expands to show personnel breakdown from time entries
-- "Contract Value" expands to show each JO
-- "Change Orders" expands to show each approved CO
+Add a section documenting required environment variables and the secrets needed in Lovable Cloud for edge functions.
 
-This uses existing list components already on the page (`ProjectPurchaseOrdersList`, `ProjectChangeOrdersList`, etc.) -- the drill-down links will scroll to or navigate to those sections.
+## Out of Scope (Cannot Be Done Here)
 
----
+- **Git history cleaning** (removing `.env` from past commits) -- this requires running `git filter-branch` or BFG locally, not through Lovable's editor.
+- **GitHub branch protection rules** -- these must be configured in GitHub's repository settings UI.
+- Both are documented in the README for the team to complete manually.
 
-### Files to Modify
+## Technical Details
+
+### Files Modified
 
 | File | Change |
 |------|--------|
-| `src/pages/ProjectDetail.tsx` | Fix `financialData` cost calculation to remove vendor bill double-counting; pass additional drill-down data |
-| `src/components/project-hub/ProjectFinancialSummary.tsx` | Redesign with stat cards, margin color coding, negative profit alert, drill-down links |
+| `.gitignore` | Add env, keystore, and secrets rules |
+| `supabase/config.toml` | Add `verify_jwt = false` for public webhook functions |
 
-### Files NOT Modified
+### Files Created
 
-- No database changes
-- No hook changes (data sources remain the same, just used differently)
-- No changes to existing list components
+| File | Purpose |
+|------|---------|
+| `.env.example` | Safe placeholder template for environment variables |
+| `CONTRIBUTING.md` | PR workflow and branch protection documentation |
 
-### Technical Details
+### Edge Functions Requiring `verify_jwt = false`
 
-**Cost formula change (ProjectDetail.tsx lines 196-213):**
+These functions accept external webhooks or unauthenticated public form submissions:
 
-Before:
-```typescript
-const totalLaborCost = timeEntryLaborCost + personnelPaymentCost + vendorLaborCost;
-const totalOtherExpenses = projectExpenses?.vendor_other_total || 0;
-const totalAllCosts = totalPOValue + totalLaborCost + totalOtherExpenses;
-```
+- `quickbooks-webhook` (Intuit webhook callbacks)
+- `twilio-webhook` (Twilio SMS callbacks)
+- `accept-vendor-invitation` (public vendor onboarding)
+- `accept-portal-invitation` (public portal access)
+- `get-estimate-for-approval` (public estimate approval links)
+- `process-co-signature` (public change order signatures)
 
-After:
-```typescript
-const totalLaborCost = timeEntryLaborCost + personnelPaymentCost;
-const totalOtherExpenses = 0; // Vendor bills are PO payments, not separate expenses
-const totalAllCosts = totalPOValue + totalLaborCost;
-```
+All other functions keep JWT validation (either default or in-code).
 
-**Margin color coding logic:**
-```typescript
-const marginColor = netMargin >= 30 ? 'text-green-500' 
-  : netMargin >= 15 ? 'text-yellow-500' 
-  : 'text-red-500';
-```
-
-**Negative profit alert:**
-```tsx
-{data.netProfit < 0 && (
-  <Alert variant="destructive">
-    <AlertTitle>Project Loss Alert</AlertTitle>
-    <AlertDescription>
-      This project is currently showing a loss of {formatCurrency(Math.abs(data.netProfit))}. 
-      Review costs and billing.
-    </AlertDescription>
-  </Alert>
-)}
-```
