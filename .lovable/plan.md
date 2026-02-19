@@ -1,162 +1,231 @@
 
-
-# Step 5: Financial Reporting Repair
+# Step 6: QuickBooks Integration Hardening
 
 ## Summary
 
-Refactor the project financial summary to clearly separate three financial metrics (Contract Value, Recognized Revenue, Actual Cost), add an accounting cutover date to `company_settings`, and label legacy vs. current data in the UI.
+Standardize all QuickBooks mapping tables, create an idempotent sync queue, eliminate silent entity creation in QuickBooks, and establish immutable structured logging for all sync operations.
 
 ## Current State
 
-- `ProjectFinancialSummary.tsx` mixes contract value, invoicing, and costs into a single flat view with no data-source labeling
-- `ProjectDetail.tsx` calculates `financialData` in a single `useMemo` block pulling from operational tables (job orders, change orders, T&M tickets, POs, invoices, vendor bills, time entries, personnel payments)
-- `company_settings` has `locked_period_date` and `locked_period_enabled` but NO `accounting_cutover_date` column
-- The subledger (`accounting_transactions` / `accounting_lines`) exists but is not queried by any reporting component
-- No distinction between pre-cutover (legacy/QuickBooks) and post-cutover (CommandX subledger) data
+### Existing Mapping Tables (8 total)
+All 8 entity types have mapping tables, but schemas are inconsistent:
+
+| Table | Has `sync_direction`? | Has `error_message`? | Has `updated_at`? | Notes |
+|-------|----------------------|---------------------|-------------------|-------|
+| `quickbooks_vendor_mappings` | YES | NO | YES | Most complete |
+| `quickbooks_customer_mappings` | NO | NO | YES | Missing fields |
+| `quickbooks_invoice_mappings` | NO | NO | YES | Uses `synced_at` instead of `last_synced_at` |
+| `quickbooks_bill_mappings` | NO | YES | YES | Has `quickbooks_doc_number` |
+| `quickbooks_estimate_mappings` | NO | NO | YES | Minimal |
+| `quickbooks_po_mappings` | NO | NO | YES | Minimal |
+| `quickbooks_account_mappings` | NO | NO | YES | Has QB account metadata |
+| `quickbooks_product_mappings` | NO | NO | YES | Has `quickbooks_item_type` |
+
+### Silent Entity Creation Problem
+6 edge functions silently create vendors/customers in QuickBooks:
+- `quickbooks-create-bill` -- calls `getOrCreateQBVendor()` which creates vendors without user confirmation
+- `quickbooks-update-bill` -- same `getOrCreateQBVendor()` pattern
+- `quickbooks-create-purchase-order` -- same pattern
+- `quickbooks-create-invoice` -- calls `quickbooks-sync-customers` with `find-or-create` action
+- `quickbooks-update-invoice` -- same `find-or-create` pattern
+- `quickbooks-create-estimate` -- same `find-or-create` pattern
+
+### Logging Gap
+Two separate logging tables exist with different schemas:
+- `quickbooks_sync_log` -- entity-level logs (entity_type, entity_id, action, status, details)
+- `quickbooks_sync_logs` -- batch-level logs (sync_type, records_synced, details)
+
+Neither captures request/response payloads, HTTP status codes, or is immutable.
 
 ## What Will Change
 
-### 1. Database Migration
+### 1. Database Migration: Standardize Mapping Tables
 
-Add `accounting_cutover_date` column to `company_settings`:
+Add missing columns to existing mapping tables via `ALTER TABLE ADD COLUMN IF NOT EXISTS`:
 
-| Column | Type | Default | Notes |
-|--------|------|---------|-------|
-| `accounting_cutover_date` | DATE | NULL | Transactions before this date are "legacy" |
+| Column Added | Tables Receiving It |
+|-------------|-------------------|
+| `sync_direction TEXT DEFAULT 'export'` | customer, invoice, bill, estimate, po, account, product |
+| `error_message TEXT` | vendor, customer, invoice, estimate, po, account, product |
 
-This is separate from `locked_period_date` (which blocks edits). The cutover date controls data source labeling only.
+Rename `quickbooks_invoice_mappings.synced_at` to `last_synced_at` (add new column, backfill, keep old for compatibility).
 
-### 2. New Hook: `useAccountingCutover`
+No UNIQUE constraints are added on QB IDs where they don't already exist -- these tables may legitimately have multiple local entities mapped to the same QB entity in edge cases.
 
-A small hook that reads `company_settings.accounting_cutover_date` and provides:
-- `cutoverDate: string | null`
-- `isLegacy(date: string): boolean` -- returns true if the date is before the cutover
-- `hasCutover: boolean` -- whether a cutover date is configured
+### 2. Database Migration: Sync Queue Table
 
-File: `src/hooks/useAccountingCutover.ts`
+Create `quickbooks_sync_queue`:
 
-### 3. New Hook: `useProjectSubledgerTotals`
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | UUID | Primary key |
+| `entity_type` | TEXT | 'vendor', 'customer', 'invoice', 'bill', 'estimate', 'purchase_order' |
+| `entity_id` | UUID | Local entity ID |
+| `action` | TEXT | 'create', 'update', 'delete', 'void' |
+| `priority` | INTEGER | Default 0 (higher = more urgent) |
+| `status` | TEXT | 'pending', 'processing', 'completed', 'failed', 'cancelled' |
+| `retry_count` | INTEGER | Default 0 |
+| `max_retries` | INTEGER | Default 3 |
+| `next_retry_at` | TIMESTAMPTZ | For exponential backoff |
+| `scheduled_at` | TIMESTAMPTZ | Default now() |
+| `processed_at` | TIMESTAMPTZ | When completed |
+| `error_message` | TEXT | Last error |
+| `created_by` | UUID | Who queued it |
+| `created_at` | TIMESTAMPTZ | Default now() |
+| `updated_at` | TIMESTAMPTZ | Default now() |
 
-Queries `accounting_transactions` + `accounting_lines` for a given project to get subledger-sourced totals:
-- Recognized revenue (posted invoices in subledger)
-- Actual costs (posted bills, payroll entries in subledger)
+Deduplication: UNIQUE constraint on `(entity_type, entity_id, action)` WHERE `status IN ('pending', 'processing')` -- prevents duplicate pending items for the same entity/action.
 
-Only returns data for post-cutover transactions. Falls back gracefully (returns zeros) if no subledger entries exist yet.
+RLS: admin and manager roles can SELECT/INSERT/UPDATE. No DELETE.
 
-File: `src/integrations/supabase/hooks/useProjectSubledgerTotals.ts`
+### 3. Database Migration: Enhanced Immutable Sync Log
 
-### 4. Refactored `ProjectFinancialSummary.tsx`
+Create `quickbooks_api_log` (new immutable table, keeping existing tables intact):
 
-Restructure into three clearly labeled sections:
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | UUID | Primary key |
+| `function_name` | TEXT | Edge function that made the call |
+| `entity_type` | TEXT | What was being synced |
+| `entity_id` | UUID | Local entity ID |
+| `quickbooks_entity_id` | TEXT | QB entity ID (if known) |
+| `http_method` | TEXT | GET, POST, PUT |
+| `endpoint` | TEXT | QB API endpoint path |
+| `http_status` | INTEGER | Response status code |
+| `request_payload` | JSONB | Sanitized request body |
+| `response_payload` | JSONB | Response body |
+| `error_message` | TEXT | Error details |
+| `request_sent_at` | TIMESTAMPTZ | When request was sent |
+| `response_received_at` | TIMESTAMPTZ | When response came back |
+| `initiated_by` | UUID | User who triggered sync |
+| `created_at` | TIMESTAMPTZ | Default now() |
 
-**Section 1: Contract / Forecast Value**
-- Original Contract (job orders total)
-- Change Orders (net additive/deductive)
-- T&M Tickets (approved)
-- Total Contract Value
+RLS: admin and accounting can SELECT. System can INSERT. No UPDATE or DELETE.
 
-**Section 2: Recognized Revenue**
-- Total Invoiced (from operational tables or subledger post-cutover)
-- Total Paid
-- Invoicing Progress bar
-- Payment Collection bar
-- If pre-cutover data exists, show a "Legacy" badge
+Trigger: `BEFORE UPDATE OR DELETE` raises exception -- logs are immutable.
 
-**Section 3: Actual Costs**
-- WO / Sub Costs (PO commitments)
-- Internal Labor (time entries + personnel payments)
-- Vendor Payments progress bar
-- Total Costs
-- If pre-cutover data exists, show a "Legacy" badge
+### 4. Shared Logging Utility
 
-**Section 4: Profitability (derived)**
-- Net Profit = Contract Value - Actual Costs
-- Margin %
-- Supervision cost impact (unchanged)
+Create `supabase/functions/_shared/qbApiLogger.ts`:
 
-**Data Source Indicator:**
-- When a cutover date is configured, each section shows a small badge:
-  - "CommandX" (blue) for post-cutover data
-  - "Legacy" (amber) for pre-cutover data
-  - "Mixed" (gray) when both exist
+A wrapper around the QuickBooks API fetch calls that:
+- Records request timestamp before sending
+- Records response timestamp after receiving
+- Sanitizes sensitive data (access tokens, auth headers) from payloads
+- Inserts into `quickbooks_api_log`
+- Returns the parsed response
 
-### 5. Updated `FinancialData` Interface
-
-Add new fields to support the three-metric separation:
+All edge functions will import and use this wrapper instead of raw `qbRequest()` calls.
 
 ```text
-// New fields added:
-recognizedRevenue: number       // Invoiced amount (subledger-sourced post-cutover)
-committedCosts: number          // PO commitments
-actualCosts: number             // Vendor bills paid + labor
-dataSource: 'legacy' | 'current' | 'mixed'
+loggedQBRequest(supabase, {
+  functionName: 'quickbooks-create-bill',
+  entityType: 'bill',
+  entityId: billId,
+  method: 'POST',
+  endpoint: '/bill?minorversion=65',
+  accessToken, realmId, body,
+  initiatedBy: userId
+}) -> { response, logId }
 ```
 
-Existing fields are preserved for backward compatibility.
+### 5. Edge Function Updates: Ban Silent Entity Creation
 
-### 6. Updated `ProjectDetail.tsx` Financial Calculation
+Modify 6 edge functions to require pre-existing mappings instead of auto-creating:
 
-The `financialData` useMemo will:
-- Check the cutover date from the new hook
-- For post-cutover projects: query subledger totals via `useProjectSubledgerTotals`
-- For pre-cutover projects: continue using operational tables (as today)
-- Set `dataSource` flag based on project dates vs. cutover date
-- Pass the enhanced data to `ProjectFinancialSummary`
+**`quickbooks-create-bill` and `quickbooks-update-bill`:**
+- Replace `getOrCreateQBVendor()` with `getRequiredQBVendor()` that:
+  - Checks `quickbooks_vendor_mappings` for existing mapping
+  - If not found, returns error: `"Vendor '[name]' is not mapped to QuickBooks. Please sync this vendor first from the Vendor Management page."`
+  - Never creates a vendor in QuickBooks
 
-### 7. Company Settings UI Update
+**`quickbooks-create-purchase-order`:**
+- Same change: replace `getOrCreateQBVendor()` with lookup-only
 
-Add the cutover date field to `CompanySettingsForm.tsx` in the accounting section, near the existing locked period controls. Admin-only, with a warning that changing it affects all financial reports.
+**`quickbooks-create-invoice`, `quickbooks-update-invoice`, `quickbooks-create-estimate`:**
+- Replace `find-or-create` customer sync calls with mapping lookup
+- If no mapping exists, return error: `"Customer '[name]' is not mapped to QuickBooks. Please sync this customer first from the Customer Management page."`
+
+**`quickbooks-sync-customers` `find-or-create` action:**
+- Keep it but rename to `find-only` -- returns mapping if exists, error if not
+- The existing `export` action (which does create customers) remains as the explicit user-initiated flow
+
+### 6. Integrate Shared Logger
+
+Update all QuickBooks edge functions to use `loggedQBRequest()` instead of raw `qbRequest()`. This affects approximately 20 edge functions that make QuickBooks API calls.
 
 ## Files Created
 
 | File | Purpose |
 |------|---------|
-| Migration SQL | Add `accounting_cutover_date` to `company_settings` |
-| `src/hooks/useAccountingCutover.ts` | Cutover date hook |
-| `src/integrations/supabase/hooks/useProjectSubledgerTotals.ts` | Subledger totals query |
+| Migration SQL | Standardize mappings, create sync queue, create API log |
+| `supabase/functions/_shared/qbApiLogger.ts` | Shared logging wrapper for QB API calls |
 
 ## Files Modified
 
 | File | Change |
 |------|--------|
-| `src/components/project-hub/ProjectFinancialSummary.tsx` | Restructure into 3 sections + data source badges |
-| `src/pages/ProjectDetail.tsx` | Add cutover/subledger hooks, enhance `financialData` calculation |
-| `src/components/settings/CompanySettingsForm.tsx` | Add cutover date input field |
+| `quickbooks-create-bill/index.ts` | Replace `getOrCreateQBVendor` with lookup-only + use logger |
+| `quickbooks-update-bill/index.ts` | Same |
+| `quickbooks-create-purchase-order/index.ts` | Same |
+| `quickbooks-create-invoice/index.ts` | Replace `find-or-create` with lookup-only + use logger |
+| `quickbooks-update-invoice/index.ts` | Same |
+| `quickbooks-create-estimate/index.ts` | Same |
+| `quickbooks-sync-customers/index.ts` | Rename `find-or-create` to `find-only`, use logger |
+| `quickbooks-sync-vendors/index.ts` | Use logger |
+| `quickbooks-sync-products/index.ts` | Use logger |
+| `quickbooks-sync-accounts/index.ts` | Use logger |
 
 ## What Will NOT Change
 
-- The subledger tables themselves (created in Step 4)
-- The locked period mechanism (Step 3)
-- Edge functions or QuickBooks sync logic
-- Any other pages or components
+- Existing `quickbooks_sync_log` and `quickbooks_sync_logs` tables (preserved for backward compat; new detailed logging goes to `quickbooks_api_log`)
+- The explicit `export` and `import` actions in sync functions (these are user-initiated bulk operations)
+- QuickBooks OAuth flow
+- QuickBooks webhook handler
+- The subledger tables (Step 4)
+- No frontend changes in this step
 
 ## Risk Assessment
 
-- **Low risk**: The cutover date is optional (NULL by default). Without it, everything behaves exactly as today -- all data shows as "current" with no legacy labels.
-- **No data loss**: This is additive -- existing calculations are preserved, just reorganized visually.
-- **Graceful fallback**: If no subledger entries exist yet, the component falls back to operational table data with no errors.
+- **Medium risk**: Removing silent entity creation is a behavioral change. Users who previously relied on automatic vendor/customer creation during bill/invoice sync will now see an error asking them to sync the entity first. This is the correct behavior per the core rules ("No silent vendor/customer creation").
+- **Mitigation**: Error messages clearly indicate what action the user needs to take.
+- **Low risk**: Schema additions are non-destructive `ADD COLUMN IF NOT EXISTS`.
+- **No data loss**: Existing mapping data is preserved. New columns get sensible defaults.
 
 ## Technical Details
 
-### Subledger Query (useProjectSubledgerTotals)
+### Deduplication Constraint (Sync Queue)
 
 ```text
-SELECT 
-  SUM(CASE WHEN at.transaction_type = 'invoice' THEN al.debit_amount ELSE 0 END) as recognized_revenue,
-  SUM(CASE WHEN at.transaction_type IN ('bill','payroll') THEN al.debit_amount ELSE 0 END) as actual_costs
-FROM accounting_lines al
-JOIN accounting_transactions at ON al.transaction_id = at.id
-WHERE al.project_id = $projectId
-  AND at.status = 'posted'
-  AND at.transaction_date >= $cutoverDate
+CREATE UNIQUE INDEX idx_qb_sync_queue_dedup
+ON quickbooks_sync_queue (entity_type, entity_id, action)
+WHERE status IN ('pending', 'processing');
 ```
 
-### Data Source Logic
+This ensures only one pending/processing item exists per entity+action combination. Completed/failed items don't block new entries.
+
+### Silent Creation Replacement Pattern
 
 ```text
-IF no cutover date configured -> dataSource = 'current' (no labels shown)
-IF project created_at >= cutover date -> dataSource = 'current'  
-IF project created_at < cutover date AND has post-cutover transactions -> dataSource = 'mixed'
-IF project created_at < cutover date AND no post-cutover transactions -> dataSource = 'legacy'
+-- BEFORE (silent creation):
+async function getOrCreateQBVendor(supabase, vendorId, accessToken, realmId):
+  mapping = lookup mapping
+  if mapping exists -> return QB ID
+  search QB by name -> if found, create mapping, return QB ID
+  create vendor in QB -> create mapping, return QB ID   // <-- BANNED
+
+-- AFTER (lookup only):
+async function getRequiredQBVendor(supabase, vendorId):
+  mapping = lookup mapping
+  if mapping exists -> return QB ID
+  vendor = get vendor name
+  throw Error("Vendor 'X' is not mapped to QuickBooks...")
 ```
 
+### Logger Sanitization
+
+The shared logger strips these from payloads before storing:
+- `Authorization` headers
+- `access_token` values
+- `refresh_token` values
+- Full SSN/tax ID values (replaced with masked versions)
