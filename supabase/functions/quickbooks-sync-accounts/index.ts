@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { loggedQBRequest } from "../_shared/qbApiLogger.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -105,9 +106,16 @@ serve(async (req) => {
       
       // Query QuickBooks for expense-type accounts
       const query = "SELECT * FROM Account WHERE AccountType IN ('Expense', 'Cost of Goods Sold', 'Other Expense') AND Active = true MAXRESULTS 500";
-      const result = await qbRequest('GET', `/query?query=${encodeURIComponent(query)}&minorversion=65`, accessToken, realmId);
+      const result = await loggedQBRequest(supabase, {
+        functionName: 'quickbooks-sync-accounts',
+        entityType: 'expense_category',
+        method: 'GET',
+        endpoint: `/query?query=${encodeURIComponent(query)}&minorversion=65`,
+        accessToken, realmId,
+      });
+      const qbResult = result.response;
       
-      const qbAccounts = result.QueryResponse?.Account || [];
+      const qbAccounts = qbResult.QueryResponse?.Account || [];
       
       // Get existing mappings to mark which accounts are already linked
       const { data: mappings } = await supabase
@@ -136,10 +144,17 @@ serve(async (req) => {
       console.log('Importing expense accounts from QuickBooks...');
       
       // Query QuickBooks for expense-type accounts
-      const query = "SELECT * FROM Account WHERE AccountType IN ('Expense', 'Cost of Goods Sold', 'Other Expense') AND Active = true MAXRESULTS 500";
-      const result = await qbRequest('GET', `/query?query=${encodeURIComponent(query)}&minorversion=65`, accessToken, realmId);
+      const importQuery = "SELECT * FROM Account WHERE AccountType IN ('Expense', 'Cost of Goods Sold', 'Other Expense') AND Active = true MAXRESULTS 500";
+      const importResult = await loggedQBRequest(supabase, {
+        functionName: 'quickbooks-sync-accounts',
+        entityType: 'expense_category',
+        method: 'GET',
+        endpoint: `/query?query=${encodeURIComponent(importQuery)}&minorversion=65`,
+        accessToken, realmId,
+      });
+      const importQbResult = importResult.response;
       
-      const qbAccounts = result.QueryResponse?.Account || [];
+      const qbAccounts = importQbResult.QueryResponse?.Account || [];
       console.log(`Found ${qbAccounts.length} expense accounts in QuickBooks`);
 
       let imported = 0;

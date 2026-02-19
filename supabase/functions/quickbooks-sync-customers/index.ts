@@ -508,38 +508,24 @@ serve(async (req) => {
       });
     }
 
-    // Helper action to find or create QB customer for invoices
-    if (action === 'find-or-create') {
+    // Lookup-only action for invoices/estimates - NEVER creates customers in QuickBooks
+    if (action === 'find-or-create' || action === 'find-only') {
       const { data: customer, error: customerError } = await supabase
         .from('customers')
-        .select(`
-          *,
-          quickbooks_customer_mappings(*)
-        `)
+        .select('id, name')
         .eq('id', customerId)
         .single();
 
       if (customerError) throw customerError;
 
-      // Get mapping from embedded query
-      let mapping = customer.quickbooks_customer_mappings?.[0];
-      
-      // FALLBACK: If no mapping found via embed, query directly
-      if (!mapping) {
-        console.log(`[find-or-create] No embedded mapping found for customer ${customerId}, checking directly...`);
-        const { data: directMapping } = await supabase
-          .from('quickbooks_customer_mappings')
-          .select('*')
-          .eq('customer_id', customerId)
-          .single();
-        
-        if (directMapping) {
-          console.log(`[find-or-create] Found mapping via direct query: QB ID ${directMapping.quickbooks_customer_id}`);
-          mapping = directMapping;
-        }
-      }
+      // Check for existing mapping
+      const { data: mapping } = await supabase
+        .from('quickbooks_customer_mappings')
+        .select('quickbooks_customer_id')
+        .eq('customer_id', customerId)
+        .single();
 
-      if (mapping && mapping.quickbooks_customer_id) {
+      if (mapping?.quickbooks_customer_id) {
         return new Response(JSON.stringify({ 
           quickbooksCustomerId: mapping.quickbooks_customer_id 
         }), {
@@ -547,39 +533,14 @@ serve(async (req) => {
         });
       }
 
-      // Create in QuickBooks with duplicate handling
-      const addressParts = (customer.address || '').split(', ');
-      
-      const qbCustomer: any = {
-        DisplayName: customer.name.substring(0, 500),
-        CompanyName: customer.company || undefined,
-        PrimaryEmailAddr: customer.email ? { Address: customer.email } : undefined,
-        PrimaryPhone: customer.phone ? { FreeFormNumber: customer.phone } : undefined,
-      };
-
-      if (addressParts.length > 0) {
-        qbCustomer.BillAddr = {
-          Line1: addressParts[0] || '',
-          City: addressParts[1] || '',
-          CountrySubDivisionCode: addressParts[2] || '',
-          PostalCode: addressParts[3] || '',
-        };
-      }
-
-      const result = await createQBCustomerSafe(qbCustomer, accessToken, realmId);
-      
-      await supabase
-        .from('quickbooks_customer_mappings')
-        .insert({
-          customer_id: customer.id,
-          quickbooks_customer_id: result.Customer.Id,
-          sync_status: 'synced',
-          last_synced_at: new Date().toISOString(),
-        });
-
+      // No mapping found - return error instead of silently creating
       return new Response(JSON.stringify({ 
-        quickbooksCustomerId: result.Customer.Id 
+        error: `Customer '${customer.name}' is not mapped to QuickBooks. Please sync this customer first from the Customer Management page.`,
+        missing_entity: 'customer',
+        customer_id: customerId,
+        customer_name: customer.name
       }), {
+        status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }

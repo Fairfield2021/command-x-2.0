@@ -5972,6 +5972,7 @@ export type Database = {
       quickbooks_account_mappings: {
         Row: {
           created_at: string | null
+          error_message: string | null
           expense_category_id: string
           id: string
           last_synced_at: string | null
@@ -5979,11 +5980,13 @@ export type Database = {
           quickbooks_account_name: string | null
           quickbooks_account_subtype: string | null
           quickbooks_account_type: string | null
+          sync_direction: string | null
           sync_status: string
           updated_at: string | null
         }
         Insert: {
           created_at?: string | null
+          error_message?: string | null
           expense_category_id: string
           id?: string
           last_synced_at?: string | null
@@ -5991,11 +5994,13 @@ export type Database = {
           quickbooks_account_name?: string | null
           quickbooks_account_subtype?: string | null
           quickbooks_account_type?: string | null
+          sync_direction?: string | null
           sync_status?: string
           updated_at?: string | null
         }
         Update: {
           created_at?: string | null
+          error_message?: string | null
           expense_category_id?: string
           id?: string
           last_synced_at?: string | null
@@ -6003,6 +6008,7 @@ export type Database = {
           quickbooks_account_name?: string | null
           quickbooks_account_subtype?: string | null
           quickbooks_account_type?: string | null
+          sync_direction?: string | null
           sync_status?: string
           updated_at?: string | null
         }
@@ -6016,6 +6022,60 @@ export type Database = {
           },
         ]
       }
+      quickbooks_api_log: {
+        Row: {
+          created_at: string
+          endpoint: string
+          entity_id: string | null
+          entity_type: string | null
+          error_message: string | null
+          function_name: string
+          http_method: string
+          http_status: number | null
+          id: string
+          initiated_by: string | null
+          quickbooks_entity_id: string | null
+          request_payload: Json | null
+          request_sent_at: string
+          response_payload: Json | null
+          response_received_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          endpoint: string
+          entity_id?: string | null
+          entity_type?: string | null
+          error_message?: string | null
+          function_name: string
+          http_method: string
+          http_status?: number | null
+          id?: string
+          initiated_by?: string | null
+          quickbooks_entity_id?: string | null
+          request_payload?: Json | null
+          request_sent_at: string
+          response_payload?: Json | null
+          response_received_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          endpoint?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          error_message?: string | null
+          function_name?: string
+          http_method?: string
+          http_status?: number | null
+          id?: string
+          initiated_by?: string | null
+          quickbooks_entity_id?: string | null
+          request_payload?: Json | null
+          request_sent_at?: string
+          response_payload?: Json | null
+          response_received_at?: string | null
+        }
+        Relationships: []
+      }
       quickbooks_bill_mappings: {
         Row: {
           bill_id: string
@@ -6025,6 +6085,7 @@ export type Database = {
           last_synced_at: string | null
           quickbooks_bill_id: string
           quickbooks_doc_number: string | null
+          sync_direction: string | null
           sync_status: string
           updated_at: string | null
         }
@@ -6036,6 +6097,7 @@ export type Database = {
           last_synced_at?: string | null
           quickbooks_bill_id: string
           quickbooks_doc_number?: string | null
+          sync_direction?: string | null
           sync_status?: string
           updated_at?: string | null
         }
@@ -6047,6 +6109,7 @@ export type Database = {
           last_synced_at?: string | null
           quickbooks_bill_id?: string
           quickbooks_doc_number?: string | null
+          sync_direction?: string | null
           sync_status?: string
           updated_at?: string | null
         }
@@ -6103,9 +6166,11 @@ export type Database = {
         Row: {
           created_at: string | null
           customer_id: string
+          error_message: string | null
           id: string
           last_synced_at: string | null
           quickbooks_customer_id: string
+          sync_direction: string | null
           sync_status:
             | Database["public"]["Enums"]["quickbooks_sync_status"]
             | null
@@ -6114,9 +6179,11 @@ export type Database = {
         Insert: {
           created_at?: string | null
           customer_id: string
+          error_message?: string | null
           id?: string
           last_synced_at?: string | null
           quickbooks_customer_id: string
+          sync_direction?: string | null
           sync_status?:
             | Database["public"]["Enums"]["quickbooks_sync_status"]
             | null
@@ -6125,9 +6192,11 @@ export type Database = {
         Update: {
           created_at?: string | null
           customer_id?: string
+          error_message?: string | null
           id?: string
           last_synced_at?: string | null
           quickbooks_customer_id?: string
+          sync_direction?: string | null
           sync_status?:
             | Database["public"]["Enums"]["quickbooks_sync_status"]
             | null
@@ -6146,28 +6215,34 @@ export type Database = {
       quickbooks_estimate_mappings: {
         Row: {
           created_at: string
+          error_message: string | null
           estimate_id: string
           id: string
           last_synced_at: string | null
           quickbooks_estimate_id: string
+          sync_direction: string | null
           sync_status: string
           updated_at: string
         }
         Insert: {
           created_at?: string
+          error_message?: string | null
           estimate_id: string
           id?: string
           last_synced_at?: string | null
           quickbooks_estimate_id: string
+          sync_direction?: string | null
           sync_status?: string
           updated_at?: string
         }
         Update: {
           created_at?: string
+          error_message?: string | null
           estimate_id?: string
           id?: string
           last_synced_at?: string | null
           quickbooks_estimate_id?: string
+          sync_direction?: string | null
           sync_status?: string
           updated_at?: string
         }
@@ -6184,10 +6259,13 @@ export type Database = {
       quickbooks_invoice_mappings: {
         Row: {
           created_at: string | null
+          error_message: string | null
           id: string
           invoice_id: string
+          last_synced_at: string | null
           quickbooks_doc_number: string | null
           quickbooks_invoice_id: string
+          sync_direction: string | null
           sync_status:
             | Database["public"]["Enums"]["quickbooks_sync_status"]
             | null
@@ -6196,10 +6274,13 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          error_message?: string | null
           id?: string
           invoice_id: string
+          last_synced_at?: string | null
           quickbooks_doc_number?: string | null
           quickbooks_invoice_id: string
+          sync_direction?: string | null
           sync_status?:
             | Database["public"]["Enums"]["quickbooks_sync_status"]
             | null
@@ -6208,10 +6289,13 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          error_message?: string | null
           id?: string
           invoice_id?: string
+          last_synced_at?: string | null
           quickbooks_doc_number?: string | null
           quickbooks_invoice_id?: string
+          sync_direction?: string | null
           sync_status?:
             | Database["public"]["Enums"]["quickbooks_sync_status"]
             | null
@@ -6279,28 +6363,34 @@ export type Database = {
       quickbooks_po_mappings: {
         Row: {
           created_at: string
+          error_message: string | null
           id: string
           last_synced_at: string | null
           purchase_order_id: string
           quickbooks_po_id: string
+          sync_direction: string | null
           sync_status: string
           updated_at: string
         }
         Insert: {
           created_at?: string
+          error_message?: string | null
           id?: string
           last_synced_at?: string | null
           purchase_order_id: string
           quickbooks_po_id: string
+          sync_direction?: string | null
           sync_status?: string
           updated_at?: string
         }
         Update: {
           created_at?: string
+          error_message?: string | null
           id?: string
           last_synced_at?: string | null
           purchase_order_id?: string
           quickbooks_po_id?: string
+          sync_direction?: string | null
           sync_status?: string
           updated_at?: string
         }
@@ -6318,6 +6408,7 @@ export type Database = {
         Row: {
           conflict_data: Json | null
           created_at: string | null
+          error_message: string | null
           id: string
           last_synced_at: string | null
           product_id: string
@@ -6331,6 +6422,7 @@ export type Database = {
         Insert: {
           conflict_data?: Json | null
           created_at?: string | null
+          error_message?: string | null
           id?: string
           last_synced_at?: string | null
           product_id: string
@@ -6344,6 +6436,7 @@ export type Database = {
         Update: {
           conflict_data?: Json | null
           created_at?: string | null
+          error_message?: string | null
           id?: string
           last_synced_at?: string | null
           product_id?: string
@@ -6430,10 +6523,65 @@ export type Database = {
         }
         Relationships: []
       }
+      quickbooks_sync_queue: {
+        Row: {
+          action: string
+          created_at: string
+          created_by: string | null
+          entity_id: string
+          entity_type: string
+          error_message: string | null
+          id: string
+          max_retries: number
+          next_retry_at: string | null
+          priority: number
+          processed_at: string | null
+          retry_count: number
+          scheduled_at: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          action?: string
+          created_at?: string
+          created_by?: string | null
+          entity_id: string
+          entity_type: string
+          error_message?: string | null
+          id?: string
+          max_retries?: number
+          next_retry_at?: string | null
+          priority?: number
+          processed_at?: string | null
+          retry_count?: number
+          scheduled_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          created_by?: string | null
+          entity_id?: string
+          entity_type?: string
+          error_message?: string | null
+          id?: string
+          max_retries?: number
+          next_retry_at?: string | null
+          priority?: number
+          processed_at?: string | null
+          retry_count?: number
+          scheduled_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       quickbooks_vendor_mappings: {
         Row: {
           conflict_data: Json | null
           created_at: string | null
+          error_message: string | null
           id: string
           last_synced_at: string | null
           quickbooks_vendor_id: string
@@ -6445,6 +6593,7 @@ export type Database = {
         Insert: {
           conflict_data?: Json | null
           created_at?: string | null
+          error_message?: string | null
           id?: string
           last_synced_at?: string | null
           quickbooks_vendor_id: string
@@ -6456,6 +6605,7 @@ export type Database = {
         Update: {
           conflict_data?: Json | null
           created_at?: string | null
+          error_message?: string | null
           id?: string
           last_synced_at?: string | null
           quickbooks_vendor_id?: string
