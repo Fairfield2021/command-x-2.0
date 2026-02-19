@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { validateLockedPeriod } from "../_shared/lockedPeriodValidator.ts";
+import { getRequiredQBCustomer } from "../_shared/qbApiLogger.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -224,28 +225,8 @@ serve(async (req) => {
     const syncToken = qbInvoiceData.Invoice.SyncToken;
     console.log("Got SyncToken:", syncToken);
 
-    // Get or create customer in QuickBooks using fetch with auth forwarding
-    console.log("Syncing customer to QuickBooks...");
-    const customerResponse = await fetch(`${SUPABASE_URL}/functions/v1/quickbooks-sync-customers`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': authHeader || '',
-      },
-      body: JSON.stringify({ action: "find-or-create", customerId: invoice.customer_id }),
-    });
-
-    if (!customerResponse.ok) {
-      const errorText = await customerResponse.text();
-      console.error("Customer sync failed:", errorText);
-      throw new Error(`Customer sync failed: ${customerResponse.status}`);
-    }
-
-    const customerSyncResult = await customerResponse.json();
-    const qbCustomerId = customerSyncResult.quickbooksCustomerId;
-    if (!qbCustomerId) {
-      throw new Error("Failed to get QuickBooks customer ID");
-    }
+    // Lookup customer in QuickBooks (must be pre-synced)
+    const qbCustomerId = await getRequiredQBCustomer(supabase, invoice.customer_id);
 
     // Get product mappings
     const productIds = lineItems

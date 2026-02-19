@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getRequiredQBVendor } from "../_shared/qbApiLogger.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -94,152 +95,7 @@ async function qbRequest(
   return response.json();
 }
 
-async function getOrCreateQBVendor(
-  supabase: any,
-  vendorId: string,
-  accessToken: string,
-  realmId: string
-): Promise<string> {
-  // Check for existing mapping
-  const { data: mapping } = await supabase
-    .from("quickbooks_vendor_mappings")
-    .select("quickbooks_vendor_id")
-    .eq("vendor_id", vendorId)
-    .single();
-
-  if (mapping?.quickbooks_vendor_id) {
-    return mapping.quickbooks_vendor_id;
-  }
-
-  // Get vendor from Supabase
-  const { data: vendor, error: vendorError } = await supabase
-    .from("vendors")
-    .select("*")
-    .eq("id", vendorId)
-    .single();
-
-  if (vendorError || !vendor) {
-    throw new Error("Vendor not found");
-  }
-
-  // Normalize vendor name (trim whitespace)
-  const normalizedName = vendor.name.trim();
-  const vendorNameEscaped = normalizedName.replace(/'/g, "\\'");
-  const searchQuery = `SELECT * FROM Vendor WHERE DisplayName = '${vendorNameEscaped}'`;
-  
-  try {
-    const searchResult = await qbRequest(
-      "GET",
-      `/query?query=${encodeURIComponent(searchQuery)}`,
-      accessToken,
-      realmId
-    );
-    
-    if (searchResult.QueryResponse?.Vendor?.[0]) {
-      const existingQBVendor = searchResult.QueryResponse.Vendor[0];
-      console.log("Found existing QuickBooks vendor:", existingQBVendor.Id, existingQBVendor.DisplayName);
-      
-      // Create mapping for existing vendor
-      await supabase.from("quickbooks_vendor_mappings").insert({
-        vendor_id: vendorId,
-        quickbooks_vendor_id: existingQBVendor.Id,
-        sync_status: "synced",
-        sync_direction: "export",
-        last_synced_at: new Date().toISOString(),
-      });
-      
-      return existingQBVendor.Id;
-    }
-  } catch (searchError) {
-    console.log("Vendor search failed, will try to create:", searchError);
-  }
-
-  // Create in QuickBooks with normalized name
-  const qbVendorData: any = {
-    DisplayName: normalizedName,
-    CompanyName: vendor.company?.trim() || normalizedName,
-    PrimaryEmailAddr: vendor.email ? { Address: vendor.email } : undefined,
-    PrimaryPhone: vendor.phone ? { FreeFormNumber: vendor.phone } : undefined,
-  };
-
-  if (vendor.address || vendor.city || vendor.state || vendor.zip) {
-    qbVendorData.BillAddr = {
-      Line1: vendor.address || undefined,
-      City: vendor.city || undefined,
-      CountrySubDivisionCode: vendor.state || undefined,
-      PostalCode: vendor.zip || undefined,
-    };
-  }
-
-  try {
-    const result = await qbRequest("POST", "/vendor?minorversion=65", accessToken, realmId, qbVendorData);
-    const qbVendorId = result.Vendor.Id;
-
-    // Create mapping
-    await supabase.from("quickbooks_vendor_mappings").insert({
-      vendor_id: vendorId,
-      quickbooks_vendor_id: qbVendorId,
-      sync_status: "synced",
-      sync_direction: "export",
-      last_synced_at: new Date().toISOString(),
-    });
-
-    return qbVendorId;
-  } catch (createError: any) {
-    // Handle duplicate name error - extract ID from error message first
-    if (createError.message?.includes("Duplicate Name Exists") || createError.message?.includes("6240") || createError.message?.includes("400")) {
-      console.log("Duplicate name error detected, attempting to extract ID from error...");
-      
-      // Extract ID from error message: "The name supplied already exists. : Id=1209"
-      const idMatch = createError.message.match(/Id=(\d+)/);
-      if (idMatch) {
-        const existingVendorId = idMatch[1];
-        console.log(`Extracted existing vendor ID from error: ${existingVendorId}`);
-        
-        // Create mapping directly using the extracted ID
-        await supabase.from("quickbooks_vendor_mappings").insert({
-          vendor_id: vendorId,
-          quickbooks_vendor_id: existingVendorId,
-          sync_status: "synced",
-          sync_direction: "export",
-          last_synced_at: new Date().toISOString(),
-        });
-        
-        return existingVendorId;
-      }
-      
-      // Fallback: fuzzy search with normalized name
-      console.log("ID not in error message, attempting fuzzy search...");
-      const fuzzyQuery = `SELECT * FROM Vendor WHERE DisplayName LIKE '%${normalizedName.split(" ")[0]}%'`;
-      const fuzzyResult = await qbRequest(
-        "GET",
-        `/query?query=${encodeURIComponent(fuzzyQuery)}`,
-        accessToken,
-        realmId
-      );
-      
-      if (fuzzyResult.QueryResponse?.Vendor?.length > 0) {
-        // Find best match using normalized comparison
-        const exactMatch = fuzzyResult.QueryResponse.Vendor.find(
-          (v: any) => v.DisplayName.trim().toLowerCase() === normalizedName.toLowerCase()
-        );
-        const existingQBVendor = exactMatch || fuzzyResult.QueryResponse.Vendor[0];
-        console.log("Found vendor via fuzzy search:", existingQBVendor.Id, existingQBVendor.DisplayName);
-        
-        await supabase.from("quickbooks_vendor_mappings").insert({
-          vendor_id: vendorId,
-          quickbooks_vendor_id: existingQBVendor.Id,
-          sync_status: "synced",
-          sync_direction: "export",
-          last_synced_at: new Date().toISOString(),
-        });
-        
-        return existingQBVendor.Id;
-      }
-    }
-    throw createError;
-  }
-}
+// getOrCreateQBVendor REMOVED - replaced by getRequiredQBVendor from _shared/qbApiLogger.ts
 
 async function getExpenseAccountRef(accessToken: string, realmId: string) {
   // Find a suitable expense account for PO line items
@@ -318,8 +174,8 @@ serve(async (req) => {
 
     const { accessToken, realmId } = await getValidToken(supabase);
 
-    // Get or create vendor in QuickBooks
-    const qbVendorId = await getOrCreateQBVendor(supabase, po.vendor_id, accessToken, realmId);
+    // Lookup vendor in QuickBooks (must be pre-synced)
+    const qbVendorId = await getRequiredQBVendor(supabase, po.vendor_id);
 
     // Get expense account for line items
     const expenseAccountRef = await getExpenseAccountRef(accessToken, realmId);
