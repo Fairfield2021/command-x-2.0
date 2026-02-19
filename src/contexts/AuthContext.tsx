@@ -190,11 +190,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!isElectron() || deepLinkListenerSet.current) return;
     deepLinkListenerSet.current = true;
 
-    console.log("[Auth] Setting up Electron deep link listener");
-
     window.electronAPI?.onDeepLink(async (url: string) => {
-      console.log("[Auth] Deep link received:", url);
-
       try {
         // Parse the deep link URL: commandx://auth/callback#access_token=...&refresh_token=...
         const urlObj = new URL(url);
@@ -209,23 +205,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           hashParams.get("refresh_token") || searchParams.get("refresh_token");
 
         if (accessToken && refreshToken) {
-          console.log("[Auth] Setting session from deep link tokens");
           const { error } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: refreshToken,
           });
 
           if (error) {
-            console.error("[Auth] Failed to set session:", error);
+            console.error("[Auth] Failed to set session from deep link");
           } else {
-            console.log("[Auth] Session set successfully from deep link");
             navigate("/");
           }
-        } else {
-          console.warn("[Auth] Deep link missing tokens:", url);
         }
       } catch (err) {
-        console.error("[Auth] Error handling deep link:", err);
+        console.error("[Auth] Error handling deep link");
       }
     });
   }, [navigate]);
@@ -275,7 +267,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signIn = useCallback(
     async (email: string, password: string) => {
-      console.info(`[Auth] signIn: start | email: ${email} | origin: ${window.location.origin}`);
       try {
         const { data, error } = await retryOnNetworkError(
           () => supabase.auth.signInWithPassword({ email, password }),
@@ -284,17 +275,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         );
 
         if (error) {
-          console.error("[Auth] signIn error:", error.message);
           logAuthEvent("sign_in", email, undefined, false, error.message);
           return { error };
         }
 
-        console.info("[Auth] signIn success");
         logAuthEvent("sign_in", email, data.user?.id, true);
         navigate("/");
         return { error: null };
       } catch (error) {
-        console.error("[Auth] signIn exception:", error);
         logAuthEvent("sign_in", email, undefined, false, (error as Error).message);
         return { error: error as Error };
       }
@@ -313,22 +301,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signInWithGoogle = useCallback(async () => {
     try {
-      const electronDetected = isElectron();
-      console.log(
-        "[Auth] signInWithGoogle called, isElectron:",
-        electronDetected
-      );
-      console.log("[Auth] window.electronAPI:", window.electronAPI);
-      console.log("[Auth] userAgent:", navigator.userAgent);
-
       // For Electron: use Supabase OAuth directly (opens in external browser)
-      if (electronDetected) {
+      if (isElectron()) {
         // Use Supabase OAuth with redirect to desktop callback page
         const redirectTo = "https://fairfieldrg.com/auth/desktop-callback";
-        console.log(
-          "[Auth] Using Supabase OAuth for Electron, redirectTo:",
-          redirectTo
-        );
 
         const { data, error } = await supabase.auth.signInWithOAuth({
           provider: "google",
@@ -338,27 +314,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           },
         });
 
-        console.log("[Auth] Supabase OAuth response:", {
-          url: data?.url,
-          error,
-        });
-
         if (error) {
           return { error };
         }
 
         // Open the OAuth URL in the external browser
         if (data?.url) {
-          console.log(
-            "[Auth] Opening OAuth URL in external browser:",
-            data.url
-          );
           await window.electronAPI?.openExternal(data.url);
         }
         return { error: null };
       }
-
-      console.log("[Auth] Using Lovable OAuth for web");
       // For web: use normal Lovable OAuth flow
       const { error } = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: window.location.origin,

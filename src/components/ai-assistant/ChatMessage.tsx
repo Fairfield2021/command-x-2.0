@@ -33,13 +33,18 @@ export function ChatMessage({ message }: ChatMessageProps) {
     submitForm(data);
   };
 
-  // Simple markdown-like formatting
+  // Sanitized markdown-like formatting: escape HTML first, then apply safe tags
   const formatContent = (content: string) => {
-    // Convert **bold** to strong
-    let formatted = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    // Convert *italic* to em
+    // Escape all HTML special characters to prevent XSS before applying any formatting
+    const escaped = content
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;');
+    // Now apply controlled formatting on the escaped content
+    let formatted = escaped.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
     formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
-    // Convert line breaks
     formatted = formatted.replace(/\n/g, '<br/>');
     return formatted;
   };

@@ -298,48 +298,81 @@ export function PersonnelApplicantMap({ mapboxToken, isAdmin = false }: Personne
         const activeEntry = person as ActiveClockLocation;
         const isOnLunch = activeEntry.is_on_lunch;
         const staleness = getStalenessInfo(activeEntry.last_location_check_at);
-        
+
         // Color based on staleness and lunch status
         let bgColor = 'bg-green-500';
         let pingColor = 'bg-green-500/30';
         let showPing = true;
-        
+
         if (isOnLunch) {
           bgColor = 'bg-yellow-500';
           pingColor = 'bg-yellow-500/30';
         } else if (staleness.level === 'very-stale') {
           bgColor = 'bg-gray-400';
           pingColor = 'bg-gray-400/30';
-          showPing = false; // No pulse for very stale
+          showPing = false;
         } else if (staleness.level === 'stale') {
           bgColor = 'bg-amber-500';
           pingColor = 'bg-amber-500/30';
         }
-        
-        el.innerHTML = `
-          <div class="relative">
-            ${showPing ? `<div class="absolute inset-0 w-10 h-10 -ml-1 -mt-1 rounded-full ${pingColor} animate-ping"></div>` : ''}
-            <div class="relative w-8 h-8 rounded-full flex items-center justify-center shadow-lg cursor-pointer transition-transform hover:scale-110 ${bgColor} text-white border-2 border-white">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                <circle cx="12" cy="12" r="5"/>
-              </svg>
-            </div>
-          </div>
-        `;
+
+        // Build active marker using DOM API (no innerHTML)
+        const wrapper = document.createElement('div');
+        wrapper.className = 'relative';
+
+        if (showPing) {
+          const ping = document.createElement('div');
+          ping.className = `absolute inset-0 w-10 h-10 -ml-1 -mt-1 rounded-full ${pingColor} animate-ping`;
+          wrapper.appendChild(ping);
+        }
+
+        const dot = document.createElement('div');
+        dot.className = `relative w-8 h-8 rounded-full flex items-center justify-center shadow-lg cursor-pointer transition-transform hover:scale-110 ${bgColor} text-white border-2 border-white`;
+
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('width', '14');
+        svg.setAttribute('height', '14');
+        svg.setAttribute('viewBox', '0 0 24 24');
+        svg.setAttribute('fill', 'currentColor');
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', '12');
+        circle.setAttribute('cy', '12');
+        circle.setAttribute('r', '5');
+        svg.appendChild(circle);
+        dot.appendChild(svg);
+        wrapper.appendChild(dot);
+        el.appendChild(wrapper);
       } else {
-        // Regular markers for home addresses
-        el.innerHTML = `
-          <div class="w-8 h-8 rounded-full flex items-center justify-center shadow-lg cursor-pointer transition-transform hover:scale-110 ${
-            person.type === 'personnel' 
-              ? 'bg-primary text-primary-foreground' 
-              : 'bg-amber-500 text-white'
-          }">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
-              <circle cx="12" cy="7" r="4"/>
-            </svg>
-          </div>
-        `;
+        // Build home-address marker using DOM API (no innerHTML)
+        const markerDiv = document.createElement('div');
+        markerDiv.className = `w-8 h-8 rounded-full flex items-center justify-center shadow-lg cursor-pointer transition-transform hover:scale-110 ${
+          person.type === 'personnel'
+            ? 'bg-primary text-primary-foreground'
+            : 'bg-amber-500 text-white'
+        }`;
+
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('width', '16');
+        svg.setAttribute('height', '16');
+        svg.setAttribute('viewBox', '0 0 24 24');
+        svg.setAttribute('fill', 'none');
+        svg.setAttribute('stroke', 'currentColor');
+        svg.setAttribute('stroke-width', '2');
+        svg.setAttribute('stroke-linecap', 'round');
+        svg.setAttribute('stroke-linejoin', 'round');
+
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', 'M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2');
+        svg.appendChild(path);
+
+        const personCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        personCircle.setAttribute('cx', '12');
+        personCircle.setAttribute('cy', '7');
+        personCircle.setAttribute('r', '4');
+        svg.appendChild(personCircle);
+
+        markerDiv.appendChild(svg);
+        el.appendChild(markerDiv);
       }
 
       el.addEventListener('click', () => {
