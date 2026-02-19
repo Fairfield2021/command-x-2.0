@@ -1,90 +1,125 @@
 
 
-# Step 1: Repository and Environment Security Lockdown
+# Step 2: RBAC and RLS Hardening
 
-## Summary
+## Current State Analysis
 
-This plan hardens the project's environment security by updating `.gitignore`, adding a `.env.example` template, and documenting the setup. The client-side code is already clean (no service-role keys in the `src/` directory), and edge functions correctly use `SUPABASE_SERVICE_ROLE_KEY` server-side only.
+The project already has a well-established RBAC system:
 
-## What's Already Secure
+- **`user_roles`** table with `app_role` enum: `admin`, `manager`, `user`, `personnel`, `vendor`, `accounting`
+- **`user_permissions`** table with 25 modules and granular `can_view/can_add/can_edit/can_delete` flags
+- **`project_assignments`** table linking users to projects (with `project_role` column)
+- **`has_role()`** and **`has_permission()`** security definer functions already exist
+- **RLS is enabled on all tables** (100% coverage)
+- Existing RLS policies use `has_role()` properly to avoid recursion
 
-- The Supabase client (`src/integrations/supabase/client.ts`) only uses the anon key -- no service-role keys are exposed to the browser.
-- All 77 edge functions that use `SUPABASE_SERVICE_ROLE_KEY` do so server-side (Deno runtime), which is the correct pattern.
+**Creating new `departments`, `roles`, `permissions`, `role_permissions` tables would duplicate the existing system and risk conflicts.** Instead, this plan hardens the existing RBAC with the security gaps identified below.
 
-## What Needs Fixing
+## Security Gaps Found
 
-### 1. Update `.gitignore` to block sensitive files
+### Gap 1: Regular users (`user` role) can see ALL projects
+The policy `Staff can view all projects` grants SELECT to anyone with `admin`, `manager`, OR `user` role -- meaning every regular user sees every project regardless of assignment.
 
-The current `.gitignore` is missing rules for `.env`, keystores, and mobile platform secrets. We'll add:
+### Gap 2: Financial tables have no project-scoping for regular users
+Invoices, estimates, purchase orders, change orders, and vendor bills let any `user` role view ALL records. There is no restriction to assigned projects.
+
+### Gap 3: Several tables use overly permissive `qual: true`
+Tables like `project_documents`, `project_task_orders`, `po_addendums`, and `expense_categories` have SELECT policies with `qual: true` (anyone authenticated can see everything).
+
+### Gap 4: Accounting role is missing from financial RLS policies
+The `accounting` role should have access to financial tables but is not referenced in most RLS policies.
+
+### Gap 5: No `is_assigned_to_project()` helper function
+Project-scoped access checks are currently done ad-hoc. A reusable security definer function would simplify and secure all project-scoped policies.
+
+## What Will Change
+
+### 1. New Database Function: `is_assigned_to_project()`
+
+A `SECURITY DEFINER` function that checks if a user is assigned to a specific project via the `project_assignments` table.
 
 ```text
-# Environment files
-.env
-.env.local
-.env.*.local
-.env.production
-.env.development
-
-# Secrets and keys
-*.keystore
-*.jks
-android/local.properties
-ios/App/GoogleService-Info.plist
+is_assigned_to_project(user_id, project_id) -> boolean
 ```
 
-Note: The `.env` file in this project is auto-managed by Lovable Cloud and cannot be deleted. Adding it to `.gitignore` prevents it from being committed if the project is pushed to GitHub.
+### 2. Replace Overly Permissive Projects Policy
 
-### 2. Create `.env.example`
+**Drop**: `Staff can view all projects` (gives all users access to everything)
 
-A safe template file documenting what environment variables are needed, with placeholder values only:
+**Add**: `Users can view assigned projects` -- restricts `user` role to only projects in `project_assignments`.
 
-```text
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=your-anon-key-here
-VITE_SUPABASE_PROJECT_ID=your-project-id
-VITE_BUILD_TIMESTAMP=auto-generated
-```
+Admin, manager, and accounting roles retain full access.
 
-### 3. Add `verify_jwt = false` to `supabase/config.toml` for public endpoints
+### 3. Harden Financial Table Policies
 
-Currently `config.toml` only has the project ID. We need to add JWT verification settings for webhook/public endpoints that must accept unauthenticated requests (e.g., `quickbooks-webhook`, `twilio-webhook`, vendor onboarding acceptance). All other functions will use the default (JWT required) or validate in code.
+For `invoices`, `estimates`, `purchase_orders`, `change_orders`, and `vendor_bills`:
 
-### 4. Update `README.md`
+- **Drop** the existing `Staff can view` policies that grant blanket access to `user` role
+- **Add** new policies that:
+  - Admin/manager/accounting: full view access
+  - `user` role: can only view records linked to their assigned projects
 
-Add a section documenting required environment variables and the secrets needed in Lovable Cloud for edge functions.
+### 4. Harden Operational Table Policies
 
-## Out of Scope (Cannot Be Done Here)
+For `project_documents`, `project_task_orders`:
 
-- **Git history cleaning** (removing `.env` from past commits) -- this requires running `git filter-branch` or BFG locally, not through Lovable's editor.
-- **GitHub branch protection rules** -- these must be configured in GitHub's repository settings UI.
-- Both are documented in the README for the team to complete manually.
+- **Drop** `Authenticated users can view` (qual: true) policies
+- **Add** policies scoped to admin/manager OR project assignment
+
+### 5. Add Accounting Role to Financial Policies
+
+Update ALL/manage policies on financial tables to include `accounting` role alongside `admin` and `manager`.
+
+### 6. Add Performance Indexes
+
+Add indexes on columns used in RLS policy subqueries to prevent performance degradation.
+
+## Tables Affected
+
+| Table | Current Issue | Fix |
+|-------|--------------|-----|
+| `projects` | `user` role sees all | Scope to assignments |
+| `invoices` | `user` role sees all | Scope to project assignments |
+| `estimates` | `user` role sees all | Scope to project assignments |
+| `purchase_orders` | `user` role sees all | Scope to project assignments |
+| `change_orders` | `user` role sees all | Scope to project assignments |
+| `vendor_bills` | `user` role sees all | Scope to project assignments |
+| `project_documents` | `qual: true` (anyone) | Scope to admin/manager or assignments |
+| `project_task_orders` | `qual: true` (anyone) | Scope to admin/manager or assignments |
+| `po_addendums` | `qual: true` (anyone) | Scope to admin/manager or assignments |
+
+## What Will NOT Change
+
+- The existing `user_roles` and `user_permissions` tables (already correct architecture)
+- The existing `has_role()` and `has_permission()` functions
+- The `app_role` enum (already has all needed roles)
+- The `project_assignments` table structure
+- Admin/manager full-access policies (these stay as-is)
+- Vendor and personnel portal access patterns
 
 ## Technical Details
 
-### Files Modified
+### Migration SQL (Single File)
 
-| File | Change |
-|------|--------|
-| `.gitignore` | Add env, keystore, and secrets rules |
-| `supabase/config.toml` | Add `verify_jwt = false` for public webhook functions |
+The migration will:
 
-### Files Created
+1. Create `is_assigned_to_project()` security definer function
+2. Drop 9 overly permissive policies
+3. Create 12 replacement policies with proper scoping
+4. Add accounting role to 6 financial management policies
+5. Add 2 performance indexes on `project_assignments(user_id)` and `project_assignments(project_id)`
 
-| File | Purpose |
-|------|---------|
-| `.env.example` | Safe placeholder template for environment variables |
-| `CONTRIBUTING.md` | PR workflow and branch protection documentation |
+### Frontend Code Changes
 
-### Edge Functions Requiring `verify_jwt = false`
+**None required.** The existing `usePermissionCheck` hook and `useUserRole` hook already handle the client-side permission logic correctly. RLS changes are transparent to the frontend -- queries will simply return fewer rows for unprivileged users.
 
-These functions accept external webhooks or unauthenticated public form submissions:
+### Rollback Strategy
 
-- `quickbooks-webhook` (Intuit webhook callbacks)
-- `twilio-webhook` (Twilio SMS callbacks)
-- `accept-vendor-invitation` (public vendor onboarding)
-- `accept-portal-invitation` (public portal access)
-- `get-estimate-for-approval` (public estimate approval links)
-- `process-co-signature` (public change order signatures)
+Each policy change is paired with a comment containing the original policy definition, enabling manual rollback if needed.
 
-All other functions keep JWT validation (either default or in-code).
+### Risk Assessment
+
+- **Low risk**: Admin and manager access is unchanged
+- **Medium risk**: Users with `user` role who previously saw all projects will now only see assigned ones. If project assignments are missing, those users will see nothing until assigned.
+- **Mitigation**: Before applying, we can query how many users have `user` role and whether they have project assignments to estimate impact.
 
