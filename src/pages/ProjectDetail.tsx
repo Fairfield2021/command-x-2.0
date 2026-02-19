@@ -14,6 +14,8 @@ import { usePurchaseOrders } from "@/integrations/supabase/hooks/usePurchaseOrde
 import { useVendorBills } from "@/integrations/supabase/hooks/useVendorBills";
 import { useExpensesByProject } from "@/integrations/supabase/hooks/useExpenseReports";
 import { useProjectTimeEntryCosts } from "@/integrations/supabase/hooks/useProjectLaborExpenses";
+import { useAccountingCutover } from "@/hooks/useAccountingCutover";
+import { useProjectSubledgerTotals } from "@/integrations/supabase/hooks/useProjectSubledgerTotals";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -63,6 +65,8 @@ const ProjectDetail = () => {
   const { data: projectVendorBills } = useVendorBills({ project_id: id });
   const { data: projectExpenses } = useExpensesByProject(id);
   const { data: timeEntryCosts } = useProjectTimeEntryCosts(id);
+  const { cutoverDate, hasCutover, isLegacy } = useAccountingCutover();
+  const { data: subledgerTotals } = useProjectSubledgerTotals(id, cutoverDate);
   
   // Fetch supervision cost breakdown
   const { data: supervisionBreakdown } = useQuery({
@@ -213,6 +217,16 @@ const ProjectDetail = () => {
     const netProfit = totalContractValue - totalAllCosts;
     const netMargin = totalContractValue > 0 ? (netProfit / totalContractValue) * 100 : 0;
 
+    // Determine data source
+    let dataSource: 'legacy' | 'current' | 'mixed' = 'current';
+    if (hasCutover && project) {
+      const projectDate = project.created_at || project.start_date;
+      if (projectDate && isLegacy(projectDate)) {
+        const hasSubledgerData = (subledgerTotals?.recognizedRevenue || 0) > 0 || (subledgerTotals?.actualCosts || 0) > 0;
+        dataSource = hasSubledgerData ? 'mixed' : 'legacy';
+      }
+    }
+
     return {
       originalContractValue,
       changeOrdersTotal,
@@ -231,8 +245,12 @@ const ProjectDetail = () => {
       netMargin,
       supervisionLaborCost: supervisionBreakdown?.supervisionCost || 0,
       fieldLaborCost: supervisionBreakdown?.fieldCost || 0,
+      recognizedRevenue: subledgerTotals?.recognizedRevenue || 0,
+      actualCosts: subledgerTotals?.actualCosts || 0,
+      committedCosts: totalPOValue,
+      dataSource,
     };
-  }, [projectJobOrders, changeOrders, tmTickets, projectPurchaseOrders, projectInvoices, projectVendorBills, projectExpenses, timeEntryCosts, supervisionBreakdown]);
+  }, [projectJobOrders, changeOrders, tmTickets, projectPurchaseOrders, projectInvoices, projectVendorBills, projectExpenses, timeEntryCosts, supervisionBreakdown, hasCutover, project, isLegacy, subledgerTotals]);
 
   // Calculate overall project completion
   const overallCompletion = useMemo(() => {
