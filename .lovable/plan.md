@@ -1,125 +1,150 @@
 
 
-# Step 2: RBAC and RLS Hardening
+# Step 3: Accounting Period Guardrails
 
-## Current State Analysis
+## Current State
 
-The project already has a well-established RBAC system:
-
-- **`user_roles`** table with `app_role` enum: `admin`, `manager`, `user`, `personnel`, `vendor`, `accounting`
-- **`user_permissions`** table with 25 modules and granular `can_view/can_add/can_edit/can_delete` flags
-- **`project_assignments`** table linking users to projects (with `project_role` column)
-- **`has_role()`** and **`has_permission()`** security definer functions already exist
-- **RLS is enabled on all tables** (100% coverage)
-- Existing RLS policies use `has_role()` properly to avoid recursion
-
-**Creating new `departments`, `roles`, `permissions`, `role_permissions` tables would duplicate the existing system and risk conflicts.** Instead, this plan hardens the existing RBAC with the security gaps identified below.
-
-## Security Gaps Found
-
-### Gap 1: Regular users (`user` role) can see ALL projects
-The policy `Staff can view all projects` grants SELECT to anyone with `admin`, `manager`, OR `user` role -- meaning every regular user sees every project regardless of assignment.
-
-### Gap 2: Financial tables have no project-scoping for regular users
-Invoices, estimates, purchase orders, change orders, and vendor bills let any `user` role view ALL records. There is no restriction to assigned projects.
-
-### Gap 3: Several tables use overly permissive `qual: true`
-Tables like `project_documents`, `project_task_orders`, `po_addendums`, and `expense_categories` have SELECT policies with `qual: true` (anyone authenticated can see everything).
-
-### Gap 4: Accounting role is missing from financial RLS policies
-The `accounting` role should have access to financial tables but is not referenced in most RLS policies.
-
-### Gap 5: No `is_assigned_to_project()` helper function
-Project-scoped access checks are currently done ad-hoc. A reusable security definer function would simplify and secure all project-scoped policies.
+- **`company_settings`** has `locked_period_date` (DATE) and `locked_period_enabled` (BOOLEAN) -- already functional
+- **`locked_period_violations`** table exists with RLS enabled (admin-only SELECT, open INSERT for logging)
+- **`validateLockedPeriod()`** server-side function exists and is used by 6 edge functions (create/update for invoice, estimate, bill)
+- **`useLockedPeriod`** client-side hook exists but is only used in `VendorBillForm.tsx`
+- **No `accounting_periods` table** exists yet
+- **Critical flaw**: The validator **fails open** -- if settings can't be read, transactions are allowed through
 
 ## What Will Change
 
-### 1. New Database Function: `is_assigned_to_project()`
+### 1. Database Migration
 
-A `SECURITY DEFINER` function that checks if a user is assigned to a specific project via the `project_assignments` table.
+**New table: `accounting_periods`**
 
-```text
-is_assigned_to_project(user_id, project_id) -> boolean
-```
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | UUID | Primary key |
+| `period_name` | TEXT | e.g., "January 2025" |
+| `start_date` | DATE | Period start |
+| `end_date` | DATE | Period end |
+| `is_locked` | BOOLEAN | Default false |
+| `locked_at` | TIMESTAMPTZ | When locked |
+| `locked_by` | UUID | References auth.users |
+| `fiscal_year` | INTEGER | For reporting |
+| `created_at` | TIMESTAMPTZ | Default now() |
+| `updated_at` | TIMESTAMPTZ | Default now() |
 
-### 2. Replace Overly Permissive Projects Policy
+RLS policies:
+- SELECT: admin, manager, accounting roles can view
+- INSERT/UPDATE/DELETE: admin only
 
-**Drop**: `Staff can view all projects` (gives all users access to everything)
+**New table: `accounting_period_audit_log`**
 
-**Add**: `Users can view assigned projects` -- restricts `user` role to only projects in `project_assignments`.
+Tracks lock/unlock actions for audit trail.
 
-Admin, manager, and accounting roles retain full access.
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | UUID | Primary key |
+| `period_id` | UUID | References accounting_periods |
+| `action` | TEXT | 'lock' or 'unlock' |
+| `performed_by` | UUID | References auth.users |
+| `performed_at` | TIMESTAMPTZ | Default now() |
+| `details` | JSONB | Additional context |
 
-### 3. Harden Financial Table Policies
+RLS: admin-only SELECT, open INSERT for system logging.
 
-For `invoices`, `estimates`, `purchase_orders`, `change_orders`, and `vendor_bills`:
+**New trigger function: `validate_transaction_date_not_locked()`**
 
-- **Drop** the existing `Staff can view` policies that grant blanket access to `user` role
-- **Add** new policies that:
-  - Admin/manager/accounting: full view access
-  - `user` role: can only view records linked to their assigned projects
+A `BEFORE INSERT OR UPDATE` trigger on financial tables (`invoices`, `estimates`, `vendor_bills`, `purchase_orders`, `change_orders`) that:
+- Checks if the transaction date falls within any locked `accounting_periods` row
+- Checks if the date is on or before `company_settings.locked_period_date`
+- Raises an exception if either check fails (fail-closed)
+- Logs the violation to `locked_period_violations`
 
-### 4. Harden Operational Table Policies
+### 2. Server-Side Validator: Fail-Closed
 
-For `project_documents`, `project_task_orders`:
+Update `supabase/functions/_shared/lockedPeriodValidator.ts`:
 
-- **Drop** `Authenticated users can view` (qual: true) policies
-- **Add** policies scoped to admin/manager OR project assignment
+- **Change fail-open to fail-closed**: If `company_settings` cannot be read, return `{ allowed: false }` with a message explaining the system cannot verify period status
+- **Add `accounting_periods` check**: Query for any locked period where the transaction date falls between `start_date` and `end_date`
+- **Return the specific locked period name** in the error message for clarity
+- All 6 existing edge function callers automatically get the enhanced validation with no changes needed
 
-### 5. Add Accounting Role to Financial Policies
+### 3. Client-Side Hook Enhancement
 
-Update ALL/manage policies on financial tables to include `accounting` role alongside `admin` and `manager`.
+Update `src/hooks/useLockedPeriod.ts`:
 
-### 6. Add Performance Indexes
+- Fetch `accounting_periods` (locked ones) alongside `company_settings`
+- `isDateLocked()` checks both the global cutoff date AND whether the date falls in any locked accounting period
+- `validateDate()` returns which specific period is locked in the error message
+- `minAllowedDate` remains based on `company_settings.locked_period_date` (global cutoff)
 
-Add indexes on columns used in RLS policy subqueries to prevent performance degradation.
+### 4. UI Integration
 
-## Tables Affected
+Integrate `useLockedPeriod` into financial forms that currently lack it:
 
-| Table | Current Issue | Fix |
-|-------|--------------|-----|
-| `projects` | `user` role sees all | Scope to assignments |
-| `invoices` | `user` role sees all | Scope to project assignments |
-| `estimates` | `user` role sees all | Scope to project assignments |
-| `purchase_orders` | `user` role sees all | Scope to project assignments |
-| `change_orders` | `user` role sees all | Scope to project assignments |
-| `vendor_bills` | `user` role sees all | Scope to project assignments |
-| `project_documents` | `qual: true` (anyone) | Scope to admin/manager or assignments |
-| `project_task_orders` | `qual: true` (anyone) | Scope to admin/manager or assignments |
-| `po_addendums` | `qual: true` (anyone) | Scope to admin/manager or assignments |
+| Form Component | Currently Uses Hook? |
+|---------------|---------------------|
+| `VendorBillForm.tsx` | Yes |
+| `EstimateForm.tsx` | No -- will add |
+| Invoice creation (in `useProjectInvoice.ts`) | No -- will add |
+| Purchase order forms | No -- will add |
+| Change order forms | No -- will add |
+
+For each form:
+- Disable date picker for locked dates using `minAllowedDate` and `isDateLocked`
+- Show validation error if a locked date is submitted
+- Add visual warning text near date fields when locked periods are active
+
+### 5. Admin Period Management
+
+No new pages are created in this step. The `accounting_periods` table will be manageable through the existing company settings area. The data structure is in place for a future admin UI.
+
+## Files Modified
+
+| File | Change |
+|------|--------|
+| `supabase/functions/_shared/lockedPeriodValidator.ts` | Fail-closed + accounting_periods check |
+| `src/hooks/useLockedPeriod.ts` | Add accounting_periods query + enhanced validation |
+| `src/components/estimates/EstimateForm.tsx` | Add useLockedPeriod integration |
+| `src/integrations/supabase/hooks/useProjectInvoice.ts` | Add locked period validation before insert |
+
+## Files Created
+
+| File | Purpose |
+|------|---------|
+| Migration SQL | accounting_periods table, audit log, trigger function |
 
 ## What Will NOT Change
 
-- The existing `user_roles` and `user_permissions` tables (already correct architecture)
-- The existing `has_role()` and `has_permission()` functions
-- The `app_role` enum (already has all needed roles)
-- The `project_assignments` table structure
-- Admin/manager full-access policies (these stay as-is)
-- Vendor and personnel portal access patterns
+- The 6 edge functions that call `validateLockedPeriod()` -- they get enhanced validation automatically through the shared module
+- The `locked_period_violations` table structure (already correct)
+- The `company_settings` table (existing `locked_period_date` and `locked_period_enabled` columns are preserved)
+- The `VendorBillForm.tsx` integration (already works, just gets enhanced behavior from the updated hook)
+
+## Risk Assessment
+
+- **Low risk**: New table + trigger additions are non-destructive
+- **Medium risk**: Fail-closed change means if the database is unreachable, financial edge functions will block rather than allow. This is the correct behavior for accounting integrity per the system's core rules ("Never fail open if settings cannot be read")
+- **Mitigation**: The trigger function uses `EXCEPTION` which rolls back the transaction cleanly, so no partial writes occur
 
 ## Technical Details
 
-### Migration SQL (Single File)
+### Trigger Function Logic (Pseudocode)
 
-The migration will:
+```text
+BEFORE INSERT OR UPDATE on financial tables:
+  1. Check company_settings.locked_period_enabled
+  2. If enabled AND txn_date <= locked_period_date -> RAISE EXCEPTION
+  3. Check accounting_periods for any row where is_locked = true
+     AND txn_date BETWEEN start_date AND end_date -> RAISE EXCEPTION
+  4. Log violation to locked_period_violations
+  5. Otherwise allow
+```
 
-1. Create `is_assigned_to_project()` security definer function
-2. Drop 9 overly permissive policies
-3. Create 12 replacement policies with proper scoping
-4. Add accounting role to 6 financial management policies
-5. Add 2 performance indexes on `project_assignments(user_id)` and `project_assignments(project_id)`
+### Edge Function Validator Changes
 
-### Frontend Code Changes
-
-**None required.** The existing `usePermissionCheck` hook and `useUserRole` hook already handle the client-side permission logic correctly. RLS changes are transparent to the frontend -- queries will simply return fewer rows for unprivileged users.
-
-### Rollback Strategy
-
-Each policy change is paired with a comment containing the original policy definition, enabling manual rollback if needed.
-
-### Risk Assessment
-
-- **Low risk**: Admin and manager access is unchanged
-- **Medium risk**: Users with `user` role who previously saw all projects will now only see assigned ones. If project assignments are missing, those users will see nothing until assigned.
-- **Mitigation**: Before applying, we can query how many users have `user` role and whether they have project assignments to estimate impact.
+```text
+validateLockedPeriod():
+  IF cannot read company_settings -> return { allowed: false }  // FAIL CLOSED
+  IF locked_period_enabled AND txn_date <= locked_period_date -> block
+  IF any accounting_period is locked AND txn_date in range -> block
+  OTHERWISE -> allow
+```
 
