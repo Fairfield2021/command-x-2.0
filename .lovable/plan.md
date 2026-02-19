@@ -1,150 +1,182 @@
 
 
-# Step 3: Accounting Period Guardrails
+# Step 4: Accounting Subledger System
+
+## Summary
+
+Create the foundational double-entry bookkeeping subledger that serves as the authoritative source for all financial data. This system enforces immutability on posted transactions (corrections via reversals only), validates debit/credit balance, and provides QuickBooks sync mapping with a full audit trail.
 
 ## Current State
 
-- **`company_settings`** has `locked_period_date` (DATE) and `locked_period_enabled` (BOOLEAN) -- already functional
-- **`locked_period_violations`** table exists with RLS enabled (admin-only SELECT, open INSERT for logging)
-- **`validateLockedPeriod()`** server-side function exists and is used by 6 edge functions (create/update for invoice, estimate, bill)
-- **`useLockedPeriod`** client-side hook exists but is only used in `VendorBillForm.tsx`
-- **No `accounting_periods` table** exists yet
-- **Critical flaw**: The validator **fails open** -- if settings can't be read, transactions are allowed through
+- **No subledger exists** -- financial data lives directly in operational tables (`invoices`, `vendor_bills`, etc.)
+- Two QuickBooks sync log tables already exist (`quickbooks_sync_log` and `quickbooks_sync_logs`) but are operational logs, not accounting sync maps
+- `expense_categories` exists but lacks account codes needed for a chart of accounts -- the new `accounting_lines` table will store `account_code` and `account_name` denormalized for immutability
+- The `accounting_periods` table and locked period triggers from Step 3 are already in place
 
-## What Will Change
+## What Will Be Created
 
-### 1. Database Migration
+### 1. `accounting_transactions` table (append-only ledger)
 
-**New table: `accounting_periods`**
+The core transaction header table. Once posted, rows cannot be updated or deleted -- corrections are made via reversal transactions only.
 
 | Column | Type | Notes |
 |--------|------|-------|
 | `id` | UUID | Primary key |
-| `period_name` | TEXT | e.g., "January 2025" |
-| `start_date` | DATE | Period start |
-| `end_date` | DATE | Period end |
-| `is_locked` | BOOLEAN | Default false |
-| `locked_at` | TIMESTAMPTZ | When locked |
-| `locked_by` | UUID | References auth.users |
-| `fiscal_year` | INTEGER | For reporting |
+| `transaction_date` | DATE | Required |
+| `transaction_type` | TEXT | 'invoice', 'bill', 'payment', 'journal_entry', 'payroll' |
+| `reference_type` | TEXT | 'invoice', 'vendor_bill', 'personnel_payment', etc. |
+| `reference_id` | UUID | Source document ID (nullable) |
+| `reference_number` | TEXT | Display number (e.g., INV-2500001) |
+| `description` | TEXT | Transaction description |
+| `total_amount` | NUMERIC | Total transaction amount (absolute) |
+| `status` | TEXT | 'draft', 'posted', 'reversed' |
+| `posted_at` | TIMESTAMPTZ | When posted |
+| `posted_by` | UUID | Who posted |
+| `reversed_at` | TIMESTAMPTZ | When reversed |
+| `reversed_by` | UUID | Who reversed |
+| `reversal_transaction_id` | UUID | Self-reference to reversal |
+| `created_at` | TIMESTAMPTZ | Default now() |
+| `created_by` | UUID | Creator |
+
+Indexes on: `transaction_date`, `status`, `reference_type + reference_id`, `reversal_transaction_id`.
+
+### 2. `accounting_lines` table (debit/credit entries)
+
+Double-entry line items. Each line is either a debit or a credit, never both.
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | UUID | Primary key |
+| `transaction_id` | UUID | FK to accounting_transactions (CASCADE) |
+| `line_number` | INTEGER | Ordering |
+| `account_id` | UUID | FK to expense_categories (nullable) |
+| `account_code` | TEXT | Denormalized for immutability |
+| `account_name` | TEXT | Denormalized for immutability |
+| `debit_amount` | NUMERIC(15,2) | Default 0 |
+| `credit_amount` | NUMERIC(15,2) | Default 0 |
+| `project_id` | UUID | FK to projects (nullable) |
+| `vendor_id` | UUID | FK to vendors (nullable) |
+| `customer_id` | UUID | FK to customers (nullable) |
+| `description` | TEXT | Line description |
+| `created_at` | TIMESTAMPTZ | Default now() |
+
+CHECK constraint: exactly one of debit or credit must be positive, the other zero.
+
+Indexes on: `transaction_id`, `account_id`, `project_id`.
+
+### 3. `accounting_sync_map` table
+
+Maps subledger transactions to QuickBooks entities. Ensures no duplicate syncs via UNIQUE constraints.
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | UUID | Primary key |
+| `transaction_id` | UUID | FK to accounting_transactions (UNIQUE) |
+| `quickbooks_entity_type` | TEXT | 'Invoice', 'Bill', 'Payment', 'JournalEntry' |
+| `quickbooks_entity_id` | TEXT | QuickBooks ID (UNIQUE) |
+| `sync_status` | TEXT | 'pending', 'synced', 'error' |
+| `last_synced_at` | TIMESTAMPTZ | Last sync time |
+| `error_message` | TEXT | Last error (nullable) |
 | `created_at` | TIMESTAMPTZ | Default now() |
 | `updated_at` | TIMESTAMPTZ | Default now() |
 
-RLS policies:
-- SELECT: admin, manager, accounting roles can view
-- INSERT/UPDATE/DELETE: admin only
+UNIQUE on `transaction_id` (one QB entity per transaction).
+UNIQUE on `quickbooks_entity_type + quickbooks_entity_id` (no duplicate QB records).
 
-**New table: `accounting_period_audit_log`**
+### 4. `accounting_sync_audit_log` table (immutable)
 
-Tracks lock/unlock actions for audit trail.
+Every sync attempt is logged for audit trail. Append-only.
 
 | Column | Type | Notes |
 |--------|------|-------|
 | `id` | UUID | Primary key |
-| `period_id` | UUID | References accounting_periods |
-| `action` | TEXT | 'lock' or 'unlock' |
-| `performed_by` | UUID | References auth.users |
-| `performed_at` | TIMESTAMPTZ | Default now() |
-| `details` | JSONB | Additional context |
+| `sync_map_id` | UUID | FK to accounting_sync_map |
+| `sync_direction` | TEXT | 'to_quickbooks', 'from_quickbooks' |
+| `sync_status` | TEXT | 'success', 'error' |
+| `request_payload` | JSONB | What was sent |
+| `response_payload` | JSONB | What was returned |
+| `error_message` | TEXT | Error details |
+| `synced_at` | TIMESTAMPTZ | Default now() |
+| `synced_by` | UUID | Who triggered the sync |
 
-RLS: admin-only SELECT, open INSERT for system logging.
+## Database Functions
 
-**New trigger function: `validate_transaction_date_not_locked()`**
+### `enforce_posted_transaction_immutability()` -- BEFORE UPDATE trigger
 
-A `BEFORE INSERT OR UPDATE` trigger on financial tables (`invoices`, `estimates`, `vendor_bills`, `purchase_orders`, `change_orders`) that:
-- Checks if the transaction date falls within any locked `accounting_periods` row
-- Checks if the date is on or before `company_settings.locked_period_date`
-- Raises an exception if either check fails (fail-closed)
-- Logs the violation to `locked_period_violations`
+Prevents any UPDATE on `accounting_transactions` rows where `status = 'posted'`, EXCEPT:
+- Setting `status` from 'posted' to 'reversed' (with `reversed_at`, `reversed_by`, `reversal_transaction_id`)
 
-### 2. Server-Side Validator: Fail-Closed
+This enforces the "corrections via reversals only" rule at the database level.
 
-Update `supabase/functions/_shared/lockedPeriodValidator.ts`:
+### `validate_transaction_balance()` -- trigger on status change to 'posted'
 
-- **Change fail-open to fail-closed**: If `company_settings` cannot be read, return `{ allowed: false }` with a message explaining the system cannot verify period status
-- **Add `accounting_periods` check**: Query for any locked period where the transaction date falls between `start_date` and `end_date`
-- **Return the specific locked period name** in the error message for clarity
-- All 6 existing edge function callers automatically get the enhanced validation with no changes needed
+Before a transaction can be posted, validates that the sum of all `debit_amount` values equals the sum of all `credit_amount` values across its `accounting_lines`. If they don't balance, raises an exception.
 
-### 3. Client-Side Hook Enhancement
+### `prevent_posted_lines_modification()` -- BEFORE UPDATE/DELETE trigger on accounting_lines
 
-Update `src/hooks/useLockedPeriod.ts`:
+Prevents modification or deletion of lines belonging to a posted transaction.
 
-- Fetch `accounting_periods` (locked ones) alongside `company_settings`
-- `isDateLocked()` checks both the global cutoff date AND whether the date falls in any locked accounting period
-- `validateDate()` returns which specific period is locked in the error message
-- `minAllowedDate` remains based on `company_settings.locked_period_date` (global cutoff)
+## RLS Policies
 
-### 4. UI Integration
+| Table | Policy | Roles |
+|-------|--------|-------|
+| `accounting_transactions` | SELECT | admin, manager, accounting |
+| `accounting_transactions` | INSERT | admin, accounting |
+| `accounting_transactions` | UPDATE (draft only) | admin, accounting |
+| `accounting_lines` | SELECT | admin, manager, accounting |
+| `accounting_lines` | INSERT | admin, accounting |
+| `accounting_sync_map` | SELECT | admin, manager, accounting |
+| `accounting_sync_map` | ALL | admin |
+| `accounting_sync_audit_log` | SELECT | admin, accounting |
+| `accounting_sync_audit_log` | INSERT | admin, accounting (for system logging) |
 
-Integrate `useLockedPeriod` into financial forms that currently lack it:
+No DELETE policies on any table -- accounting data is never deleted.
 
-| Form Component | Currently Uses Hook? |
-|---------------|---------------------|
-| `VendorBillForm.tsx` | Yes |
-| `EstimateForm.tsx` | No -- will add |
-| Invoice creation (in `useProjectInvoice.ts`) | No -- will add |
-| Purchase order forms | No -- will add |
-| Change order forms | No -- will add |
+## What Will NOT Change
 
-For each form:
-- Disable date picker for locked dates using `minAllowedDate` and `isDateLocked`
-- Show validation error if a locked date is submitted
-- Add visual warning text near date fields when locked periods are active
-
-### 5. Admin Period Management
-
-No new pages are created in this step. The `accounting_periods` table will be manageable through the existing company settings area. The data structure is in place for a future admin UI.
-
-## Files Modified
-
-| File | Change |
-|------|--------|
-| `supabase/functions/_shared/lockedPeriodValidator.ts` | Fail-closed + accounting_periods check |
-| `src/hooks/useLockedPeriod.ts` | Add accounting_periods query + enhanced validation |
-| `src/components/estimates/EstimateForm.tsx` | Add useLockedPeriod integration |
-| `src/integrations/supabase/hooks/useProjectInvoice.ts` | Add locked period validation before insert |
+- Existing operational tables (`invoices`, `vendor_bills`, `purchase_orders`, etc.) remain unchanged
+- Existing `quickbooks_sync_log` and `quickbooks_sync_logs` tables are preserved (they serve operational logging)
+- No edge functions are modified in this step -- the subledger is schema-only, ready for future integration
+- No frontend changes -- admin UI for the subledger will be a future step
 
 ## Files Created
 
 | File | Purpose |
 |------|---------|
-| Migration SQL | accounting_periods table, audit log, trigger function |
-
-## What Will NOT Change
-
-- The 6 edge functions that call `validateLockedPeriod()` -- they get enhanced validation automatically through the shared module
-- The `locked_period_violations` table structure (already correct)
-- The `company_settings` table (existing `locked_period_date` and `locked_period_enabled` columns are preserved)
-- The `VendorBillForm.tsx` integration (already works, just gets enhanced behavior from the updated hook)
+| Migration SQL | All 4 tables, 3 trigger functions, RLS policies, indexes |
 
 ## Risk Assessment
 
-- **Low risk**: New table + trigger additions are non-destructive
-- **Medium risk**: Fail-closed change means if the database is unreachable, financial edge functions will block rather than allow. This is the correct behavior for accounting integrity per the system's core rules ("Never fail open if settings cannot be read")
-- **Mitigation**: The trigger function uses `EXCEPTION` which rolls back the transaction cleanly, so no partial writes occur
+- **No risk to existing data**: All new tables, no modifications to existing schema
+- **Forward-compatible**: The subledger sits alongside operational tables. Future steps will wire invoice/bill creation to also create subledger entries
+- **Immutability enforced at DB level**: Even if application code has bugs, posted transactions cannot be corrupted
 
 ## Technical Details
 
-### Trigger Function Logic (Pseudocode)
+### Immutability Enforcement (Pseudocode)
 
 ```text
-BEFORE INSERT OR UPDATE on financial tables:
-  1. Check company_settings.locked_period_enabled
-  2. If enabled AND txn_date <= locked_period_date -> RAISE EXCEPTION
-  3. Check accounting_periods for any row where is_locked = true
-     AND txn_date BETWEEN start_date AND end_date -> RAISE EXCEPTION
-  4. Log violation to locked_period_violations
-  5. Otherwise allow
+BEFORE UPDATE on accounting_transactions:
+  IF OLD.status = 'posted' THEN
+    -- Only allow: status -> 'reversed' with reversal fields
+    IF NEW.status = 'reversed' 
+       AND NEW.reversed_at IS NOT NULL 
+       AND NEW.reversed_by IS NOT NULL
+       AND NEW.reversal_transaction_id IS NOT NULL THEN
+      ALLOW
+    ELSE
+      RAISE EXCEPTION 'Posted transactions are immutable'
+    END IF
+  END IF
 ```
 
-### Edge Function Validator Changes
+### Balance Validation (Pseudocode)
 
 ```text
-validateLockedPeriod():
-  IF cannot read company_settings -> return { allowed: false }  // FAIL CLOSED
-  IF locked_period_enabled AND txn_date <= locked_period_date -> block
-  IF any accounting_period is locked AND txn_date in range -> block
-  OTHERWISE -> allow
+BEFORE UPDATE on accounting_transactions (when status changes to 'posted'):
+  total_debits = SUM(debit_amount) FROM accounting_lines WHERE transaction_id = NEW.id
+  total_credits = SUM(credit_amount) FROM accounting_lines WHERE transaction_id = NEW.id
+  IF total_debits != total_credits OR total_debits = 0 THEN
+    RAISE EXCEPTION 'Transaction does not balance'
+  END IF
 ```
-
