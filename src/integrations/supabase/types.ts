@@ -1673,6 +1673,7 @@ export type Database = {
       }
       company_settings: {
         Row: {
+          accounting_cutover_date: string | null
           address: string | null
           city: string | null
           company_name: string
@@ -1698,6 +1699,7 @@ export type Database = {
           zip: string | null
         }
         Insert: {
+          accounting_cutover_date?: string | null
           address?: string | null
           city?: string | null
           company_name?: string
@@ -1723,6 +1725,7 @@ export type Database = {
           zip?: string | null
         }
         Update: {
+          accounting_cutover_date?: string | null
           address?: string | null
           city?: string | null
           company_name?: string

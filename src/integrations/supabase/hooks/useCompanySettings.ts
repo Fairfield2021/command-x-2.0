@@ -25,6 +25,8 @@ export interface CompanySettings {
   // Locked period fields
   locked_period_date: string | null;
   locked_period_enabled: boolean;
+  // Accounting cutover
+  accounting_cutover_date: string | null;
   created_at: string;
   updated_at: string;
 }
