@@ -14,6 +14,90 @@ export type Database = {
   }
   public: {
     Tables: {
+      accounting_lines: {
+        Row: {
+          account_code: string | null
+          account_id: string | null
+          account_name: string | null
+          created_at: string
+          credit_amount: number
+          customer_id: string | null
+          debit_amount: number
+          description: string | null
+          id: string
+          line_number: number
+          project_id: string | null
+          transaction_id: string
+          vendor_id: string | null
+        }
+        Insert: {
+          account_code?: string | null
+          account_id?: string | null
+          account_name?: string | null
+          created_at?: string
+          credit_amount?: number
+          customer_id?: string | null
+          debit_amount?: number
+          description?: string | null
+          id?: string
+          line_number?: number
+          project_id?: string | null
+          transaction_id: string
+          vendor_id?: string | null
+        }
+        Update: {
+          account_code?: string | null
+          account_id?: string | null
+          account_name?: string | null
+          created_at?: string
+          credit_amount?: number
+          customer_id?: string | null
+          debit_amount?: number
+          description?: string | null
+          id?: string
+          line_number?: number
+          project_id?: string | null
+          transaction_id?: string
+          vendor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accounting_lines_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "expense_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounting_lines_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounting_lines_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounting_lines_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounting_lines_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       accounting_period_audit_log: {
         Row: {
           action: string
@@ -87,6 +171,159 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      accounting_sync_audit_log: {
+        Row: {
+          error_message: string | null
+          id: string
+          request_payload: Json | null
+          response_payload: Json | null
+          sync_direction: string
+          sync_map_id: string | null
+          sync_status: string
+          synced_at: string
+          synced_by: string | null
+        }
+        Insert: {
+          error_message?: string | null
+          id?: string
+          request_payload?: Json | null
+          response_payload?: Json | null
+          sync_direction: string
+          sync_map_id?: string | null
+          sync_status: string
+          synced_at?: string
+          synced_by?: string | null
+        }
+        Update: {
+          error_message?: string | null
+          id?: string
+          request_payload?: Json | null
+          response_payload?: Json | null
+          sync_direction?: string
+          sync_map_id?: string | null
+          sync_status?: string
+          synced_at?: string
+          synced_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accounting_sync_audit_log_sync_map_id_fkey"
+            columns: ["sync_map_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_sync_map"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      accounting_sync_map: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          last_synced_at: string | null
+          quickbooks_entity_id: string
+          quickbooks_entity_type: string
+          sync_status: string
+          transaction_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          last_synced_at?: string | null
+          quickbooks_entity_id: string
+          quickbooks_entity_type: string
+          sync_status?: string
+          transaction_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          last_synced_at?: string | null
+          quickbooks_entity_id?: string
+          quickbooks_entity_type?: string
+          sync_status?: string
+          transaction_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accounting_sync_map_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: true
+            referencedRelation: "accounting_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      accounting_transactions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          posted_at: string | null
+          posted_by: string | null
+          reference_id: string | null
+          reference_number: string | null
+          reference_type: string | null
+          reversal_transaction_id: string | null
+          reversed_at: string | null
+          reversed_by: string | null
+          status: string
+          total_amount: number
+          transaction_date: string
+          transaction_type: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          posted_at?: string | null
+          posted_by?: string | null
+          reference_id?: string | null
+          reference_number?: string | null
+          reference_type?: string | null
+          reversal_transaction_id?: string | null
+          reversed_at?: string | null
+          reversed_by?: string | null
+          status?: string
+          total_amount?: number
+          transaction_date: string
+          transaction_type: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          posted_at?: string | null
+          posted_by?: string | null
+          reference_id?: string | null
+          reference_number?: string | null
+          reference_type?: string | null
+          reversal_transaction_id?: string | null
+          reversed_at?: string | null
+          reversed_by?: string | null
+          status?: string
+          total_amount?: number
+          transaction_date?: string
+          transaction_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accounting_transactions_reversal_transaction_id_fkey"
+            columns: ["reversal_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       activities: {
         Row: {
