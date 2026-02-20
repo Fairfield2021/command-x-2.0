@@ -33,15 +33,40 @@ export function ChatMessage({ message }: ChatMessageProps) {
     submitForm(data);
   };
 
-  // Simple markdown-like formatting
-  const formatContent = (content: string) => {
-    // Convert **bold** to strong
-    let formatted = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    // Convert *italic* to em
-    formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
-    // Convert line breaks
-    formatted = formatted.replace(/\n/g, '<br/>');
-    return formatted;
+  // Safe markdown-like rendering — no dangerouslySetInnerHTML
+  const renderContent = (content: string): React.ReactNode[] => {
+    // Split on **bold**, *italic*, and newlines, render as React elements
+    const parts: React.ReactNode[] = [];
+    // Combined pattern: **bold**, *italic*, newline
+    const pattern = /(\*\*.*?\*\*|\*.*?\*|\n)/g;
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+    let keyIdx = 0;
+
+    while ((match = pattern.exec(content)) !== null) {
+      // Push plain text before this match
+      if (match.index > lastIndex) {
+        parts.push(content.slice(lastIndex, match.index));
+      }
+
+      const token = match[0];
+      if (token === "\n") {
+        parts.push(<br key={`br-${keyIdx++}`} />);
+      } else if (token.startsWith("**")) {
+        parts.push(<strong key={`b-${keyIdx++}`}>{token.slice(2, -2)}</strong>);
+      } else if (token.startsWith("*")) {
+        parts.push(<em key={`em-${keyIdx++}`}>{token.slice(1, -1)}</em>);
+      }
+
+      lastIndex = match.index + token.length;
+    }
+
+    // Push any remaining plain text
+    if (lastIndex < content.length) {
+      parts.push(content.slice(lastIndex));
+    }
+
+    return parts;
   };
 
   return (
@@ -76,9 +101,10 @@ export function ChatMessage({ message }: ChatMessageProps) {
         )}
       >
         <div
-          className="text-sm leading-relaxed"
-          dangerouslySetInnerHTML={{ __html: formatContent(message.content) }}
-        />
+        className="text-sm leading-relaxed"
+        >
+          {renderContent(message.content)}
+        </div>
 
         {/* Inline Form for Estimate */}
         {message.formRequest && message.formRequest.type === "create_estimate" && (
