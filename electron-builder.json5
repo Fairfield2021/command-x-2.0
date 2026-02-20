@@ -10,8 +10,8 @@
   // GitHub Releases configuration for auto-updates
   publish: {
     provider: "github",
-    owner: "Smoothestguy",
-    repo: "commndx",
+    owner: "Fairfield2021",
+    repo: "command-x-2.0",
     releaseType: "release",
   },
   mac: {
@@ -23,6 +23,10 @@
     gatekeeperAssess: false,
     entitlements: "build/entitlements.mac.plist",
     entitlementsInherit: "build/entitlements.mac.plist",
+    // Publisher name must match the CN on the Developer ID Application certificate.
+    // electron-updater uses this to verify the cryptographic signature of every
+    // downloaded update before installation.
+    publisherName: ["Fairfield Group LLC", "Command X"],
     // Register commandx:// protocol for OAuth deep links
     extendInfo: {
       CFBundleURLTypes: [
@@ -56,6 +60,13 @@
     ],
     artifactName: "${productName}-${version}-Setup.${ext}",
     icon: "build/icon.ico",
+    // Publisher name must match the CN on the Authenticode code-signing certificate.
+    // electron-updater verifies this against the digital signature of the downloaded
+    // installer before allowing it to run.
+    publisherName: ["Fairfield Group LLC", "Command X"],
+    // Require a valid Authenticode signature on the downloaded NSIS installer.
+    // This prevents unsigned or tampered update packages from being executed.
+    verifyUpdateCodeSignature: true,
   },
   nsis: {
     oneClick: false,
