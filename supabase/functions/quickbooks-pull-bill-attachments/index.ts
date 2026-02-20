@@ -1,10 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
 
 const QUICKBOOKS_BASE_URL = "https://quickbooks.api.intuit.com/v3/company";
 
@@ -181,6 +177,7 @@ async function importAttachment(
 
   } catch (error: any) {
     console.error(`Failed to import attachment: ${error.message}`);
+import { getCorsHeaders } from "../_shared/cors.ts";
     return { success: false, fileName: qbAttachable.FileName, error: error.message };
   }
 }
