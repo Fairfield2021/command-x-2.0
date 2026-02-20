@@ -11,6 +11,15 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
     allowedHosts: ['.manus.computer'],
   },
+  // Ensure env vars are always available even if .env is missing or empty
+  define: {
+    'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(
+      process.env.VITE_SUPABASE_URL || 'https://cpllxlkrwweqydbnunlw.supabase.co'
+    ),
+    'import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY': JSON.stringify(
+      process.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNwbGx4bGtyd3dlcXlkYm51bmx3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0NDQ2NTMsImV4cCI6MjA4NzAyMDY1M30.wb31B7Y_MPoKtNff5hieL5s1p3QKQmxOxXsfNQm_7x0'
+    ),
+  },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {
     alias: {
