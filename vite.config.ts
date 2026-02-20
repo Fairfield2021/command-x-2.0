@@ -1,3 +1,4 @@
+// Build: 2026-02-20 - Cache bust for env var fix
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
