@@ -11,20 +11,26 @@ import { usePurchaseOrders, PurchaseOrder } from "@/integrations/supabase/hooks/
 import { useVendors } from "@/integrations/supabase/hooks/useVendors";
 import { useProjects } from "@/integrations/supabase/hooks/useProjects";
 import { PullToRefreshWrapper } from "@/components/shared/PullToRefreshWrapper";
-
 import { PurchaseOrderCard } from "@/components/purchase-orders/PurchaseOrderCard";
 import { PurchaseOrderStats } from "@/components/purchase-orders/PurchaseOrderStats";
 import { PurchaseOrderEmptyState } from "@/components/purchase-orders/PurchaseOrderEmptyState";
+import { useQuickBooksConfig } from "@/integrations/supabase/hooks/useQuickBooks";
+import { QBOPopupLink } from "@/components/quickbooks/QBOPopupLink";
+import { useQBMappingForList } from "@/integrations/supabase/hooks/useQBMappingForList";
 
 const PurchaseOrders = () => {
   const navigate = useNavigate();
   const { data: purchaseOrders, isLoading, error, refetch, isFetching } = usePurchaseOrders();
   const { data: vendors } = useVendors();
   const { data: projects } = useProjects();
-  
-  
+  const { data: qbConfig } = useQuickBooksConfig();
+
   const [search, setSearch] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("all");
+
+  // QB mappings for per-row "Edit in QBO" buttons
+  const poIds = useMemo(() => purchaseOrders?.map((po) => po.id) ?? [], [purchaseOrders]);
+  const qbMappings = useQBMappingForList(poIds, "purchase_order");
 
   const filteredPOs = useMemo(() => {
     return purchaseOrders?.filter((po) => {
@@ -158,16 +164,26 @@ const PurchaseOrders = () => {
       sortable: false,
       filterable: false,
       render: (item) => (
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={(e) => {
-            e.stopPropagation();
-            navigate(`/purchase-orders/${item.id}`);
-          }}
-        >
-          <Eye className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/purchase-orders/${item.id}`);
+            }}
+          >
+            <Eye className="h-4 w-4" />
+          </Button>
+          {qbMappings.get(item.id) && (
+            <QBOPopupLink
+              docType="purchase_order"
+              txnId={qbMappings.get(item.id)}
+              variant="edit"
+              onClose={() => refetch()}
+            />
+          )}
+        </div>
       ),
     },
   ];
@@ -198,6 +214,13 @@ const PurchaseOrders = () => {
               <span className="hidden sm:inline">New Purchase Order</span>
               <span className="sm:hidden">New</span>
             </Button>
+            {qbConfig?.is_connected && (
+              <QBOPopupLink
+                docType="purchase_order"
+                variant="create"
+                onClose={() => refetch()}
+              />
+            )}
           </div>
         }
       >

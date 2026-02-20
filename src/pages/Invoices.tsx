@@ -32,6 +32,8 @@ import { Invoice } from "@/integrations/supabase/hooks/useInvoices";
 import { InvoiceStatCard } from "@/components/invoices/InvoiceStatCard";
 import { BulkPaymentDialog } from "@/components/invoices/BulkPaymentDialog";
 import { TablePagination } from "@/components/shared/TablePagination";
+import { QBOPopupLink } from "@/components/quickbooks/QBOPopupLink";
+import { useQBMappingForList } from "@/integrations/supabase/hooks/useQBMappingForList";
 
 type CardFilter =
   | "all"
@@ -69,6 +71,10 @@ const Invoices = () => {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+
+  // QB mappings for per-row "Edit in QBO" buttons
+  const invoiceIds = useMemo(() => allInvoices.map((i) => i.id), [allInvoices]);
+  const qbMappings = useQBMappingForList(invoiceIds, "invoice");
 
   // Count selected invoices with outstanding balance
   const selectedWithBalance = useMemo(() => {
@@ -271,16 +277,26 @@ const Invoices = () => {
       sortable: false,
       filterable: false,
       render: (item) => (
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={(e) => {
-            e.stopPropagation();
-            navigate(`/invoices/${item.id}`);
-          }}
-        >
-          <Eye className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/invoices/${item.id}`);
+            }}
+          >
+            <Eye className="h-4 w-4" />
+          </Button>
+          {qbMappings.get(item.id) && (
+            <QBOPopupLink
+              docType="invoice"
+              txnId={qbMappings.get(item.id)}
+              variant="edit"
+              onClose={() => refetch()}
+            />
+          )}
+        </div>
       ),
     },
   ];
@@ -364,6 +380,13 @@ const Invoices = () => {
               <span className="hidden sm:inline">New Invoice</span>
               <span className="sm:hidden">New</span>
             </Button>
+            {qbConfig?.is_connected && (
+              <QBOPopupLink
+                docType="invoice"
+                variant="create"
+                onClose={() => refetch()}
+              />
+            )}
           </div>
         }
       >

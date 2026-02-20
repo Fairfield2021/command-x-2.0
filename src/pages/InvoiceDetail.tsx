@@ -28,6 +28,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useState } from "react";
+import { QBOPopupLink } from "@/components/quickbooks/QBOPopupLink";
+import { useQBMappingForList } from "@/integrations/supabase/hooks/useQBMappingForList";
 
 const InvoiceDetail = () => {
   const { id } = useParams();
@@ -39,6 +41,10 @@ const InvoiceDetail = () => {
   const deleteInvoice = useDeleteInvoice();
   const [showSendConfirm, setShowSendConfirm] = useState(false);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+
+  // QB mapping for "Edit in QBO" button
+  const qbMappings = useQBMappingForList(id ? [id] : [], "invoice");
+  const qbTxnId = id ? qbMappings.get(id) : undefined;
 
   const handleMarkPaid = () => {
     if (id) {
@@ -181,6 +187,14 @@ const InvoiceDetail = () => {
   const desktopActions = (
     <div className="flex items-center gap-3">
       <StatusBadge status={invoice.status} />
+      {qbTxnId && (
+        <QBOPopupLink
+          docType="invoice"
+          txnId={qbTxnId}
+          variant="edit"
+          onClose={() => refetch()}
+        />
+      )}
       {canEdit && (
         <Button variant="outline" onClick={() => navigate(`/invoices/${id}/edit`)}>
           <Edit className="h-4 w-4 mr-2" />
