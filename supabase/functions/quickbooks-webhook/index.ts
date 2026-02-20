@@ -1231,7 +1231,81 @@ async function processEstimateUpdate(
 
   if (!mapping) {
     console.log("[Webhook] No local mapping found for QB estimate:", qbEstimateId);
-    // This estimate exists in QB but not in Command X - could trigger an import
+
+    // For Create events: import the estimate from QBO into Command X
+    if (operation === "Create") {
+      try {
+        const qbEstimate = await fetchQBEstimate(qbEstimateId, accessToken, realmId);
+        console.log("[Webhook] Importing new estimate from QBO:", qbEstimate.DocNumber);
+
+        // Resolve customer via QB customer mapping
+        let customerId: string | null = null;
+        let customerName = "Unknown Customer";
+        if (qbEstimate.CustomerRef?.value) {
+          const { data: custMap } = await supabase
+            .from("quickbooks_customer_mappings")
+            .select("customer_id, customers:customer_id(name)")
+            .eq("quickbooks_customer_id", qbEstimate.CustomerRef.value)
+            .maybeSingle();
+          if (custMap) {
+            customerId = custMap.customer_id;
+            customerName = (custMap as any).customers?.name || customerName;
+          }
+        }
+
+        if (!customerId) {
+          console.log("[Webhook] Cannot import estimate — no local customer mapping for QB customer:", qbEstimate.CustomerRef?.value);
+          return { success: true, skipped: true, reason: "No customer mapping for QB estimate" };
+        }
+
+        const totalAmt = parseFloat(qbEstimate.TotalAmt || "0");
+        const taxAmt = parseFloat(qbEstimate.TxnTaxDetail?.TotalTax || "0");
+
+        const { data: newEstimate, error: insertError } = await supabase
+          .from("estimates")
+          .insert({
+            number: qbEstimate.DocNumber || "",
+            customer_id: customerId,
+            customer_name: customerName,
+            status: mapQbStatusToLocal(qbEstimate.TxnStatus),
+            subtotal: totalAmt - taxAmt,
+            tax_amount: taxAmt,
+            total: totalAmt,
+            valid_until: qbEstimate.ExpirationDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+            notes: qbEstimate.CustomerMemo?.value || null,
+          })
+          .select()
+          .single();
+
+        if (insertError) {
+          console.error("[Webhook] Error creating estimate from QBO:", insertError);
+          return { success: false, error: insertError.message };
+        }
+
+        // Create mapping row (idempotent)
+        await supabase.from("quickbooks_estimate_mappings").upsert({
+          estimate_id: newEstimate.id,
+          quickbooks_estimate_id: qbEstimateId,
+          sync_status: "synced",
+          last_synced_at: new Date().toISOString(),
+        }, { onConflict: "quickbooks_estimate_id" });
+
+        await supabase.from("quickbooks_sync_log").insert({
+          entity_type: "estimate",
+          entity_id: newEstimate.id,
+          action: "webhook_create",
+          status: "success",
+          details: { qb_estimate_id: qbEstimateId, qb_doc_number: qbEstimate.DocNumber, operation },
+        });
+
+        console.log("[Webhook] Imported new estimate from QBO:", newEstimate.id);
+        return { success: true, action: "created", estimateId: newEstimate.id };
+      } catch (err: any) {
+        console.error("[Webhook] Failed to import estimate from QBO:", err);
+        return { success: false, error: err.message };
+      }
+    }
+
     return { success: true, skipped: true, reason: "No local mapping" };
   }
 
@@ -1402,6 +1476,86 @@ async function processInvoiceUpdate(
 
   if (!mapping) {
     console.log("[Webhook] No local mapping found for QB invoice:", qbInvoiceId);
+
+    // For Create events: import the invoice from QBO into Command X
+    if (operation === "Create") {
+      try {
+        const qbInvoice = await fetchQBInvoice(qbInvoiceId, accessToken, realmId);
+        console.log("[Webhook] Importing new invoice from QBO:", qbInvoice.DocNumber);
+
+        // Resolve customer via QB customer mapping
+        let customerId: string | null = null;
+        let customerName = "Unknown Customer";
+        if (qbInvoice.CustomerRef?.value) {
+          const { data: custMap } = await supabase
+            .from("quickbooks_customer_mappings")
+            .select("customer_id, customers:customer_id(name)")
+            .eq("quickbooks_customer_id", qbInvoice.CustomerRef.value)
+            .maybeSingle();
+          if (custMap) {
+            customerId = custMap.customer_id;
+            customerName = (custMap as any).customers?.name || customerName;
+          }
+        }
+
+        if (!customerId) {
+          console.log("[Webhook] Cannot import invoice — no local customer mapping for QB customer:", qbInvoice.CustomerRef?.value);
+          return { success: true, skipped: true, reason: "No customer mapping for QB invoice" };
+        }
+
+        const totalAmt = parseFloat(qbInvoice.TotalAmt || "0");
+        const balance = parseFloat(qbInvoice.Balance || "0");
+        const taxAmt = parseFloat(qbInvoice.TxnTaxDetail?.TotalTax || "0");
+        const paidAmt = totalAmt - balance;
+
+        const { data: newInvoice, error: insertError } = await supabase
+          .from("invoices")
+          .insert({
+            number: qbInvoice.DocNumber || "",
+            customer_id: customerId,
+            customer_name: customerName,
+            due_date: qbInvoice.DueDate || new Date().toISOString().split("T")[0],
+            status: mapQbInvoiceStatusToLocal(balance, totalAmt, qbInvoice.DueDate),
+            subtotal: totalAmt - taxAmt,
+            tax_amount: taxAmt,
+            total: totalAmt,
+            paid_amount: paidAmt,
+            remaining_amount: balance,
+            notes: qbInvoice.PrivateNote || null,
+          })
+          .select()
+          .single();
+
+        if (insertError) {
+          console.error("[Webhook] Error creating invoice from QBO:", insertError);
+          return { success: false, error: insertError.message };
+        }
+
+        // Create mapping row (idempotent)
+        await supabase.from("quickbooks_invoice_mappings").upsert({
+          invoice_id: newInvoice.id,
+          quickbooks_invoice_id: qbInvoiceId,
+          quickbooks_doc_number: qbInvoice.DocNumber,
+          sync_status: "synced",
+          synced_at: new Date().toISOString(),
+        }, { onConflict: "quickbooks_invoice_id" });
+
+        await supabase.from("quickbooks_sync_log").insert({
+          entity_type: "invoice",
+          entity_id: newInvoice.id,
+          action: "webhook_create",
+          status: "success",
+          details: { qb_invoice_id: qbInvoiceId, qb_doc_number: qbInvoice.DocNumber, operation },
+        });
+
+        console.log("[Webhook] Imported new invoice from QBO:", newInvoice.id);
+        return { success: true, action: "created", invoiceId: newInvoice.id };
+      } catch (err: any) {
+        console.error("[Webhook] Failed to import invoice from QBO:", err);
+        return { success: false, error: err.message };
+      }
+    }
+
     return { success: true, skipped: true, reason: "No local mapping" };
   }
 
@@ -1604,7 +1758,80 @@ async function processBillUpdate(
 
   if (!mapping) {
     console.log("[Webhook] No local mapping found for QB bill:", qbBillId);
-    // This bill exists in QB but not in Command X - could trigger an import
+
+    // For Create events: import the bill from QBO into Command X
+    if (operation === "Create") {
+      try {
+        const qbBill = await fetchQBBill(qbBillId, accessToken, realmId);
+        console.log("[Webhook] Importing new vendor bill from QBO:", qbBill.DocNumber);
+
+        // Resolve vendor via QB vendor mapping
+        let vendorId: string | null = null;
+        let vendorName = "Unknown Vendor";
+        if (qbBill.VendorRef?.value) {
+          const { data: vendMap } = await supabase
+            .from("quickbooks_vendor_mappings")
+            .select("vendor_id, vendors:vendor_id(name)")
+            .eq("quickbooks_vendor_id", qbBill.VendorRef.value)
+            .maybeSingle();
+          if (vendMap) {
+            vendorId = vendMap.vendor_id;
+            vendorName = (vendMap as any).vendors?.name || vendorName;
+          }
+        }
+
+        if (!vendorId) {
+          console.log("[Webhook] Cannot import bill — no local vendor mapping for QB vendor:", qbBill.VendorRef?.value);
+          return { success: true, skipped: true, reason: "No vendor mapping for QB bill" };
+        }
+
+        const totalAmt = parseFloat(qbBill.TotalAmt || "0");
+        const balance = parseFloat(qbBill.Balance || "0");
+
+        const { data: newBill, error: insertError } = await supabase
+          .from("vendor_bills")
+          .insert({
+            vendor_id: vendorId,
+            vendor_name: vendorName,
+            bill_date: qbBill.TxnDate || new Date().toISOString().split("T")[0],
+            due_date: qbBill.DueDate || qbBill.TxnDate || new Date().toISOString().split("T")[0],
+            total: totalAmt,
+            remaining_amount: balance,
+            status: balance <= 0 ? "paid" : "open",
+            notes: qbBill.PrivateNote || null,
+          })
+          .select()
+          .single();
+
+        if (insertError) {
+          console.error("[Webhook] Error creating vendor bill from QBO:", insertError);
+          return { success: false, error: insertError.message };
+        }
+
+        // Create mapping row (idempotent)
+        await supabase.from("quickbooks_bill_mappings").upsert({
+          bill_id: newBill.id,
+          quickbooks_bill_id: qbBillId,
+          sync_status: "synced",
+          last_synced_at: new Date().toISOString(),
+        }, { onConflict: "quickbooks_bill_id" });
+
+        await supabase.from("quickbooks_sync_log").insert({
+          entity_type: "bill",
+          entity_id: newBill.id,
+          action: "webhook_create",
+          status: "success",
+          details: { qb_bill_id: qbBillId, qb_doc_number: qbBill.DocNumber, operation },
+        });
+
+        console.log("[Webhook] Imported new vendor bill from QBO:", newBill.id);
+        return { success: true, action: "created", billId: newBill.id };
+      } catch (err: any) {
+        console.error("[Webhook] Failed to import bill from QBO:", err);
+        return { success: false, error: err.message };
+      }
+    }
+
     return { success: true, skipped: true, reason: "No local mapping" };
   }
 

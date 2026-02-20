@@ -1,7 +1,8 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { formatLocalDate, parseLocalDate } from "@/lib/dateUtils";
-import { Eye, MoreHorizontal, Edit, Trash2, DollarSign, RefreshCw, CheckCircle2, AlertCircle, Loader2, Pencil } from "lucide-react";
+import { Eye, MoreHorizontal, Edit, Trash2, DollarSign, RefreshCw, CheckCircle2, AlertCircle, Loader2, ExternalLink, Pencil } from "lucide-react";
+import { QBOPopupLink } from "@/components/quickbooks/QBOPopupLink";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -188,6 +189,21 @@ function BillRow({
                 <DollarSign className="mr-2 h-4 w-4" />
                 Record Payment
               </DropdownMenuItem>
+            )}
+            {/* Edit in QBO deep-link — only when mapped */}
+            {qbConfig?.is_connected && billMapping?.quickbooks_bill_id && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <QBOPopupLink
+                    docType="bill"
+                    txnId={billMapping.quickbooks_bill_id}
+                    variant="edit"
+                    onClose={() => refetchMapping()}
+                    className="w-full cursor-pointer"
+                  />
+                </DropdownMenuItem>
+              </>
             )}
             {(canSync || hasSyncError) && (
               <>
