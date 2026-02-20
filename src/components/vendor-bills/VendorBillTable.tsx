@@ -180,10 +180,6 @@ function BillRow({
               <Eye className="mr-2 h-4 w-4" />
               View
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate(`/vendor-bills/${bill.id}/edit${window.location.search}`)}>
-              <Edit className="mr-2 h-4 w-4" />
-              Edit
-            </DropdownMenuItem>
             {bill.status !== "paid" && bill.status !== "void" && (
               <DropdownMenuItem onClick={() => onRecordPayment(bill.id)}>
                 <DollarSign className="mr-2 h-4 w-4" />

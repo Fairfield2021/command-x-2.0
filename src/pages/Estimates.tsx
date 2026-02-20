@@ -6,7 +6,7 @@ import { EnhancedDataTable, EnhancedColumn } from "@/components/shared/EnhancedD
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Eye, FileText, Loader2, Edit, XCircle, SquarePen, EyeOff, EyeIcon } from "lucide-react";
+import { Plus, Eye, FileText, Loader2, XCircle, SquarePen, EyeOff, EyeIcon } from "lucide-react";
 import { SearchInput } from "@/components/ui/search-input";
 import { useEstimates, useBulkUpdateEstimates, Estimate } from "@/integrations/supabase/hooks/useEstimates";
 import { useCustomers } from "@/integrations/supabase/hooks/useCustomers";
@@ -175,17 +175,6 @@ const Estimates = () => {
           >
             <Eye className="h-4 w-4" />
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`/estimates/${item.id}/edit`);
-            }}
-            title="Edit estimate"
-          >
-            <Edit className="h-4 w-4" />
-          </Button>
           {qbMappings.get(item.id) && (
             <QBOPopupLink
               docType="estimate"
@@ -234,10 +223,6 @@ const Estimates = () => {
         description="Create and manage project estimates"
         actions={
           <div className="flex items-center gap-2">
-            <Button variant="glow" onClick={() => navigate("/estimates/new")}>
-              <Plus className="h-4 w-4" />
-              New Estimate
-            </Button>
             {qbConfig?.is_connected && (
               <QBOPopupLink
                 docType="estimate"
@@ -347,7 +332,6 @@ const Estimates = () => {
               {/* Estimates Display */}
               {filteredEstimates.length === 0 ? (
                 <EstimateEmptyState
-                  onCreateEstimate={() => navigate("/estimates/new")}
                   hasFilters={hasActiveFilters}
                 />
               ) : (

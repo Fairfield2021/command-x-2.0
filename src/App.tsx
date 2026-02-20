@@ -41,27 +41,18 @@ import Vendors from "./pages/Vendors";
 import VendorDetail from "./pages/VendorDetail";
 import VendorBills from "./pages/VendorBills";
 import VendorBillDetail from "./pages/VendorBillDetail";
-import NewVendorBill from "./pages/NewVendorBill";
-import EditVendorBill from "./pages/EditVendorBill";
 import VendorDocuments from "./pages/VendorDocuments";
 import Jobs from "./pages/Jobs";
 import Sales from "./pages/Sales";
 import Estimates from "./pages/Estimates";
-import NewEstimate from "./pages/NewEstimate";
 import EstimateDetail from "./pages/EstimateDetail";
-import EditEstimate from "./pages/EditEstimate";
 // JobOrders page removed - job orders are now accessed through ProjectDetail
 import JobOrderDetail from "./pages/JobOrderDetail";
 import EditJobOrder from "./pages/EditJobOrder";
 import PurchaseOrders from "./pages/PurchaseOrders";
-import NewPurchaseOrder from "./pages/NewPurchaseOrder";
 import PurchaseOrderDetail from "./pages/PurchaseOrderDetail";
-import EditPurchaseOrder from "./pages/EditPurchaseOrder";
 import Invoices from "./pages/Invoices";
-import NewInvoice from "./pages/NewInvoice";
-import NewTimeEntryInvoice from "./pages/NewTimeEntryInvoice";
 import InvoiceDetail from "./pages/InvoiceDetail";
-import EditInvoice from "./pages/EditInvoice";
 import TimeTracking from "./pages/TimeTracking";
 import OverheadAnalysis from "./pages/OverheadAnalysis";
 import TeamTimesheet from "./pages/TeamTimesheet";
@@ -381,16 +372,8 @@ const App = () => {
                       <Route path="/vendors/:id" element={<VendorDetail />} />
                       <Route path="/vendor-bills" element={<VendorBills />} />
                       <Route
-                        path="/vendor-bills/new"
-                        element={<NewVendorBill />}
-                      />
-                      <Route
                         path="/vendor-bills/:id"
                         element={<VendorBillDetail />}
-                      />
-                      <Route
-                        path="/vendor-bills/:id/edit"
-                        element={<EditVendorBill />}
                       />
                       <Route
                         path="/vendor-documents"
@@ -399,14 +382,9 @@ const App = () => {
                       <Route path="/jobs" element={<Jobs />} />
                       <Route path="/sales" element={<Sales />} />
                       <Route path="/estimates" element={<Estimates />} />
-                      <Route path="/estimates/new" element={<NewEstimate />} />
                       <Route
                         path="/estimates/:id"
                         element={<EstimateDetail />}
-                      />
-                      <Route
-                        path="/estimates/:id/edit"
-                        element={<EditEstimate />}
                       />
                       {/* Job orders are accessed through project detail - standalone list removed */}
                       <Route
@@ -420,10 +398,6 @@ const App = () => {
                       <Route
                         path="/purchase-orders"
                         element={<PurchaseOrders />}
-                      />
-                      <Route
-                        path="/purchase-orders/new"
-                        element={<NewPurchaseOrder />}
                       />
                       <Route
                         path="/purchase-orders/:id"
@@ -441,21 +415,8 @@ const App = () => {
                         path="/change-orders/:id/edit"
                         element={<EditChangeOrder />}
                       />
-                      <Route
-                        path="/purchase-orders/:id/edit"
-                        element={<EditPurchaseOrder />}
-                      />
                       <Route path="/invoices" element={<Invoices />} />
-                      <Route path="/invoices/new" element={<NewInvoice />} />
-                      <Route
-                        path="/invoices/new-from-time"
-                        element={<NewTimeEntryInvoice />}
-                      />
                       <Route path="/invoices/:id" element={<InvoiceDetail />} />
-                      <Route
-                        path="/invoices/:id/edit"
-                        element={<EditInvoice />}
-                      />
                       <Route path="/time-tracking" element={<TimeTracking />} />
                       <Route path="/overhead-analysis" element={<OverheadAnalysis />} />
                       <Route

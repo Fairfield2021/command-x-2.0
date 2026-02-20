@@ -306,12 +306,6 @@ const Invoices = () => {
       <PageLayout
         title="Invoices"
         description="Manage billing and track payments"
-        actions={
-          <Button variant="glow" onClick={() => navigate("/invoices/new")}>
-            <Plus className="h-4 w-4" />
-            New Invoice
-          </Button>
-        }
       >
         <div>Loading invoices...</div>
       </PageLayout>
@@ -323,12 +317,6 @@ const Invoices = () => {
       <PageLayout
         title="Invoices"
         description="Manage billing and track payments"
-        actions={
-          <Button variant="glow" onClick={() => navigate("/invoices/new")}>
-            <Plus className="h-4 w-4" />
-            New Invoice
-          </Button>
-        }
       >
         <div className="text-destructive">
           Error loading invoices: {error.message}
@@ -358,28 +346,6 @@ const Invoices = () => {
                 className="h-9 bg-secondary border-border"
               />
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate("/invoices/new-from-time")}
-              className="hidden md:flex"
-            >
-              <Clock className="mr-2 h-4 w-4" />
-              From Time
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => navigate("/invoices/new-from-time")}
-              className="md:hidden"
-            >
-              <Clock className="h-4 w-4" />
-            </Button>
-            <Button variant="glow" size="sm" onClick={() => navigate("/invoices/new")}>
-              <Plus className="mr-2 h-4 w-4" />
-              <span className="hidden sm:inline">New Invoice</span>
-              <span className="sm:hidden">New</span>
-            </Button>
             {qbConfig?.is_connected && (
               <QBOPopupLink
                 docType="invoice"
@@ -501,7 +467,6 @@ const Invoices = () => {
           {/* Empty State */}
           {filteredInvoices.length === 0 && (
             <InvoiceEmptyState
-              onAddInvoice={() => navigate("/invoices/new")}
               isFiltered={hasActiveFilters}
             />
           )}

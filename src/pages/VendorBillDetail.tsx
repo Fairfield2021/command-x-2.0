@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Edit, Trash2, DollarSign, Calendar, Building2, FileText, ChevronDown } from "lucide-react";
+import { ArrowLeft, Trash2, DollarSign, Calendar, Building2, FileText, ChevronDown } from "lucide-react";
 import { formatLocalDate } from "@/lib/dateUtils";
 import { useState } from "react";
 import { useVendorBill, useDeleteVendorBill } from "@/integrations/supabase/hooks/useVendorBills";
@@ -130,10 +130,6 @@ export default function VendorBillDetail() {
                 Record Payment
               </Button>
             )}
-            <Button variant="outline" onClick={() => navigate(`/vendor-bills/${id}/edit${window.location.search}`)}>
-              <Edit className="h-4 w-4 mr-2" />
-              Edit
-            </Button>
             <Button variant="destructive" onClick={() => setDeleteOpen(true)}>
               <Trash2 className="h-4 w-4 mr-2" />
               Delete

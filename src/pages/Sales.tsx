@@ -51,9 +51,7 @@ export default function Sales() {
               </div>
             </>
           ) : (
-            <EstimateEmptyState 
-              onCreateEstimate={() => navigate('/estimates/new')}
-            />
+          <EstimateEmptyState />
           )}
         </TabsContent>
 

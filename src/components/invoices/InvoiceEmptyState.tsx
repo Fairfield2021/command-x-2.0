@@ -2,7 +2,7 @@ import { Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface InvoiceEmptyStateProps {
-  onAddInvoice: () => void;
+  onAddInvoice?: () => void;
   isFiltered?: boolean;
 }
 

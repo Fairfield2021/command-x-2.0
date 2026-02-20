@@ -147,10 +147,6 @@ export default function VendorBills() {
               <Lightbulb className="h-4 w-4 mr-1" />
               Smart Create
             </Button>
-            <Button onClick={() => navigate("/vendor-bills/new")}>
-              <Plus className="h-4 w-4 mr-1" />
-              New Bill
-            </Button>
             {qbConfig?.is_connected && (
               <QBOPopupLink
                 docType="bill"

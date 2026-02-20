@@ -209,11 +209,6 @@ const PurchaseOrders = () => {
                 className="h-9 bg-secondary border-border"
               />
             </div>
-            <Button variant="glow" size="sm" onClick={() => navigate("/purchase-orders/new")}>
-              <Plus className="mr-2 h-4 w-4" />
-              <span className="hidden sm:inline">New Purchase Order</span>
-              <span className="sm:hidden">New</span>
-            </Button>
             {qbConfig?.is_connected && (
               <QBOPopupLink
                 docType="purchase_order"
@@ -256,7 +251,6 @@ const PurchaseOrders = () => {
               {/* Purchase Orders Display */}
               {filteredPOs.length === 0 ? (
                 <PurchaseOrderEmptyState
-                  onCreatePO={() => navigate("/purchase-orders/new")}
                   hasFilters={hasActiveFilters}
                 />
               ) : (
