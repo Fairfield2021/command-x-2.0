@@ -76,9 +76,29 @@ function isProfilePictureField(field: FormField): boolean {
   );
 }
 
+// Security: validate URLs before fetching to prevent SSRF attacks
+function isAllowedImageUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== "https:") return false;
+    const hostname = parsed.hostname;
+    if (hostname === "localhost") return false;
+    if (/^127\./.test(hostname)) return false;
+    if (/^10\./.test(hostname)) return false;
+    if (/^192\.168\./.test(hostname)) return false;
+    if (/^172\.(1[6-9]|2\d|3[01])\./.test(hostname)) return false;
+    if (hostname === "169.254.169.254") return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 // Fetch image as base64
 async function fetchImageAsBase64(url: string): Promise<string | null> {
   try {
+    // Block private IPs and non-https URLs (SSRF prevention)
+    if (!url || !isAllowedImageUrl(url)) return null;
     const response = await fetch(url);
     if (!response.ok) return null;
     const blob = await response.blob();

@@ -138,12 +138,35 @@ const truncateText = (pdf: jsPDF, text: string, maxWidth: number): string => {
   return truncated + "...";
 };
 
+// Security: validate URLs before fetching to prevent SSRF attacks
+const isAllowedImageUrl = (url: string): boolean => {
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== "https:") return false;
+    const hostname = parsed.hostname;
+    if (hostname === "localhost") return false;
+    if (/^127\./.test(hostname)) return false;
+    if (/^10\./.test(hostname)) return false;
+    if (/^192\.168\./.test(hostname)) return false;
+    if (/^172\.(1[6-9]|2\d|3[01])\./.test(hostname)) return false;
+    if (hostname === "169.254.169.254") return false;
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 // Helper to fetch image as base64
 const fetchImageAsBase64 = async (url: string): Promise<string | null> => {
   try {
     // Skip local paths that won't work with fetch
-    if (!url || url.startsWith('/') || url.startsWith('./')) {
+    if (!url || url.startsWith("/") || url.startsWith("./")) {
       console.warn("Skipping local path for image:", url);
+      return null;
+    }
+    // Block private IPs and non-https URLs (SSRF prevention)
+    if (!isAllowedImageUrl(url)) {
+      console.warn("Blocked disallowed image URL:", url);
       return null;
     }
     const response = await fetch(url);

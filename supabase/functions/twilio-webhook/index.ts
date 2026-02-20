@@ -1,9 +1,64 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+const ALLOWED_ORIGINS = [
+  "https://commandx-craft.lovable.app",
+  "https://id-preview--76ab7580-4e0f-4011-980d-d7fa0d216db7.lovable.app",
+];
+
+function getCorsHeaders(req: Request): Record<string, string> {
+  const origin = req.headers.get("Origin") ?? "";
+  const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  };
+}
+
+/**
+ * Validate Twilio webhook signature using HMAC-SHA256.
+ * Twilio computes: HMAC-SHA1(authToken, url + sorted-params).
+ * We replicate that here to reject forged webhook calls.
+ */
+async function validateTwilioSignature(
+  authToken: string,
+  signature: string,
+  url: string,
+  params: Record<string, string>
+): Promise<boolean> {
+  try {
+    // Build validation string: url + alphabetically-sorted params concatenated as key+value
+    const sortedKeys = Object.keys(params).sort();
+    let validationStr = url;
+    for (const key of sortedKeys) {
+      validationStr += key + (params[key] ?? "");
+    }
+
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      "raw",
+      encoder.encode(authToken),
+      { name: "HMAC", hash: "SHA-1" },
+      false,
+      ["sign"]
+    );
+
+    const signatureBytes = await crypto.subtle.sign(
+      "HMAC",
+      key,
+      encoder.encode(validationStr)
+    );
+
+    const computed = btoa(
+      String.fromCharCode(...new Uint8Array(signatureBytes))
+    );
+
+    return computed === signature;
+  } catch (err) {
+    console.error("Signature validation error:", err);
+    return false;
+  }
+}
 
 // Extract last 10 digits for flexible matching
 function getPhoneDigits(phone: string): string {
@@ -18,6 +73,8 @@ interface PossibleSender {
 }
 
 Deno.serve(async (req: Request) => {
+  const corsHeaders = getCorsHeaders(req);
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -25,7 +82,40 @@ Deno.serve(async (req: Request) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const twilioAuthToken = Deno.env.get("TWILIO_AUTH_TOKEN");
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // --- Twilio Signature Validation ---
+    // Skip in development if token is not set (shouldn't happen in production)
+    if (twilioAuthToken) {
+      const twilioSignature = req.headers.get("X-Twilio-Signature") ?? "";
+      const requestUrl = req.url;
+
+      // Clone request to read form data for signature validation
+      const clonedReq = req.clone();
+      const formDataForValidation = await clonedReq.formData();
+      const params: Record<string, string> = {};
+      for (const [key, value] of formDataForValidation.entries()) {
+        params[key] = String(value);
+      }
+
+      const isValid = await validateTwilioSignature(
+        twilioAuthToken,
+        twilioSignature,
+        requestUrl,
+        params
+      );
+
+      if (!isValid) {
+        console.error("Invalid Twilio signature — rejecting webhook");
+        return new Response(
+          '<?xml version="1.0" encoding="UTF-8"?><Response></Response>',
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/xml" } }
+        );
+      }
+    } else {
+      console.warn("TWILIO_AUTH_TOKEN not set — skipping signature validation");
+    }
 
     // Parse Twilio webhook payload (form-encoded)
     const formData = await req.formData();
