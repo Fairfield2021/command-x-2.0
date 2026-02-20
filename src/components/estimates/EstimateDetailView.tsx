@@ -228,6 +228,17 @@ export function EstimateDetailView({ estimateId }: EstimateDetailViewProps) {
           {/* Desktop: Show all buttons */}
           {!isMobile && (
             <>
+              {qbTxnId && (
+                <QBOPopupLink
+                  docType="estimate"
+                  txnId={qbTxnId}
+                  variant="edit"
+                  onClose={() => {
+                    // Invalidation handled by useQBMappingForList cache
+                  }}
+                />
+              )}
+
               <Button
                 variant="outline"
                 onClick={() => {
