@@ -52,6 +52,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { QBOPopupLink } from "@/components/quickbooks/QBOPopupLink";
+import { useQBMappingForList } from "@/integrations/supabase/hooks/useQBMappingForList";
 
 interface EstimateDetailViewProps {
   estimateId: string;
@@ -71,6 +73,10 @@ export function EstimateDetailView({ estimateId }: EstimateDetailViewProps) {
   const { data: products } = useProducts();
   const { data: companySettings } = useCompanySettings();
   const { data: customers } = useCustomers();
+
+  // QB mapping for "Edit in QBO" button
+  const qbMappings = useQBMappingForList([estimateId], "estimate");
+  const qbTxnId = qbMappings.get(estimateId);
 
   // Get customer address
   const customer = customers?.find((c) => c.id === estimate?.customer_id);

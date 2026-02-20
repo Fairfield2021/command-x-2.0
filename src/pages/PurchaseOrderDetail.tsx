@@ -50,6 +50,8 @@ import { formatCurrency } from "@/lib/utils";
 import { generatePurchaseOrderPDF, ProjectInfoForPDF } from "@/utils/purchaseOrderPdfExport";
 import { downloadWorkOrderPDF, printWorkOrderPDF, mapPurchaseOrderToWorkOrder } from "@/utils/workOrderPdfExport";
 import { FileText, AlertTriangle } from "lucide-react";
+import { QBOPopupLink } from "@/components/quickbooks/QBOPopupLink";
+import { useQBMappingForList } from "@/integrations/supabase/hooks/useQBMappingForList";
 
 const PurchaseOrderDetail = () => {
   const { id } = useParams();
@@ -71,6 +73,10 @@ const PurchaseOrderDetail = () => {
   const deletePurchaseOrder = useDeletePurchaseOrder();
   const { isAdmin, isManager } = useUserRole();
   const isMobile = useIsMobile();
+
+  // QB mapping for "Edit in QBO" button
+  const qbMappings = useQBMappingForList(id ? [id] : [], "purchase_order");
+  const qbTxnId = id ? qbMappings.get(id) : undefined;
   const vendor = purchaseOrder && vendors?.find((v) => v.id === purchaseOrder.vendor_id);
   const project = purchaseOrder && projects?.find((p) => p.id === purchaseOrder.project_id);
 
@@ -278,6 +284,14 @@ const PurchaseOrderDetail = () => {
       description={`PO for ${purchaseOrder.vendor_name}`}
       actions={
         <div className="flex gap-2">
+          {qbTxnId && (
+            <QBOPopupLink
+              docType="purchase_order"
+              txnId={qbTxnId}
+              variant="edit"
+              onClose={() => {}}
+            />
+          )}
           {/* Primary actions - always visible (context-dependent) */}
           {canApprove && (
             <Button 

@@ -22,6 +22,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { QBOPopupLink } from "@/components/quickbooks/QBOPopupLink";
+import { useQBMappingForList } from "@/integrations/supabase/hooks/useQBMappingForList";
 
 export default function VendorBillDetail() {
   const { id } = useParams();
@@ -32,6 +34,10 @@ export default function VendorBillDetail() {
   const { data: bill, isLoading } = useVendorBill(id);
   const deleteBill = useDeleteVendorBill();
   const { data: linkedPersonnel } = usePersonnelForVendor(bill?.vendor_id);
+
+  // QB mapping for "Edit in QBO" button
+  const qbMappings = useQBMappingForList(id ? [id] : [], "bill");
+  const qbTxnId = id ? qbMappings.get(id) : undefined;
 
   const handleDelete = () => {
     if (id) {
@@ -79,6 +85,14 @@ export default function VendorBillDetail() {
             Back to Bills
           </Button>
           <div className="flex gap-2 flex-wrap">
+            {qbTxnId && (
+              <QBOPopupLink
+                docType="bill"
+                txnId={qbTxnId}
+                variant="edit"
+                onClose={() => {}}
+              />
+            )}
             {linkedPersonnel && linkedPersonnel.length > 0 && (
               linkedPersonnel.length === 1 ? (
                 <Button 

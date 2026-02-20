@@ -11,6 +11,8 @@ import { VendorBillFilters } from "@/components/vendor-bills/VendorBillFilters";
 import { VendorBillTable } from "@/components/vendor-bills/VendorBillTable";
 import { SmartVendorBillDialog } from "@/components/vendor-bills/SmartVendorBillDialog";
 import { useUrlFilters } from "@/hooks/useUrlFilters";
+import { useQuickBooksConfig } from "@/integrations/supabase/hooks/useQuickBooks";
+import { QBOPopupLink } from "@/components/quickbooks/QBOPopupLink";
 
 type CardFilter = "all" | "open" | "paid" | "overdue";
 
@@ -34,6 +36,7 @@ const defaultFilterValues = {
 
 export default function VendorBills() {
   const navigate = useNavigate();
+  const { data: qbConfig } = useQuickBooksConfig();
   const [smartDialogOpen, setSmartDialogOpen] = useState(false);
   
   // Use URL-based filter persistence
@@ -148,6 +151,15 @@ export default function VendorBills() {
               <Plus className="h-4 w-4 mr-1" />
               New Bill
             </Button>
+            {qbConfig?.is_connected && (
+              <QBOPopupLink
+                docType="bill"
+                variant="create"
+                onClose={() => {
+                  // bills refetch handled by query invalidation from webhook
+                }}
+              />
+            )}
           </div>
         </div>
 

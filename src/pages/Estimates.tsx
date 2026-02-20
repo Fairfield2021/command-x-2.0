@@ -18,6 +18,9 @@ import { EstimateStats } from "@/components/estimates/EstimateStats";
 import { EstimateEmptyState } from "@/components/estimates/EstimateEmptyState";
 import { EstimateBulkEditModal } from "@/components/estimates/EstimateBulkEditModal";
 import { TablePagination } from "@/components/shared/TablePagination";
+import { useQuickBooksConfig } from "@/integrations/supabase/hooks/useQuickBooks";
+import { QBOPopupLink } from "@/components/quickbooks/QBOPopupLink";
+import { useQBMappingForList } from "@/integrations/supabase/hooks/useQBMappingForList";
 
 const Estimates = () => {
   const navigate = useNavigate();
@@ -26,6 +29,7 @@ const Estimates = () => {
   const { data: customers } = useCustomers();
   const { data: projects } = useProjects();
   const isMobile = useIsMobile();
+  const { data: qbConfig } = useQuickBooksConfig();
   
   const [search, setSearch] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("all");
@@ -37,6 +41,10 @@ const Estimates = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
   const bulkUpdate = useBulkUpdateEstimates();
+
+  // QB mappings for per-row "Edit in QBO" buttons
+  const estimateIds = useMemo(() => estimates?.map((e) => e.id) ?? [], [estimates]);
+  const qbMappings = useQBMappingForList(estimateIds, "estimate");
 
   // Count drafts
   const draftCount = estimates?.filter(e => e.status === "draft").length || 0;
@@ -178,6 +186,14 @@ const Estimates = () => {
           >
             <Edit className="h-4 w-4" />
           </Button>
+          {qbMappings.get(item.id) && (
+            <QBOPopupLink
+              docType="estimate"
+              txnId={qbMappings.get(item.id)}
+              variant="edit"
+              onClose={() => refetch()}
+            />
+          )}
         </div>
       ),
     },
@@ -217,10 +233,19 @@ const Estimates = () => {
         title="Estimates"
         description="Create and manage project estimates"
         actions={
-          <Button variant="glow" onClick={() => navigate("/estimates/new")}>
-            <Plus className="h-4 w-4" />
-            New Estimate
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="glow" onClick={() => navigate("/estimates/new")}>
+              <Plus className="h-4 w-4" />
+              New Estimate
+            </Button>
+            {qbConfig?.is_connected && (
+              <QBOPopupLink
+                docType="estimate"
+                variant="create"
+                onClose={() => refetch()}
+              />
+            )}
+          </div>
         }
       >
         <PullToRefreshWrapper onRefresh={refetch} isRefreshing={isFetching}>
