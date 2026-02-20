@@ -244,11 +244,7 @@ export default function ChangeOrderDetail() {
           </Button>
         </>
       )}
-      {canCreateInvoice && (
-        <Button onClick={() => navigate(`/invoices/new?changeOrderId=${id}`)}>
-          <Receipt className="mr-2 h-4 w-4" /> Create Invoice
-        </Button>
-      )}
+      
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="outline" size="icon"><MoreVertical className="h-4 w-4" /></Button>

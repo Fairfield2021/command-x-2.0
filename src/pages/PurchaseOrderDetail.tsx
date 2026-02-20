@@ -34,7 +34,7 @@ import { useVendors } from "@/integrations/supabase/hooks/useVendors";
 import { useProjects } from "@/integrations/supabase/hooks/useProjects";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { ArrowLeft, ShoppingCart, Truck, Building, Send, CheckCircle, CheckCheck, XCircle, Loader2, MoreVertical, Receipt, Lock, LockOpen, Pencil, Printer, Download, Copy, Trash2 } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Truck, Building, Send, CheckCircle, CheckCheck, XCircle, Loader2, MoreVertical, Receipt, Lock, LockOpen, Pencil, Printer, Download, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -90,7 +90,6 @@ const PurchaseOrderDetail = () => {
   const canDelete = purchaseOrder && (
     (purchaseOrder.status === 'draft' || purchaseOrder.status === 'pending_approval') || isAdmin
   ) && (isAdmin || isManager);
-  const canDuplicate = !!purchaseOrder;
 
   const billedAmount = Number(purchaseOrder?.billed_amount || 0);
   const total = Number(purchaseOrder?.total || 0);
@@ -235,11 +234,6 @@ const PurchaseOrderDetail = () => {
     await downloadWorkOrderPDF(workOrderData);
   };
 
-  const handleDuplicate = () => {
-    if (!purchaseOrder) return;
-    navigate(`/purchase-orders/new?duplicate=${purchaseOrder.id}`);
-  };
-
   const handleDelete = async () => {
     if (!purchaseOrder) return;
     
@@ -365,12 +359,6 @@ const PurchaseOrderDetail = () => {
                 <DropdownMenuItem onClick={() => navigate(`/purchase-orders/${purchaseOrder.id}/edit`)}>
                   <Pencil className="mr-2 h-4 w-4" /> 
                   Edit
-                </DropdownMenuItem>
-              )}
-              {canDuplicate && (
-                <DropdownMenuItem onClick={handleDuplicate}>
-                  <Copy className="mr-2 h-4 w-4" /> 
-                  Duplicate
                 </DropdownMenuItem>
               )}
               <DropdownMenuItem onClick={handleDownloadWorkOrder}>

@@ -1,9 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Calendar, Eye, Edit, AlertCircle } from "lucide-react";
+import { FileText, Calendar, Eye, AlertCircle } from "lucide-react";
 import { Estimate } from "@/integrations/supabase/hooks/useEstimates";
-import { useNavigate } from "react-router-dom";
 import { formatCurrency } from "@/lib/utils";
 
 interface EstimateCardProps {
@@ -20,14 +19,8 @@ const statusColors = {
 };
 
 export function EstimateCard({ estimate, onClick, index }: EstimateCardProps) {
-  const navigate = useNavigate();
   const isDraft = estimate.status === "draft";
   const isIncomplete = isDraft && (!estimate.customer_name || estimate.customer_name === "Draft");
-
-  const handleContinueEditing = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    navigate(`/estimates/new?draft=${estimate.id}`);
-  };
 
   return (
     <div
@@ -55,7 +48,7 @@ export function EstimateCard({ estimate, onClick, index }: EstimateCardProps) {
       {isIncomplete && (
         <div className="flex items-center gap-2 p-2 mb-3 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400">
           <AlertCircle className="h-4 w-4" />
-          <span className="text-xs font-medium">Incomplete - click to continue</span>
+          <span className="text-xs font-medium">Incomplete draft</span>
         </div>
       )}
 
@@ -84,44 +77,18 @@ export function EstimateCard({ estimate, onClick, index }: EstimateCardProps) {
       </div>
 
       {/* Action Buttons */}
-      {isDraft ? (
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10"
-          onClick={handleContinueEditing}
-        >
-          <Edit className="h-4 w-4 mr-2" />
-          Continue Editing
-        </Button>
-      ) : (
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1"
-            onClick={(e) => {
-              e.stopPropagation();
-              onClick();
-            }}
-          >
-            <Eye className="h-4 w-4 mr-2" />
-            View
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1"
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`/estimates/${estimate.id}/edit`);
-            }}
-          >
-            <Edit className="h-4 w-4 mr-2" />
-            Edit
-          </Button>
-        </div>
-      )}
+      <Button
+        variant="outline"
+        size="sm"
+        className="w-full"
+        onClick={(e) => {
+          e.stopPropagation();
+          onClick();
+        }}
+      >
+        <Eye className="h-4 w-4 mr-2" />
+        View
+      </Button>
     </div>
   );
 }

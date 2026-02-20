@@ -417,10 +417,6 @@ export function EstimateDetailView({ estimateId }: EstimateDetailViewProps) {
                       Copy Approval Link
                     </DropdownMenuItem>
                   )}
-                  <DropdownMenuItem onClick={() => navigate(`/estimates/${estimateId}/edit`)}>
-                    <Edit className="mr-2 h-4 w-4" />
-                    Edit Estimate
-                  </DropdownMenuItem>
                   <DropdownMenuItem 
                     onClick={() => syncToQuickBooks.mutate(estimateId)}
                     disabled={syncToQuickBooks.isPending}

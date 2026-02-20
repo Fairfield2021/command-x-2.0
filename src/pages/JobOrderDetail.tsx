@@ -79,24 +79,10 @@ const JobOrderDetail = () => {
       description={`${jobOrder.customer_name} - ${jobOrder.project_name}`}
       actions={
         <div className="flex gap-2">
-          <Button 
-            variant="glow" 
-            size={isMobile ? "sm" : "default"}
-            onClick={() => setInvoiceDialogOpen(true)}
-          >
-            <Receipt className={`h-4 w-4 ${!isMobile && "mr-2"}`} />
-            {!isMobile && "Create Invoice"}
-          </Button>
-
           {!isMobile && (
-            <>
-              <Button variant="outline" onClick={() => navigate(`/job-orders/${id}/edit`)}>
-                <Pencil className="mr-2 h-4 w-4" /> Edit
-              </Button>
-              <Button variant="outline" onClick={() => navigate(`/purchase-orders/new?jobOrderId=${id}`)}>
-                <ShoppingCart className="mr-2 h-4 w-4" /> New PO
-              </Button>
-            </>
+            <Button variant="outline" onClick={() => navigate(`/job-orders/${id}/edit`)}>
+              <Pencil className="mr-2 h-4 w-4" /> Edit
+            </Button>
           )}
 
           <DropdownMenu>
@@ -107,14 +93,9 @@ const JobOrderDetail = () => {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               {isMobile && (
-                <>
-                  <DropdownMenuItem onClick={() => navigate(`/job-orders/${id}/edit`)}>
-                    <Pencil className="mr-2 h-4 w-4" /> Edit Job Order
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate(`/purchase-orders/new?jobOrderId=${id}`)}>
-                    <ShoppingCart className="mr-2 h-4 w-4" /> New Purchase Order
-                  </DropdownMenuItem>
-                </>
+                <DropdownMenuItem onClick={() => navigate(`/job-orders/${id}/edit`)}>
+                  <Pencil className="mr-2 h-4 w-4" /> Edit Job Order
+                </DropdownMenuItem>
               )}
               <DropdownMenuItem 
                 onClick={() => setDeleteDialogOpen(true)}

@@ -797,7 +797,6 @@ const ProjectDetail = () => {
       <div className="mb-8">
         <ProjectVendorBillsList
           projectId={id!}
-          onAddNew={() => navigate(`/vendor-bills/new?projectId=${id}`)}
         />
       </div>
 
@@ -824,7 +823,6 @@ const ProjectDetail = () => {
         <ProjectPurchaseOrdersList
           purchaseOrders={projectPurchaseOrders}
           projectId={id!}
-          onAddNew={() => navigate(`/purchase-orders/new?projectId=${id}`)}
         />
       </div>
 

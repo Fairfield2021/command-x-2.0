@@ -2,7 +2,7 @@ import { ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface PurchaseOrderEmptyStateProps {
-  onCreatePO: () => void;
+  onCreatePO?: () => void;
   hasFilters?: boolean;
 }
 

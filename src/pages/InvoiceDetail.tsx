@@ -3,7 +3,7 @@ import { PageLayout } from "@/components/layout/PageLayout";
 import { DetailPageLayout } from "@/components/layout/DetailPageLayout";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import { ArrowLeft, Send, Download, CheckCircle, Trash2, DollarSign, Edit } from "lucide-react";
+import { ArrowLeft, Send, Download, CheckCircle, Trash2, DollarSign } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useInvoice, useMarkInvoicePaid, useDeleteInvoice } from "@/integrations/supabase/hooks/useInvoices";
 import { useCompanySettings } from "@/integrations/supabase/hooks/useCompanySettings";
@@ -144,12 +144,6 @@ const InvoiceDetail = () => {
   // Mobile actions configuration
   const mobileActions = {
     primary: [
-      ...(canEdit ? [{
-        label: "Edit",
-        icon: <Edit className="h-4 w-4" />,
-        onClick: () => navigate(`/invoices/${id}/edit`),
-        variant: "default" as const,
-      }] : []),
       ...(invoice.status !== "paid" ? [{
         label: "Record Payment",
         icon: <DollarSign className="h-4 w-4" />,
@@ -194,12 +188,6 @@ const InvoiceDetail = () => {
           variant="edit"
           onClose={() => refetch()}
         />
-      )}
-      {canEdit && (
-        <Button variant="outline" onClick={() => navigate(`/invoices/${id}/edit`)}>
-          <Edit className="h-4 w-4 mr-2" />
-          Edit
-        </Button>
       )}
       {invoice.status !== "paid" && (
         <>
