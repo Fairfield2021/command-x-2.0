@@ -1,231 +1,242 @@
 
-# Step 6: QuickBooks Integration Hardening
+# Phase 0 — Critical Security Fixes
 
-## Summary
+This plan directly addresses all 8 items listed in the Notion Implementation Progress Tracker under Phase 0. Each item has been verified against the actual codebase. Here is exactly what the code looks like today and what changes are required.
 
-Standardize all QuickBooks mapping tables, create an idempotent sync queue, eliminate silent entity creation in QuickBooks, and establish immutable structured logging for all sync operations.
+---
 
-## Current State
+## What the Notion Tracker Requires (Phase 0, ~22 hours total)
 
-### Existing Mapping Tables (8 total)
-All 8 entity types have mapping tables, but schemas are inconsistent:
+| # | Task | Effort | Status in Code |
+|---|------|--------|----------------|
+| 1 | Remove .env with Supabase keys from Git history | 2h | Cannot be done by Lovable — manual git operation |
+| 2 | Fix Twilio webhook signature validation | 3h | CONFIRMED MISSING — no X-Twilio-Signature check anywhere |
+| 3 | Remove exposed Mapbox secret token | 1h | CONFIRMED — unauthenticated endpoint returns secret token to any caller |
+| 4 | Add Electron auto-updater signature verification | 4h | Out of scope for Lovable (Electron binary config) |
+| 5 | Fix XSS via dangerouslySetInnerHTML in AI chat | 2h | CONFIRMED — line 80 of ChatMessage.tsx, no sanitization |
+| 6 | Fix SSRF in badge PDF export | 2h | CONFIRMED — line 149 of badgePdfExport.ts, raw fetch with no URL validation |
+| 7 | Fix wildcard CORS on 29 Edge Functions | 3h | CONFIRMED — 90 files have Access-Control-Allow-Origin: * |
+| 8 | Address 36 high-severity npm vulnerabilities | 5h | Partially addressable via package updates |
 
-| Table | Has `sync_direction`? | Has `error_message`? | Has `updated_at`? | Notes |
-|-------|----------------------|---------------------|-------------------|-------|
-| `quickbooks_vendor_mappings` | YES | NO | YES | Most complete |
-| `quickbooks_customer_mappings` | NO | NO | YES | Missing fields |
-| `quickbooks_invoice_mappings` | NO | NO | YES | Uses `synced_at` instead of `last_synced_at` |
-| `quickbooks_bill_mappings` | NO | YES | YES | Has `quickbooks_doc_number` |
-| `quickbooks_estimate_mappings` | NO | NO | YES | Minimal |
-| `quickbooks_po_mappings` | NO | NO | YES | Minimal |
-| `quickbooks_account_mappings` | NO | NO | YES | Has QB account metadata |
-| `quickbooks_product_mappings` | NO | NO | YES | Has `quickbooks_item_type` |
+Lovable can implement items 2, 3, 5, 6, and 7. Items 1 and 4 require manual action outside Lovable. Item 8 is addressed through dependency notes.
 
-### Silent Entity Creation Problem
-6 edge functions silently create vendors/customers in QuickBooks:
-- `quickbooks-create-bill` -- calls `getOrCreateQBVendor()` which creates vendors without user confirmation
-- `quickbooks-update-bill` -- same `getOrCreateQBVendor()` pattern
-- `quickbooks-create-purchase-order` -- same pattern
-- `quickbooks-create-invoice` -- calls `quickbooks-sync-customers` with `find-or-create` action
-- `quickbooks-update-invoice` -- same `find-or-create` pattern
-- `quickbooks-create-estimate` -- same `find-or-create` pattern
+---
 
-### Logging Gap
-Two separate logging tables exist with different schemas:
-- `quickbooks_sync_log` -- entity-level logs (entity_type, entity_id, action, status, details)
-- `quickbooks_sync_logs` -- batch-level logs (sync_type, records_synced, details)
+## Fix 1: XSS in AI Chat (ChatMessage.tsx)
 
-Neither captures request/response payloads, HTTP status codes, or is immutable.
-
-## What Will Change
-
-### 1. Database Migration: Standardize Mapping Tables
-
-Add missing columns to existing mapping tables via `ALTER TABLE ADD COLUMN IF NOT EXISTS`:
-
-| Column Added | Tables Receiving It |
-|-------------|-------------------|
-| `sync_direction TEXT DEFAULT 'export'` | customer, invoice, bill, estimate, po, account, product |
-| `error_message TEXT` | vendor, customer, invoice, estimate, po, account, product |
-
-Rename `quickbooks_invoice_mappings.synced_at` to `last_synced_at` (add new column, backfill, keep old for compatibility).
-
-No UNIQUE constraints are added on QB IDs where they don't already exist -- these tables may legitimately have multiple local entities mapped to the same QB entity in edge cases.
-
-### 2. Database Migration: Sync Queue Table
-
-Create `quickbooks_sync_queue`:
-
-| Column | Type | Notes |
-|--------|------|-------|
-| `id` | UUID | Primary key |
-| `entity_type` | TEXT | 'vendor', 'customer', 'invoice', 'bill', 'estimate', 'purchase_order' |
-| `entity_id` | UUID | Local entity ID |
-| `action` | TEXT | 'create', 'update', 'delete', 'void' |
-| `priority` | INTEGER | Default 0 (higher = more urgent) |
-| `status` | TEXT | 'pending', 'processing', 'completed', 'failed', 'cancelled' |
-| `retry_count` | INTEGER | Default 0 |
-| `max_retries` | INTEGER | Default 3 |
-| `next_retry_at` | TIMESTAMPTZ | For exponential backoff |
-| `scheduled_at` | TIMESTAMPTZ | Default now() |
-| `processed_at` | TIMESTAMPTZ | When completed |
-| `error_message` | TEXT | Last error |
-| `created_by` | UUID | Who queued it |
-| `created_at` | TIMESTAMPTZ | Default now() |
-| `updated_at` | TIMESTAMPTZ | Default now() |
-
-Deduplication: UNIQUE constraint on `(entity_type, entity_id, action)` WHERE `status IN ('pending', 'processing')` -- prevents duplicate pending items for the same entity/action.
-
-RLS: admin and manager roles can SELECT/INSERT/UPDATE. No DELETE.
-
-### 3. Database Migration: Enhanced Immutable Sync Log
-
-Create `quickbooks_api_log` (new immutable table, keeping existing tables intact):
-
-| Column | Type | Notes |
-|--------|------|-------|
-| `id` | UUID | Primary key |
-| `function_name` | TEXT | Edge function that made the call |
-| `entity_type` | TEXT | What was being synced |
-| `entity_id` | UUID | Local entity ID |
-| `quickbooks_entity_id` | TEXT | QB entity ID (if known) |
-| `http_method` | TEXT | GET, POST, PUT |
-| `endpoint` | TEXT | QB API endpoint path |
-| `http_status` | INTEGER | Response status code |
-| `request_payload` | JSONB | Sanitized request body |
-| `response_payload` | JSONB | Response body |
-| `error_message` | TEXT | Error details |
-| `request_sent_at` | TIMESTAMPTZ | When request was sent |
-| `response_received_at` | TIMESTAMPTZ | When response came back |
-| `initiated_by` | UUID | User who triggered sync |
-| `created_at` | TIMESTAMPTZ | Default now() |
-
-RLS: admin and accounting can SELECT. System can INSERT. No UPDATE or DELETE.
-
-Trigger: `BEFORE UPDATE OR DELETE` raises exception -- logs are immutable.
-
-### 4. Shared Logging Utility
-
-Create `supabase/functions/_shared/qbApiLogger.ts`:
-
-A wrapper around the QuickBooks API fetch calls that:
-- Records request timestamp before sending
-- Records response timestamp after receiving
-- Sanitizes sensitive data (access tokens, auth headers) from payloads
-- Inserts into `quickbooks_api_log`
-- Returns the parsed response
-
-All edge functions will import and use this wrapper instead of raw `qbRequest()` calls.
-
-```text
-loggedQBRequest(supabase, {
-  functionName: 'quickbooks-create-bill',
-  entityType: 'bill',
-  entityId: billId,
-  method: 'POST',
-  endpoint: '/bill?minorversion=65',
-  accessToken, realmId, body,
-  initiatedBy: userId
-}) -> { response, logId }
+**Current vulnerable code (line 80):**
+```typescript
+dangerouslySetInnerHTML={{ __html: formatContent(message.content) }}
 ```
 
-### 5. Edge Function Updates: Ban Silent Entity Creation
+The `formatContent` function applies regex replacements on AI-generated content and then injects it directly as raw HTML with no sanitization. A malicious AI response containing `<script>`, `<img onerror=...>`, or event handler attributes would execute in the browser.
 
-Modify 6 edge functions to require pre-existing mappings instead of auto-creating:
+**Fix:** Replace `dangerouslySetInnerHTML` entirely. Parse the markdown-like formatting into React elements instead of HTML strings. No external library needed — the formatting only does bold, italic, and line breaks:
 
-**`quickbooks-create-bill` and `quickbooks-update-bill`:**
-- Replace `getOrCreateQBVendor()` with `getRequiredQBVendor()` that:
-  - Checks `quickbooks_vendor_mappings` for existing mapping
-  - If not found, returns error: `"Vendor '[name]' is not mapped to QuickBooks. Please sync this vendor first from the Vendor Management page."`
-  - Never creates a vendor in QuickBooks
+```typescript
+// Instead of dangerouslySetInnerHTML, split content into segments
+// and render <strong>, <em>, and <br/> as React elements
+const renderContent = (content: string) => {
+  // Safe React element rendering, no raw HTML injection
+};
+```
 
-**`quickbooks-create-purchase-order`:**
-- Same change: replace `getOrCreateQBVendor()` with lookup-only
+This eliminates the XSS vector completely without needing DOMPurify.
 
-**`quickbooks-create-invoice`, `quickbooks-update-invoice`, `quickbooks-create-estimate`:**
-- Replace `find-or-create` customer sync calls with mapping lookup
-- If no mapping exists, return error: `"Customer '[name]' is not mapped to QuickBooks. Please sync this customer first from the Customer Management page."`
+---
 
-**`quickbooks-sync-customers` `find-or-create` action:**
-- Keep it but rename to `find-only` -- returns mapping if exists, error if not
-- The existing `export` action (which does create customers) remains as the explicit user-initiated flow
+## Fix 2: SSRF in Badge PDF Export (badgePdfExport.ts)
 
-### 6. Integrate Shared Logger
+**Current vulnerable code (lines 142-165):**
+```typescript
+const fetchImageAsBase64 = async (url: string): Promise<string | null> => {
+  if (!url || url.startsWith('/') || url.startsWith('./')) {
+    return null; // Only blocks local paths
+  }
+  const response = await fetch(url); // No other validation
+```
 
-Update all QuickBooks edge functions to use `loggedQBRequest()` instead of raw `qbRequest()`. This affects approximately 20 edge functions that make QuickBooks API calls.
+An attacker-controlled `company_logo_url` or `photo_url` stored in the database could point to `http://169.254.169.254/` (AWS metadata), `http://localhost:5432/` (internal Postgres), or any internal service. The function fetches it client-side, so this is a client-side SSRF rather than server-side — but it still exposes the browser's internal network access and can be used for internal port scanning.
 
-## Files Created
+The same pattern exists in `applicationExportUtils.ts` (line 80).
+
+**Fix:** Add an allowlist validator before `fetch()`:
+
+```typescript
+const isAllowedImageUrl = (url: string): boolean => {
+  try {
+    const parsed = new URL(url);
+    // Only allow https
+    if (parsed.protocol !== 'https:') return false;
+    // Block private IP ranges and localhost
+    const hostname = parsed.hostname;
+    if (hostname === 'localhost') return false;
+    if (/^127\./.test(hostname)) return false;
+    if (/^10\./.test(hostname)) return false;
+    if (/^192\.168\./.test(hostname)) return false;
+    if (/^172\.(1[6-9]|2\d|3[01])\./.test(hostname)) return false;
+    if (hostname === '169.254.169.254') return false;
+    return true;
+  } catch {
+    return false;
+  }
+};
+```
+
+Apply this check in both `badgePdfExport.ts` and `applicationExportUtils.ts`.
+
+---
+
+## Fix 3: Exposed Mapbox Secret Token (get-mapbox-token)
+
+**Current state:** The `get-mapbox-token` edge function has no authentication. Any caller — including unauthenticated ones — can hit this endpoint and receive the Mapbox secret token (`MapBox` env variable). The audit (C-03) describes this as allowing "complete takeover of the Mapbox account."
+
+**Fix per Notion spec:** Add JWT authentication to the endpoint. The function will validate the Supabase auth token from the Authorization header before returning the token. Unauthenticated callers receive 401.
+
+```typescript
+// Extract and verify the user's JWT
+const authHeader = req.headers.get('Authorization');
+if (!authHeader) {
+  return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+}
+const supabase = createClient(url, anonKey, {
+  global: { headers: { Authorization: authHeader } }
+});
+const { data: { user }, error } = await supabase.auth.getUser();
+if (error || !user) {
+  return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+}
+// Now safe to return token
+```
+
+The CORS wildcard on this function is also fixed as part of Fix 5 below.
+
+---
+
+## Fix 4: Twilio Webhook Signature Validation (twilio-webhook)
+
+**Current state (confirmed):** The `twilio-webhook/index.ts` function receives incoming SMS, processes them, and stores messages — but performs zero validation of the `X-Twilio-Signature` header. Any HTTP POST to the function endpoint will be processed as a legitimate Twilio message.
+
+**Fix:** Implement HMAC-SHA1 signature validation using the Twilio auth token. The signature is computed over the full URL + sorted POST parameters:
+
+```typescript
+import { createHmac } from "https://deno.land/std/crypto/mod.ts";
+
+async function validateTwilioSignature(
+  authToken: string,
+  signature: string,
+  url: string,
+  params: Record<string, string>
+): Promise<boolean> {
+  // Sort params, build validation string
+  const sortedKeys = Object.keys(params).sort();
+  let validationStr = url;
+  for (const key of sortedKeys) {
+    validationStr += key + params[key];
+  }
+  // HMAC-SHA1
+  const key = new TextEncoder().encode(authToken);
+  const data = new TextEncoder().encode(validationStr);
+  const hmac = createHmac("sha1", key);
+  hmac.update(data);
+  const expected = btoa(String.fromCharCode(...new Uint8Array(await hmac.digest())));
+  return expected === signature;
+}
+```
+
+The `TWILIO_AUTH_TOKEN` secret is required for this. If it is already configured in the project secrets, it will be used. If not, the user will need to add it.
+
+---
+
+## Fix 5: Wildcard CORS on All Edge Functions
+
+**Current state:** 90 files contain `'Access-Control-Allow-Origin': '*'`. The audit says 29 — the actual count is higher because more functions have been added since.
+
+**The right approach for this project:** The app is deployed at `https://commandx-craft.lovable.app` (published URL) and `https://id-preview--76ab7580-4e0f-4011-980d-d7fa0d216db7.lovable.app` (preview URL). The CORS headers should allow both origins.
+
+However, there is an important nuance: some functions are called from **external systems** that legitimately need open CORS:
+- `twilio-webhook` — called directly by Twilio's servers (not a browser, so CORS doesn't apply; wildcard is irrelevant but harmless)
+- `quickbooks-webhook` — called by Intuit's servers (same — not a browser)
+- Portal/onboarding functions (`lookup-applicant`, `approve-estimate`, `get-estimate-for-approval`) — called from the app by potentially unauthenticated users
+
+**Strategy:**
+- Functions called only by authenticated app users: restrict to app origins
+- Webhook receivers (`twilio-webhook`, `quickbooks-webhook`): CORS headers are irrelevant (server-to-server) but will be restricted for consistency
+- Public portal functions: restrict to app origins (portal users access through the app)
+
+A shared CORS helper will be created in `supabase/functions/_shared/cors.ts`:
+
+```typescript
+export const ALLOWED_ORIGINS = [
+  'https://commandx-craft.lovable.app',
+  'https://id-preview--76ab7580-4e0f-4011-980d-d7fa0d216db7.lovable.app',
+];
+
+export function getCorsHeaders(req: Request) {
+  const origin = req.headers.get('Origin') || '';
+  const allowed = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    'Access-Control-Allow-Origin': allowed,
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  };
+}
+```
+
+All 90 functions will be updated to use this helper instead of the hardcoded wildcard. This is a mechanical change — the content of each function does not change, only the `corsHeaders` object and its usage.
+
+---
+
+## Files to Create
 
 | File | Purpose |
 |------|---------|
-| Migration SQL | Standardize mappings, create sync queue, create API log |
-| `supabase/functions/_shared/qbApiLogger.ts` | Shared logging wrapper for QB API calls |
+| `supabase/functions/_shared/cors.ts` | Shared CORS helper with allowed origins allowlist |
 
-## Files Modified
+## Files to Modify
 
 | File | Change |
 |------|--------|
-| `quickbooks-create-bill/index.ts` | Replace `getOrCreateQBVendor` with lookup-only + use logger |
-| `quickbooks-update-bill/index.ts` | Same |
-| `quickbooks-create-purchase-order/index.ts` | Same |
-| `quickbooks-create-invoice/index.ts` | Replace `find-or-create` with lookup-only + use logger |
-| `quickbooks-update-invoice/index.ts` | Same |
-| `quickbooks-create-estimate/index.ts` | Same |
-| `quickbooks-sync-customers/index.ts` | Rename `find-or-create` to `find-only`, use logger |
-| `quickbooks-sync-vendors/index.ts` | Use logger |
-| `quickbooks-sync-products/index.ts` | Use logger |
-| `quickbooks-sync-accounts/index.ts` | Use logger |
+| `src/components/ai-assistant/ChatMessage.tsx` | Replace `dangerouslySetInnerHTML` with safe React element rendering |
+| `src/utils/badgePdfExport.ts` | Add `isAllowedImageUrl` validator before all `fetchImageAsBase64` calls |
+| `src/utils/applicationExportUtils.ts` | Same SSRF fix for the second `fetchImageAsBase64` function |
+| `supabase/functions/get-mapbox-token/index.ts` | Add JWT authentication before returning token |
+| `supabase/functions/twilio-webhook/index.ts` | Add Twilio HMAC-SHA1 signature validation |
+| All 90 edge function `index.ts` files | Replace `Access-Control-Allow-Origin: *` with the shared CORS helper |
 
-## What Will NOT Change
+---
 
-- Existing `quickbooks_sync_log` and `quickbooks_sync_logs` tables (preserved for backward compat; new detailed logging goes to `quickbooks_api_log`)
-- The explicit `export` and `import` actions in sync functions (these are user-initiated bulk operations)
-- QuickBooks OAuth flow
-- QuickBooks webhook handler
-- The subledger tables (Step 4)
-- No frontend changes in this step
+## What Is Out of Scope for Lovable
+
+| Item | Reason | Action Required |
+|------|--------|-----------------|
+| Remove .env from Git history | Requires `git-filter-repo` CLI on the repo host | Manus must run locally |
+| Electron auto-updater signature | Electron binary config, not web code | Manus must configure in electron build pipeline |
+| npm audit (36 vulns) | Package updates can break things; needs testing | Can update specific safe packages (jspdf is already updated to v3.0.4 in package.json — C-04 may already be resolved) |
+
+---
+
+## Prerequisite: Twilio Auth Token Secret
+
+Fix 4 (Twilio signature validation) requires `TWILIO_AUTH_TOKEN` to be available as a secret in the edge function environment. Before implementing, the current secrets will be checked. If it is not already configured, it will need to be added before the Twilio fix can be deployed.
+
+---
 
 ## Risk Assessment
 
-- **Medium risk**: Removing silent entity creation is a behavioral change. Users who previously relied on automatic vendor/customer creation during bill/invoice sync will now see an error asking them to sync the entity first. This is the correct behavior per the core rules ("No silent vendor/customer creation").
-- **Mitigation**: Error messages clearly indicate what action the user needs to take.
-- **Low risk**: Schema additions are non-destructive `ADD COLUMN IF NOT EXISTS`.
-- **No data loss**: Existing mapping data is preserved. New columns get sensible defaults.
+- **XSS fix:** Zero risk — removes `dangerouslySetInnerHTML` and replaces with typed React rendering. No UI change visible to users.
+- **SSRF fix:** Zero risk — adds validation before fetch calls. Images from legitimate URLs (Supabase storage, S3, CDN) all pass https validation. Only private/internal URLs are blocked.
+- **Mapbox auth:** Low risk — any code that calls `get-mapbox-token` must be authenticated (logged-in users). The geocode function uses the token server-side and is unaffected.
+- **Twilio signature:** Low risk for authenticated flow. Risk: if `TWILIO_AUTH_TOKEN` secret is wrong, real Twilio messages will be rejected. Will add a dev-mode bypass flag.
+- **CORS:** Medium risk — any external integration that currently relies on the wildcard (e.g., a tool hitting functions from a non-app domain) will break. Webhooks from Twilio/Intuit are server-to-server and unaffected by CORS. The main risk is the preview URL vs. the published URL — both are included in the allowlist.
 
-## Technical Details
+---
 
-### Deduplication Constraint (Sync Queue)
+## Success Criteria (Notion Phase 0 Checklist)
 
-```text
-CREATE UNIQUE INDEX idx_qb_sync_queue_dedup
-ON quickbooks_sync_queue (entity_type, entity_id, action)
-WHERE status IN ('pending', 'processing');
-```
-
-This ensures only one pending/processing item exists per entity+action combination. Completed/failed items don't block new entries.
-
-### Silent Creation Replacement Pattern
-
-```text
--- BEFORE (silent creation):
-async function getOrCreateQBVendor(supabase, vendorId, accessToken, realmId):
-  mapping = lookup mapping
-  if mapping exists -> return QB ID
-  search QB by name -> if found, create mapping, return QB ID
-  create vendor in QB -> create mapping, return QB ID   // <-- BANNED
-
--- AFTER (lookup only):
-async function getRequiredQBVendor(supabase, vendorId):
-  mapping = lookup mapping
-  if mapping exists -> return QB ID
-  vendor = get vendor name
-  throw Error("Vendor 'X' is not mapped to QuickBooks...")
-```
-
-### Logger Sanitization
-
-The shared logger strips these from payloads before storing:
-- `Authorization` headers
-- `access_token` values
-- `refresh_token` values
-- Full SSN/tax ID values (replaced with masked versions)
+- AI chat renders bold/italic/line breaks without any raw HTML injection
+- Badge PDF generation only fetches images from https:// public URLs — internal network URLs are rejected
+- Mapbox token endpoint returns 401 to unauthenticated callers
+- Twilio webhook rejects requests with invalid or missing signature
+- All 90 edge functions respond with the specific app origin instead of `*` in CORS headers
+- The above items check off 5 of the 8 Phase 0 tasks in the Notion tracker
