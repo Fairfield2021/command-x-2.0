@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -15,16 +15,17 @@ import {
 const isElectron =
   typeof window !== "undefined" && window.electronAPI?.isElectron;
 const Router = isElectron ? HashRouter : BrowserRouter;
-import { SidebarProvider } from "@/components/ui/sidebar";
+// SidebarProvider is now inside NavigationLayout
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AIAssistantProvider } from "@/contexts/AIAssistantContext";
 import { LocationTrackingProvider } from "@/contexts/LocationTrackingContext";
 import { UIDensityProvider } from "@/contexts/UIDensityContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import { BottomNav } from "@/components/layout/BottomNav";
-import { MoreMenu } from "@/components/layout/MoreMenu";
-import { NetSuiteLayout } from "@/components/layout/netsuite/NetSuiteLayout";
+// Legacy nav kept as safety net (not imported)
+// import { BottomNav } from "@/components/layout/BottomNav";
+// import { NetSuiteLayout } from "@/components/layout/netsuite/NetSuiteLayout";
+import { NavigationLayout } from "@/components/layout/navigation";
 import { useNativeStatusBar } from "@/hooks/useNativeStatusBar";
 import { ChatInterface } from "@/components/ai-assistant/ChatInterface";
 import Index from "./pages/Index";
@@ -162,7 +163,6 @@ const NativeStatusBarManager = () => {
 };
 
 const App = () => {
-  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -349,12 +349,12 @@ const App = () => {
                         </PortalProtectedRoute>
                       }
                     />
-                    {/* Protected Routes with NetSuite Layout */}
+                    {/* Protected Routes with Navigation Layout */}
                     <Route
                       element={
                         <ProtectedRoute>
                           <UIDensityProvider>
-                            <NetSuiteLayout />
+                            <NavigationLayout />
                           </UIDensityProvider>
                         </ProtectedRoute>
                       }
@@ -684,11 +684,7 @@ const App = () => {
 
                     <Route path="*" element={<NotFound />} />
                   </Routes>
-                  <BottomNav onMoreClick={() => setMoreMenuOpen(true)} />
-                  <MoreMenu
-                    open={moreMenuOpen}
-                    onOpenChange={setMoreMenuOpen}
-                  />
+                  {/* Legacy BottomNav + MoreMenu removed — replaced by NavigationLayout */}
                   <ChatInterface />
                   <UpdateNotification />
                 </AIAssistantProvider>
