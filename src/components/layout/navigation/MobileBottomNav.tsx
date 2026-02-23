@@ -15,7 +15,7 @@ const tabs = [
   { id: "home", icon: Home, label: "Home", path: "/" },
   { id: "workspace", icon: Briefcase, label: "Work", path: "/jobs" },
   { id: "create", icon: Plus, label: "Create", path: "" },
-  { id: "people", icon: Users, label: "People", path: "/personnel" },
+  { id: "people", icon: Users, label: "People", path: "/people" },
   { id: "company", icon: Building2, label: "Company", path: "/settings" },
 ];
 

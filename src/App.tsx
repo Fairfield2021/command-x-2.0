@@ -64,6 +64,7 @@ import UserManagement from "./pages/UserManagement";
 import AcceptInvitation from "./pages/AcceptInvitation";
 import ApproveEstimate from "./pages/ApproveEstimate";
 import Personnel from "./pages/Personnel";
+import PeopleDirectory from "./pages/PeopleDirectory";
 import PersonnelDetail from "./pages/PersonnelDetail";
 import PersonnelRegistrationPortal from "./pages/PersonnelRegistrationPortal";
 import PersonnelInviteRegister from "./pages/PersonnelInviteRegister";
@@ -431,6 +432,7 @@ const App = () => {
                         path="/project-assignments"
                         element={<ProjectAssignments />}
                       />
+                      <Route path="/people" element={<PeopleDirectory />} />
                       <Route path="/personnel" element={<Personnel />} />
                       <Route
                         path="/personnel/:id"
