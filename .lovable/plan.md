@@ -1,89 +1,89 @@
 
 
-# Phase 4b — Job Hub (Tabbed Interface)
+# Phase 4b Fix — Add Schedule and Field Tabs to Job Hub
 
-## Overview
-Transform the current monolithic `ProjectDetail.tsx` (979 lines of vertically stacked sections) into a clean tabbed Job Hub. The data fetching and business logic already exist -- this is a UI reorganization.
+## Problem
+The current Job Hub has 5 tabs: **Overview, Financials, Documents, Team, Activity**. This doesn't match the spec, which calls for **Schedule** and **Field** tabs. Specifically:
 
-## Current State
-`ProjectDetail.tsx` renders everything in one long scroll:
-- Progress bar, Financial Summary, Labor Allocation
-- Project info cards (Status, Customer, Timeline, Address, POC)
-- Rate Brackets, Applicants, Personnel, Assets, Rooms
-- Milestones, Estimates, Job Orders, Invoices
-- Vendor Bills, Change Orders, T&M Tickets, Purchase Orders
-- Time Entries, Documents, Activity Timeline
+- **Milestones** are buried in the Overview tab instead of a dedicated Schedule tab with calendar/timeline views
+- **No Schedule tab** exists with Gantt-style timeline or calendar view of personnel schedules and milestones
+- **No Field tab** exists for daily logs, site photos, or field-level reporting
+- "Documents" and "Activity" tabs are fine to keep but don't replace the missing Schedule and Field tabs
 
-All the sub-components already exist in `src/components/project-hub/`.
-
-## New Structure: 5 Tabs
+## Proposed Change: Expand from 5 Tabs to 7 Tabs
 
 ```text
-[Overview] [Financials] [Documents] [Team] [Activity]
+[Overview] [Financials] [Schedule] [Field] [Documents] [Team] [Activity]
 ```
 
 | Tab | Contents |
 |---|---|
-| **Overview** | Project info cards (status, customer, timeline, address, POC, description), Progress bar, Milestones, Rooms |
-| **Financials** | Financial Summary, Labor Allocation, Estimates, Job Orders, Invoices, Vendor Bills, Change Orders, T&M Tickets, Purchase Orders, Time Entries |
-| **Documents** | Project Documents (existing ProjectDocuments component) |
-| **Team** | Rate Brackets, Applicants, Assigned Personnel, Asset Assignments |
-| **Activity** | Activity Timeline |
+| **Overview** | Project info, progress bar, rooms (milestones MOVE OUT) |
+| **Financials** | Financial summary, labor allocation, estimates, job orders, invoices, vendor bills, change orders, T&M, POs, time entries |
+| **Schedule** | Milestones (moved from Overview), Personnel schedules calendar, Timeline/Gantt view |
+| **Field** | Daily logs (new), Site photos (new), Weather logs (existing table), Inspections (existing table) |
+| **Documents** | Project documents (unchanged) |
+| **Team** | Rate brackets, applicants, personnel, assets (unchanged) |
+| **Activity** | Activity timeline (unchanged) |
+
+## What Already Exists (reusable)
+
+- `personnel_schedules` table + `usePersonnelSchedulesByProject` hook -- ready to use
+- `ScheduleManager` component (admin) -- can adapt for project-scoped view
+- `weather_logs` table -- can surface per-project
+- `roof_inspections` table -- can surface per-project
+- Milestone CRUD hooks (`useMilestonesByProject`, `useAddMilestone`, etc.) -- already in ProjectDetail
+
+## What Needs to Be Built (net-new)
+
+### Database: 2 new tables
+1. **`daily_field_logs`** -- date, project_id, created_by, weather_conditions, crew_count, work_performed (text), safety_incidents (text), delays (text), notes, status (draft/submitted/approved)
+2. **`field_photos`** -- project_id, daily_log_id (nullable), uploaded_by, storage_path, caption, location_tag, taken_at
+
+### New Components
+1. **`JobHubScheduleTab.tsx`** -- Milestones timeline + personnel schedule calendar for the project
+2. **`JobHubFieldTab.tsx`** -- Daily log list/form + photo gallery + weather/inspection summaries
+3. **`DailyFieldLogForm.tsx`** -- Form to create/edit a daily field log entry
+4. **`FieldPhotoGallery.tsx`** -- Grid of uploaded site photos with captions
+
+### Modified Files
+- **`ProjectDetail.tsx`** -- Add 2 new tab triggers and content panels; move milestone props from Overview to Schedule tab
+- **`JobHubOverviewTab.tsx`** -- Remove milestones section (moved to Schedule)
 
 ## Implementation Steps
 
-### Step 1: Create tab content components
-Extract each tab's content into its own component to keep things clean:
+### Step 1: Database migration
+Create `daily_field_logs` and `field_photos` tables with RLS policies scoped to authenticated users.
 
-| File | Purpose |
-|---|---|
-| `src/components/project-hub/tabs/JobHubOverviewTab.tsx` | Project info, progress, milestones, rooms |
-| `src/components/project-hub/tabs/JobHubFinancialsTab.tsx` | All financial sections |
-| `src/components/project-hub/tabs/JobHubDocumentsTab.tsx` | Document center wrapper |
-| `src/components/project-hub/tabs/JobHubTeamTab.tsx` | Personnel, applicants, rate brackets, assets |
-| `src/components/project-hub/tabs/JobHubActivityTab.tsx` | Activity timeline |
+### Step 2: Create hooks
+- `useDailyFieldLogs(projectId)` -- CRUD for daily logs
+- `useFieldPhotos(projectId)` -- CRUD for site photos with storage upload
 
-### Step 2: Refactor ProjectDetail.tsx into tabbed layout
-- Keep all existing data fetching hooks at the top (unchanged)
-- Replace the vertical stack with a `Tabs` component (Radix, already installed)
-- Each `TabsContent` renders the corresponding tab component
-- Pass down the already-fetched data as props (no new queries)
-- URL hash support: `#financials`, `#team`, etc. so tabs are linkable
+### Step 3: Build Schedule tab
+- Move milestones from Overview into new `JobHubScheduleTab`
+- Add project-scoped personnel schedule view (reuse `usePersonnelSchedulesByProject`)
+- Display milestones as a timeline and schedules as a day/week calendar grid
 
-### Step 3: Update Jobs list page
-- `Jobs.tsx` currently links to `/projects/:id` -- keep this behavior
-- Update the sidebar nav to point `/jobs` at the Jobs list page (already done in Phase 4a)
+### Step 4: Build Field tab
+- Daily log list with add/edit capability
+- Photo upload gallery using existing storage bucket
+- Weather and inspection summary cards
 
-### Step 4: Update the Notion tracker
-- Mark Phase 4b tasks as in-progress
+### Step 5: Wire into ProjectDetail.tsx
+- Add `schedule` and `field` to `VALID_TABS`
+- Add `TabsTrigger` and `TabsContent` for both
+- Pass milestone data to Schedule tab instead of Overview tab
+- Update Overview tab to remove milestones section
 
-## Technical Details
-
-### Data flow (no changes to queries)
-All hooks remain in `ProjectDetail.tsx`. Data is passed down to tab components as props. This avoids duplicate fetching and keeps the single-page data model intact.
-
-### Tab persistence
-- Default tab: Overview
-- Active tab stored in URL hash (`/projects/:id#financials`)
-- Switching tabs does not re-fetch data (all fetched on mount)
-
-### Milestone dialog
-The milestone create/edit dialog and its state management stay in `ProjectDetail.tsx` since it's triggered from the Overview tab but belongs to the page-level scope.
-
-## Files Created (new)
-| File | Purpose |
-|---|---|
-| `src/components/project-hub/tabs/JobHubOverviewTab.tsx` | Overview tab content |
-| `src/components/project-hub/tabs/JobHubFinancialsTab.tsx` | Financials tab content |
-| `src/components/project-hub/tabs/JobHubDocumentsTab.tsx` | Documents tab content |
-| `src/components/project-hub/tabs/JobHubTeamTab.tsx` | Team tab content |
-| `src/components/project-hub/tabs/JobHubActivityTab.tsx` | Activity tab content |
-
-## Files Modified
-| File | Change |
-|---|---|
-| `src/pages/ProjectDetail.tsx` | Replace vertical layout with Tabs; delegate sections to tab components |
+### Step 6: Update plan.md and Notion tracker
 
 ## Risk Assessment
-**Low risk.** No new data queries, no schema changes, no new routes. All existing sub-components are reused as-is. This is purely a UI reorganization of content that already renders correctly.
+**Low-medium risk.** The Schedule tab is mostly reorganizing existing data (milestones + schedules). The Field tab introduces 2 new tables and a photo upload flow, but follows established patterns (storage bucket, RLS, CRUD hooks). No existing functionality is removed -- milestones move tabs but remain fully functional.
+
+## Technical Notes
+
+- All new tables use `project_id` foreign key and RLS enforced at database level
+- Photo uploads use the existing Supabase storage integration pattern (same as personnel photos)
+- No new routes needed -- everything lives within the Job Hub tabs
+- Daily logs use append-only pattern with status workflow (draft -> submitted -> approved) to maintain data integrity
 
