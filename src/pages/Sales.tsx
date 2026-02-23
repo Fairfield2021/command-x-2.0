@@ -89,9 +89,7 @@ export default function Sales() {
               </div>
             </>
           ) : (
-            <InvoiceEmptyState 
-              onAddInvoice={() => navigate('/invoices/new')}
-            />
+            <InvoiceEmptyState />
           )}
         </TabsContent>
       </Tabs>
