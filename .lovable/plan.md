@@ -1,30 +1,25 @@
 
 
-# Finish Phase 2 — Delete 7 Remaining Backend Edge Functions
+# Fix Phase 2 Build Error in Sales.tsx
 
-## What's Left
-The frontend cleanup (page deletions, route removals, button/link cleanup) is already done. The only remaining Phase 2 work is deleting these 7 legacy edge functions that handled local-to-QBO document creation and updates:
+## Problem
+`Sales.tsx` line 92-94 still passes `onAddInvoice={() => navigate('/invoices/new')}` to `InvoiceEmptyState`, but that prop was removed during Phase 2 cleanup. The component now accepts an optional `createAction` ReactNode instead.
 
-| Function | Purpose (now obsolete) |
-|---|---|
-| `quickbooks-create-invoice` | Created invoices in QBO from local form |
-| `quickbooks-create-estimate` | Created estimates in QBO from local form |
-| `quickbooks-create-purchase-order` | Created POs in QBO from local form |
-| `quickbooks-create-bill` | Created bills in QBO from local form |
-| `quickbooks-update-invoice` | Updated invoices in QBO from local edit form |
-| `quickbooks-update-estimate` | Updated estimates in QBO from local edit form |
-| `quickbooks-update-bill` | Updated bills in QBO from local edit form |
+## Fix
+In `src/pages/Sales.tsx`, replace lines 92-94:
 
-## What Is NOT Being Removed
-- `quickbooks-update-vendor` — handles vendor sync, not document editing
-- `quickbooks-void-*` functions — retained for operational voiding
-- All `quickbooks-sync-*`, `quickbooks-import-*`, `quickbooks-receive-*` functions — retained for sync/webhook operations
+```tsx
+// FROM:
+<InvoiceEmptyState 
+  onAddInvoice={() => navigate('/invoices/new')}
+/>
 
-## Steps
-1. Delete all 7 edge function directories from `supabase/functions/`
-2. Remove the deployed functions from the backend
-3. Update the Notion tracker to mark Phase 2 as complete
+// TO:
+<InvoiceEmptyState />
+```
 
-## Risk
-None — the frontend routes and buttons that called these functions were already removed in the previous step. No remaining code references these functions.
+This is a one-line change. No other modifications needed.
+
+## Phase 2 Status
+Notion confirms Phase 2 is fully marked as **Complete**. This is just a leftover build error from the cleanup pass.
 
