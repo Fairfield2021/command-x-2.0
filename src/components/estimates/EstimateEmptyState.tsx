@@ -1,12 +1,11 @@
 import { FileText } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 interface EstimateEmptyStateProps {
-  onCreateEstimate?: () => void;
+  createAction?: React.ReactNode;
   hasFilters?: boolean;
 }
 
-export function EstimateEmptyState({ onCreateEstimate, hasFilters }: EstimateEmptyStateProps) {
+export function EstimateEmptyState({ createAction, hasFilters }: EstimateEmptyStateProps) {
   if (hasFilters) {
     return (
       <div className="text-center py-12 glass rounded-lg">
@@ -30,10 +29,7 @@ export function EstimateEmptyState({ onCreateEstimate, hasFilters }: EstimateEmp
       <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
         Create your first project estimate to start winning new business.
       </p>
-      <Button variant="glow" onClick={onCreateEstimate}>
-        <FileText className="h-4 w-4 mr-2" />
-        Create Your First Estimate
-      </Button>
+      {createAction}
     </div>
   );
 }

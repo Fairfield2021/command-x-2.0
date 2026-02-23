@@ -333,9 +333,13 @@ const Estimates = () => {
               {filteredEstimates.length === 0 ? (
                 <EstimateEmptyState
                   hasFilters={hasActiveFilters}
-                  onCreateEstimate={qbConfig?.is_connected ? () => {
-                    window.open("https://app.qbo.intuit.com/app/estimate", "_blank", "width=1200,height=800,resizable=yes,scrollbars=yes");
-                  } : undefined}
+                  createAction={qbConfig?.is_connected ? (
+                    <QBOPopupLink
+                      docType="estimate"
+                      variant="create"
+                      onClose={() => refetch()}
+                    />
+                  ) : undefined}
                 />
               ) : (
                 <>

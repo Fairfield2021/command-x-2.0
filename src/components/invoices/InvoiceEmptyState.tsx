@@ -1,13 +1,12 @@
 import { Receipt } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 interface InvoiceEmptyStateProps {
-  onAddInvoice?: () => void;
+  createAction?: React.ReactNode;
   isFiltered?: boolean;
 }
 
 export const InvoiceEmptyState = ({
-  onAddInvoice,
+  createAction,
   isFiltered = false,
 }: InvoiceEmptyStateProps) => {
   return (
@@ -25,11 +24,7 @@ export const InvoiceEmptyState = ({
           ? "Try adjusting your filters or search to find what you're looking for"
           : "Start billing your customers by creating your first invoice"}
       </p>
-      {!isFiltered && (
-        <Button variant="glow" onClick={onAddInvoice}>
-          Create Your First Invoice
-        </Button>
-      )}
+      {!isFiltered && createAction}
     </div>
   );
 };

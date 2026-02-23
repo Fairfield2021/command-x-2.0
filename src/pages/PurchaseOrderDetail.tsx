@@ -278,14 +278,18 @@ const PurchaseOrderDetail = () => {
       description={`PO for ${purchaseOrder.vendor_name}`}
       actions={
         <div className="flex gap-2">
-          {qbTxnId && (
+          {qbTxnId ? (
             <QBOPopupLink
               docType="purchase_order"
               txnId={qbTxnId}
               variant="edit"
-              onClose={() => {}}
             />
-          )}
+          ) : canEdit ? (
+            <QBOPopupLink
+              docType="purchase_order"
+              variant="create"
+            />
+          ) : null}
           {/* Primary actions - always visible (context-dependent) */}
           {canApprove && (
             <Button 
@@ -355,15 +359,6 @@ const PurchaseOrderDetail = () => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              {canEdit && !qbTxnId && (
-                <QBOPopupLink
-                  docType="purchase_order"
-                  variant="create"
-                  onClose={() => {
-                    // Invalidation handled by useQBMappingForList cache
-                  }}
-                />
-              )}
               <DropdownMenuItem onClick={handleDownloadWorkOrder}>
                 <FileText className="mr-2 h-4 w-4" /> 
                 Download Work Order

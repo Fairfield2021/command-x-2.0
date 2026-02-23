@@ -1,12 +1,11 @@
 import { ShoppingCart } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 interface PurchaseOrderEmptyStateProps {
-  onCreatePO?: () => void;
+  createAction?: React.ReactNode;
   hasFilters?: boolean;
 }
 
-export function PurchaseOrderEmptyState({ onCreatePO, hasFilters }: PurchaseOrderEmptyStateProps) {
+export function PurchaseOrderEmptyState({ createAction, hasFilters }: PurchaseOrderEmptyStateProps) {
   if (hasFilters) {
     return (
       <div className="text-center py-12 glass rounded-lg">
@@ -30,10 +29,7 @@ export function PurchaseOrderEmptyState({ onCreatePO, hasFilters }: PurchaseOrde
       <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
         Create purchase orders to manage vendor orders for your active job orders.
       </p>
-      <Button variant="glow" onClick={onCreatePO}>
-        <ShoppingCart className="h-4 w-4 mr-2" />
-        Create Your First PO
-      </Button>
+      {createAction}
     </div>
   );
 }

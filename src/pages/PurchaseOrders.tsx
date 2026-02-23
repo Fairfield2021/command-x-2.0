@@ -252,9 +252,13 @@ const PurchaseOrders = () => {
               {filteredPOs.length === 0 ? (
                 <PurchaseOrderEmptyState
                   hasFilters={hasActiveFilters}
-                  onCreatePO={qbConfig?.is_connected ? () => {
-                    window.open("https://app.qbo.intuit.com/app/purchaseorder", "_blank", "width=1200,height=800,resizable=yes,scrollbars=yes");
-                  } : undefined}
+                  createAction={qbConfig?.is_connected ? (
+                    <QBOPopupLink
+                      docType="purchase_order"
+                      variant="create"
+                      onClose={() => refetch()}
+                    />
+                  ) : undefined}
                 />
               ) : (
                 <>

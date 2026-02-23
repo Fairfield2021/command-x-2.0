@@ -468,9 +468,13 @@ const Invoices = () => {
           {filteredInvoices.length === 0 && (
             <InvoiceEmptyState
               isFiltered={hasActiveFilters}
-              onAddInvoice={qbConfig?.is_connected ? () => {
-                window.open("https://app.qbo.intuit.com/app/invoice", "_blank", "width=1200,height=800,resizable=yes,scrollbars=yes");
-              } : undefined}
+              createAction={qbConfig?.is_connected ? (
+                <QBOPopupLink
+                  docType="invoice"
+                  variant="create"
+                  onClose={() => refetch()}
+                />
+              ) : undefined}
             />
           )}
 
