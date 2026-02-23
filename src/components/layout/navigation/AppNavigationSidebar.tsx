@@ -97,9 +97,7 @@ const navSections: NavSection[] = [
     label: "People",
     defaultOpen: false,
     items: [
-      { title: "Personnel", url: "/personnel", icon: Users },
-      { title: "Customers", url: "/customers", icon: UserCheck },
-      { title: "Vendors", url: "/vendors", icon: Building2 },
+      { title: "Directory", url: "/people", icon: Users },
       { title: "Applications", url: "/staffing/applications", icon: UserPlus },
       { title: "Badge Templates", url: "/badge-templates", icon: Shield },
       { title: "Staffing Map", url: "/staffing/map", icon: MapPin },
