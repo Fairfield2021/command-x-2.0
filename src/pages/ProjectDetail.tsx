@@ -24,7 +24,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { ArrowLeft, Loader2, Download, LayoutDashboard, DollarSign, FileText, Users, Activity } from "lucide-react";
+import { ArrowLeft, Loader2, Download, LayoutDashboard, DollarSign, FileText, Users, Activity, CalendarDays, HardHat } from "lucide-react";
 import { format } from "date-fns";
 import { generateProjectReportPDF } from "@/utils/pdfExport";
 import { AddTMTicketDialog } from "@/components/tm-tickets/AddTMTicketDialog";
@@ -36,8 +36,10 @@ import { JobHubFinancialsTab } from "@/components/project-hub/tabs/JobHubFinanci
 import { JobHubDocumentsTab } from "@/components/project-hub/tabs/JobHubDocumentsTab";
 import { JobHubTeamTab } from "@/components/project-hub/tabs/JobHubTeamTab";
 import { JobHubActivityTab } from "@/components/project-hub/tabs/JobHubActivityTab";
+import { JobHubScheduleTab } from "@/components/project-hub/tabs/JobHubScheduleTab";
+import { JobHubFieldTab } from "@/components/project-hub/tabs/JobHubFieldTab";
 
-const VALID_TABS = ["overview", "financials", "documents", "team", "activity"] as const;
+const VALID_TABS = ["overview", "financials", "schedule", "field", "documents", "team", "activity"] as const;
 type TabValue = typeof VALID_TABS[number];
 
 const ProjectDetail = () => {
@@ -308,6 +310,14 @@ const ProjectDetail = () => {
             <DollarSign className="h-4 w-4" />
             Financials
           </TabsTrigger>
+          <TabsTrigger value="schedule" className="gap-1.5">
+            <CalendarDays className="h-4 w-4" />
+            Schedule
+          </TabsTrigger>
+          <TabsTrigger value="field" className="gap-1.5">
+            <HardHat className="h-4 w-4" />
+            Field
+          </TabsTrigger>
           <TabsTrigger value="documents" className="gap-1.5">
             <FileText className="h-4 w-4" />
             Documents
@@ -329,9 +339,6 @@ const ProjectDetail = () => {
             milestones={milestones}
             overallCompletion={overallCompletion}
             projectJobOrders={projectJobOrders}
-            onEditMilestone={handleEditMilestone}
-            onDeleteMilestone={handleDeleteMilestone}
-            onAddMilestone={openNewMilestoneDialog}
           />
         </TabsContent>
 
@@ -349,6 +356,20 @@ const ProjectDetail = () => {
             onAddJobOrder={() => setIsJobOrderDialogOpen(true)}
             onAddInvoice={() => setIsCreateInvoiceDialogOpen(true)}
           />
+        </TabsContent>
+
+        <TabsContent value="schedule">
+          <JobHubScheduleTab
+            projectId={id!}
+            milestones={milestones}
+            onEditMilestone={handleEditMilestone}
+            onDeleteMilestone={handleDeleteMilestone}
+            onAddMilestone={openNewMilestoneDialog}
+          />
+        </TabsContent>
+
+        <TabsContent value="field">
+          <JobHubFieldTab projectId={id!} />
         </TabsContent>
 
         <TabsContent value="documents">

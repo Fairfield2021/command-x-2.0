@@ -1,8 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
-import { Target, User, Calendar, MapPin, Phone, Mail, Hash, Plus, Edit, Trash2 } from "lucide-react";
+import { Target, User, Calendar, MapPin, Phone, Mail, Hash } from "lucide-react";
 import { format } from "date-fns";
 import { ProjectRoomsSection } from "@/components/project-hub/rooms/ProjectRoomsSection";
 import type { Milestone } from "@/integrations/supabase/hooks/useMilestones";
@@ -13,9 +12,6 @@ interface JobHubOverviewTabProps {
   milestones: Milestone[] | undefined;
   overallCompletion: number;
   projectJobOrders: any[];
-  onEditMilestone: (milestone: Milestone) => void;
-  onDeleteMilestone: (id: string) => void;
-  onAddMilestone: () => void;
 }
 
 export function JobHubOverviewTab({
@@ -24,9 +20,6 @@ export function JobHubOverviewTab({
   milestones,
   overallCompletion,
   projectJobOrders,
-  onEditMilestone,
-  onDeleteMilestone,
-  onAddMilestone,
 }: JobHubOverviewTabProps) {
   return (
     <div className="space-y-6">
@@ -156,66 +149,6 @@ export function JobHubOverviewTab({
           </CardContent>
         </Card>
       )}
-
-      {/* Milestones */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Target className="h-5 w-5 text-primary" />
-            <h3 className="font-heading text-lg font-semibold">Milestones ({milestones?.length || 0})</h3>
-          </div>
-          <Button variant="outline" size="sm" onClick={onAddMilestone}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Milestone
-          </Button>
-        </div>
-
-        {!milestones || milestones.length === 0 ? (
-          <Card className="glass border-border">
-            <CardContent className="py-8 text-center text-muted-foreground">
-              No milestones yet. Add milestones to track project progress.
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-3">
-            {milestones.map((milestone) => (
-              <Card key={milestone.id} className="glass border-border">
-                <CardContent className="pt-6">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h4 className="font-medium">{milestone.title}</h4>
-                        <StatusBadge status={milestone.status} />
-                      </div>
-                      {milestone.description && (
-                        <p className="text-sm text-muted-foreground mb-2">{milestone.description}</p>
-                      )}
-                      <p className="text-xs text-muted-foreground">
-                        Due: {format(new Date(milestone.due_date), "MMM dd, yyyy")}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="icon" onClick={() => onEditMilestone(milestone)}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => onDeleteMilestone(milestone.id)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-xs">
-                      <span className="text-muted-foreground">Progress</span>
-                      <span className="font-medium">{milestone.completion_percentage}%</span>
-                    </div>
-                    <Progress value={milestone.completion_percentage} className="h-2" />
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-      </div>
 
       {/* Rooms */}
       <ProjectRoomsSection projectId={project.id} />

@@ -2189,6 +2189,62 @@ export type Database = {
           },
         ]
       }
+      daily_field_logs: {
+        Row: {
+          created_at: string
+          created_by: string
+          crew_count: number | null
+          delays: string | null
+          id: string
+          log_date: string
+          notes: string | null
+          project_id: string
+          safety_incidents: string | null
+          status: string
+          updated_at: string
+          weather_conditions: string | null
+          work_performed: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          crew_count?: number | null
+          delays?: string | null
+          id?: string
+          log_date?: string
+          notes?: string | null
+          project_id: string
+          safety_incidents?: string | null
+          status?: string
+          updated_at?: string
+          weather_conditions?: string | null
+          work_performed?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          crew_count?: number | null
+          delays?: string | null
+          id?: string
+          log_date?: string
+          notes?: string | null
+          project_id?: string
+          safety_incidents?: string | null
+          status?: string
+          updated_at?: string
+          weather_conditions?: string | null
+          work_performed?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_field_logs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dashboard_configurations: {
         Row: {
           created_at: string
@@ -2671,6 +2727,57 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      field_photos: {
+        Row: {
+          caption: string | null
+          created_at: string
+          daily_log_id: string | null
+          id: string
+          location_tag: string | null
+          project_id: string
+          storage_path: string
+          taken_at: string | null
+          uploaded_by: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          daily_log_id?: string | null
+          id?: string
+          location_tag?: string | null
+          project_id: string
+          storage_path: string
+          taken_at?: string | null
+          uploaded_by: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          daily_log_id?: string | null
+          id?: string
+          location_tag?: string | null
+          project_id?: string
+          storage_path?: string
+          taken_at?: string | null
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "field_photos_daily_log_id_fkey"
+            columns: ["daily_log_id"]
+            isOneToOne: false
+            referencedRelation: "daily_field_logs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "field_photos_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       geocode_logs: {
         Row: {
