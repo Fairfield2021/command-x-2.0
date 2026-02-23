@@ -45,7 +45,7 @@ import { useCustomers } from "@/integrations/supabase/hooks/useCustomers";
 import { ConvertToJobOrderDialog } from "./ConvertToJobOrderDialog";
 import { EstimateAttachments } from "./EstimateAttachments";
 import { EstimateVersionHistory } from "./EstimateVersionHistory";
-import { Download, Edit, Trash2, Briefcase, MoreVertical, Loader2, Send, Copy, CheckCircle, FileText, Eye, RefreshCw } from "lucide-react";
+import { Download, Trash2, Briefcase, MoreVertical, Loader2, Send, Copy, CheckCircle, FileText, Eye, RefreshCw } from "lucide-react";
 import { generateEstimatePDF } from "@/utils/estimatePdfExport";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -303,13 +303,15 @@ export function EstimateDetailView({ estimateId }: EstimateDetailViewProps) {
                 {qbStatus?.quickbooks_estimate_id ? "QB Synced" : "Sync to QB"}
               </Button>
 
-              <Button
-                variant="outline"
-                onClick={() => navigate(`/estimates/${estimateId}/edit`)}
-              >
-                <Edit className="mr-2 h-4 w-4" />
-                Edit
-              </Button>
+              {!qbTxnId && (
+                <QBOPopupLink
+                  docType="estimate"
+                  variant="create"
+                  onClose={() => {
+                    // Invalidation handled by useQBMappingForList cache
+                  }}
+                />
+              )}
 
               {canConvertToJobOrder && (
                 <ConvertToJobOrderDialog

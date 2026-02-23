@@ -34,7 +34,7 @@ import { useVendors } from "@/integrations/supabase/hooks/useVendors";
 import { useProjects } from "@/integrations/supabase/hooks/useProjects";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { ArrowLeft, ShoppingCart, Truck, Building, Send, CheckCircle, CheckCheck, XCircle, Loader2, MoreVertical, Receipt, Lock, LockOpen, Pencil, Printer, Download, Trash2 } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Truck, Building, Send, CheckCircle, CheckCheck, XCircle, Loader2, MoreVertical, Receipt, Lock, LockOpen, Printer, Download, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -355,11 +355,14 @@ const PurchaseOrderDetail = () => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              {canEdit && (
-                <DropdownMenuItem onClick={() => navigate(`/purchase-orders/${purchaseOrder.id}/edit`)}>
-                  <Pencil className="mr-2 h-4 w-4" /> 
-                  Edit
-                </DropdownMenuItem>
+              {canEdit && !qbTxnId && (
+                <QBOPopupLink
+                  docType="purchase_order"
+                  variant="create"
+                  onClose={() => {
+                    // Invalidation handled by useQBMappingForList cache
+                  }}
+                />
               )}
               <DropdownMenuItem onClick={handleDownloadWorkOrder}>
                 <FileText className="mr-2 h-4 w-4" /> 
