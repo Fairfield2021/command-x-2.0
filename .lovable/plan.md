@@ -1,40 +1,50 @@
 
 
-# Phase 6A — Step 2 of 8: Create `sov_lines` Table Migration ✅
+# Phase 6A — Step 4 of 8: ContractHeader Component
 
 ## What This Step Does
 
-Creates the `sov_lines` table — child of contracts, tracking line-level financials for the Schedule of Values.
+Creates a `ContractHeader` component — a summary bar displayed at the top of the Contract tab showing contract metadata and four financial cards. It follows the same visual patterns used by `ProjectFinancialSummary` (StatCard layout, `glass border-border` cards, `formatCurrency`, status badges).
 
-## Schema
+## New File
 
-| Column | Type | Details |
-|--------|------|---------|
-| id | UUID | PK |
-| contract_id | UUID | FK → contracts.id, CASCADE delete |
-| line_number | INTEGER | NOT NULL |
-| description | TEXT | NOT NULL |
-| product_id | UUID | FK → products.id, nullable |
-| quantity | NUMERIC | default 1 |
-| unit | TEXT | default 'EA' |
-| unit_price | NUMERIC | default 0 |
-| markup | NUMERIC | default 0 |
-| total_value | NUMERIC | **GENERATED** = (qty * unit_price) * (1 + markup/100) |
-| committed_cost | NUMERIC | default 0 |
-| actual_cost | NUMERIC | default 0 |
-| billed_to_date | NUMERIC | default 0 |
-| paid_to_date | NUMERIC | default 0 |
-| invoiced_to_date | NUMERIC | default 0 |
-| retention_held | NUMERIC | default 0 |
-| balance_remaining | NUMERIC | **GENERATED** = total_value - billed_to_date |
-| percent_complete | NUMERIC | default 0 |
-| change_order_id | UUID | nullable |
-| is_addendum | BOOLEAN | default false |
-| notes | TEXT | nullable |
-| sort_order | INTEGER | default 0 |
+**`src/components/project-hub/contract/ContractHeader.tsx`**
 
-## Constraints
-- UNIQUE (contract_id, line_number)
+## Component Structure
 
-## Next Step
-- Step 3: React Query hooks (`useContracts.ts`, `useSovLines.ts`)
+```text
+ContractHeader
+├── Top Row: Contract # | Title | StatusBadge | Customer | Date Signed
+└── Financial Cards (4-column grid):
+    ├── Original Value   (neutral)
+    ├── Addendums        (blue, + prefix)
+    ├── Deductions       (red, - prefix)
+    └── Current Value    (primary, highlighted)
+```
+
+## Props
+
+| Prop | Type | Source |
+|------|------|--------|
+| contract | `Contract` (from `useContracts`) | Parent tab component |
+| customerName | `string \| null` | Resolved from customer_id |
+
+## Implementation Details
+
+- Imports `Contract` type from `src/hooks/useContracts.ts`
+- Uses existing `Card`, `CardContent`, `CardHeader`, `CardTitle` from `@/components/ui/card`
+- Uses existing `StatusBadge` for contract status (draft/active/complete/closed)
+- Uses `formatCurrency` from `@/lib/utils` for all money values
+- Uses `format` from `date-fns` for date_signed display
+- Icons from `lucide-react`: `FileText`, `DollarSign`, `Plus`, `Minus`, `Calendar`, `User`
+- Four financial cards in a responsive grid: `grid-cols-2 sm:grid-cols-4`
+- Current Value card gets `bg-primary/10` highlight treatment matching the StatCard pattern in `ProjectFinancialSummary`
+- Glass card styling: `className="glass border-border"` matching all other Job Hub cards
+
+## What Does NOT Change
+
+- No database changes
+- No hook changes
+- No modifications to existing components
+- Component is created but not wired into any tab yet (that happens in Step 7)
+
