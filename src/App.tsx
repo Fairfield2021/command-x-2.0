@@ -34,6 +34,7 @@ import AuthCallback from "./pages/AuthCallback";
 import DesktopCallback from "./pages/DesktopCallback";
 import Unauthorized from "./pages/Unauthorized";
 import Products from "./pages/Products";
+import CompanyHub from "./pages/CompanyHub";
 import Customers from "./pages/Customers";
 import CustomerDetail from "./pages/CustomerDetail";
 import Projects from "./pages/Projects";
@@ -447,6 +448,7 @@ const App = () => {
                         element={<BadgeTemplateEditor />}
                       />
                       <Route path="/settings" element={<Settings />} />
+                      <Route path="/company" element={<CompanyHub />} />
                       <Route
                         path="/document-center"
                         element={<DocumentCenter />}
