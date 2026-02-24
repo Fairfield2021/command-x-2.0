@@ -22,9 +22,6 @@ import { LocationTrackingProvider } from "@/contexts/LocationTrackingContext";
 import { UIDensityProvider } from "@/contexts/UIDensityContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ThemeProvider } from "@/components/ThemeProvider";
-// Legacy nav kept as safety net (not imported)
-// import { BottomNav } from "@/components/layout/BottomNav";
-// import { NetSuiteLayout } from "@/components/layout/netsuite/NetSuiteLayout";
 import { NavigationLayout } from "@/components/layout/navigation";
 import { useNativeStatusBar } from "@/hooks/useNativeStatusBar";
 import { ChatInterface } from "@/components/ai-assistant/ChatInterface";
@@ -60,8 +57,6 @@ import OverheadAnalysis from "./pages/OverheadAnalysis";
 import TeamTimesheet from "./pages/TeamTimesheet";
 import Reimbursements from "./pages/Reimbursements";
 import ProjectAssignments from "./pages/ProjectAssignments";
-import Settings from "./pages/Settings";
-import UserManagement from "./pages/UserManagement";
 import AcceptInvitation from "./pages/AcceptInvitation";
 import ApproveEstimate from "./pages/ApproveEstimate";
 import Personnel from "./pages/Personnel";
@@ -447,7 +442,7 @@ const App = () => {
                         path="/badge-templates/:id"
                         element={<BadgeTemplateEditor />}
                       />
-                      <Route path="/settings" element={<Settings />} />
+                      <Route path="/settings" element={<Navigate to="/company" replace />} />
                       <Route path="/company" element={<CompanyHub />} />
                       <Route
                         path="/document-center"
@@ -455,7 +450,7 @@ const App = () => {
                       />
                       <Route
                         path="/user-management"
-                        element={<UserManagement />}
+                        element={<Navigate to="/company" replace />}
                       />
                       <Route
                         path="/permissions"

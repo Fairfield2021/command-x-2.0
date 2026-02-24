@@ -7,14 +7,15 @@ import { EstimateStats } from "@/components/estimates/EstimateStats";
 import { EstimateEmptyState } from "@/components/estimates/EstimateEmptyState";
 import { InvoiceCard } from "@/components/invoices/InvoiceCard";
 import { InvoiceEmptyState } from "@/components/invoices/InvoiceEmptyState";
+import { SalesPipeline } from "@/components/sales/SalesPipeline";
 import { useEstimates } from "@/integrations/supabase/hooks/useEstimates";
 import { useInvoices } from "@/integrations/supabase/hooks/useInvoices";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Sales() {
-  const [activeTab, setActiveTab] = useState("estimates");
+  const [activeTab, setActiveTab] = useState("pipeline");
   const navigate = useNavigate();
-  const { data: estimates, isLoading: estimatesLoading } = useEstimates();
+  const { data: estimates, isLoading: estimatesLoading } = useEstimates({ includeClosed: true });
   const { data: invoices, isLoading: invoicesLoading } = useInvoices();
 
   const totalRevenue = invoices?.reduce((sum, inv) => sum + inv.total, 0) || 0;
@@ -24,11 +25,26 @@ export default function Sales() {
     <PageLayout title="Sales">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 pb-4">
-          <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto">
+          <TabsList className="grid w-full grid-cols-3 max-w-lg mx-auto">
+            <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
             <TabsTrigger value="estimates">Estimates</TabsTrigger>
             <TabsTrigger value="invoices">Invoices</TabsTrigger>
           </TabsList>
         </div>
+
+        <TabsContent value="pipeline" className="mt-0 space-y-6">
+          {estimatesLoading || invoicesLoading ? (
+            <div className="space-y-4">
+              <Skeleton className="h-24 w-full" />
+              <Skeleton className="h-48 w-full" />
+            </div>
+          ) : (
+            <SalesPipeline
+              estimates={estimates || []}
+              invoices={invoices || []}
+            />
+          )}
+        </TabsContent>
 
         <TabsContent value="estimates" className="mt-0 space-y-6">
           {estimatesLoading ? (
