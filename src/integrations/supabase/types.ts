@@ -7237,6 +7237,102 @@ export type Database = {
           },
         ]
       }
+      sov_lines: {
+        Row: {
+          actual_cost: number
+          balance_remaining: number | null
+          billed_to_date: number
+          change_order_id: string | null
+          committed_cost: number
+          contract_id: string
+          created_at: string
+          description: string
+          id: string
+          invoiced_to_date: number
+          is_addendum: boolean
+          line_number: number
+          markup: number
+          notes: string | null
+          paid_to_date: number
+          percent_complete: number
+          product_id: string | null
+          quantity: number
+          retention_held: number
+          sort_order: number
+          total_value: number | null
+          unit: string | null
+          unit_price: number
+          updated_at: string
+        }
+        Insert: {
+          actual_cost?: number
+          balance_remaining?: number | null
+          billed_to_date?: number
+          change_order_id?: string | null
+          committed_cost?: number
+          contract_id: string
+          created_at?: string
+          description: string
+          id?: string
+          invoiced_to_date?: number
+          is_addendum?: boolean
+          line_number: number
+          markup?: number
+          notes?: string | null
+          paid_to_date?: number
+          percent_complete?: number
+          product_id?: string | null
+          quantity?: number
+          retention_held?: number
+          sort_order?: number
+          total_value?: number | null
+          unit?: string | null
+          unit_price?: number
+          updated_at?: string
+        }
+        Update: {
+          actual_cost?: number
+          balance_remaining?: number | null
+          billed_to_date?: number
+          change_order_id?: string | null
+          committed_cost?: number
+          contract_id?: string
+          created_at?: string
+          description?: string
+          id?: string
+          invoiced_to_date?: number
+          is_addendum?: boolean
+          line_number?: number
+          markup?: number
+          notes?: string | null
+          paid_to_date?: number
+          percent_complete?: number
+          product_id?: string | null
+          quantity?: number
+          retention_held?: number
+          sort_order?: number
+          total_value?: number | null
+          unit?: string | null
+          unit_price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sov_lines_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sov_lines_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
           assigned_to: string | null
