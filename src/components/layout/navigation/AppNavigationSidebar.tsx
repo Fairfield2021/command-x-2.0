@@ -107,7 +107,9 @@ const navSections: NavSection[] = [
     label: "Company",
     defaultOpen: false,
     items: [
-      { title: "Settings", url: "/settings", icon: Settings },
+      { title: "Company Hub", url: "/company", icon: Building2 },
+      { title: "My Settings", url: "/settings", icon: Settings },
+      { title: "Products", url: "/products", icon: Package },
       { title: "User Management", url: "/user-management", icon: Users, adminOnly: true },
       { title: "Permissions", url: "/permissions", icon: Shield, adminOnly: true },
       { title: "QuickBooks", url: "/settings/quickbooks", icon: BookOpen, adminOnly: true },

@@ -16,7 +16,7 @@ const tabs = [
   { id: "workspace", icon: Briefcase, label: "Work", path: "/jobs" },
   { id: "create", icon: Plus, label: "Create", path: "" },
   { id: "people", icon: Users, label: "People", path: "/people" },
-  { id: "company", icon: Building2, label: "Company", path: "/settings" },
+  { id: "company", icon: Building2, label: "Company", path: "/company" },
 ];
 
 const createActions = [
