@@ -1985,6 +1985,75 @@ export type Database = {
         }
         Relationships: []
       }
+      contracts: {
+        Row: {
+          addendum_value: number
+          contract_number: string | null
+          created_at: string
+          current_value: number | null
+          customer_id: string | null
+          date_signed: string | null
+          deduction_value: number
+          id: string
+          original_value: number
+          project_id: string | null
+          qb_estimate_id: string | null
+          scope_of_work: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          addendum_value?: number
+          contract_number?: string | null
+          created_at?: string
+          current_value?: number | null
+          customer_id?: string | null
+          date_signed?: string | null
+          deduction_value?: number
+          id?: string
+          original_value?: number
+          project_id?: string | null
+          qb_estimate_id?: string | null
+          scope_of_work?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          addendum_value?: number
+          contract_number?: string | null
+          created_at?: string
+          current_value?: number | null
+          customer_id?: string | null
+          date_signed?: string | null
+          deduction_value?: number
+          id?: string
+          original_value?: number
+          project_id?: string | null
+          qb_estimate_id?: string | null
+          scope_of_work?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contracts_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversation_messages: {
         Row: {
           content: string
