@@ -377,7 +377,14 @@ const ProjectDetail = () => {
         </TabsContent>
 
         <TabsContent value="team">
-          <JobHubTeamTab projectId={id!} projectName={project.name} />
+          <JobHubTeamTab
+            projectId={id!}
+            projectName={project.name}
+            customerId={project.customer_id}
+            pocName={project.poc_name}
+            pocPhone={project.poc_phone}
+            pocEmail={project.poc_email}
+          />
         </TabsContent>
 
         <TabsContent value="activity">

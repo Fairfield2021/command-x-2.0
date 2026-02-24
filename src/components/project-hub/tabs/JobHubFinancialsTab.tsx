@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { StatusBadge } from "@/components/shared/StatusBadge";
@@ -12,6 +13,8 @@ import { ProjectTMTicketsList } from "@/components/project-hub/ProjectTMTicketsL
 import { ProjectPurchaseOrdersList } from "@/components/project-hub/ProjectPurchaseOrdersList";
 import { ProjectVendorBillsList } from "@/components/project-hub/ProjectVendorBillsList";
 import { ProjectTimeEntriesList } from "@/components/project-hub/ProjectTimeEntriesList";
+import { QBOPopupLink } from "@/components/quickbooks/QBOPopupLink";
+import { useQBMappingForList } from "@/integrations/supabase/hooks/useQBMappingForList";
 
 interface JobHubFinancialsTabProps {
   projectId: string;
@@ -42,12 +45,35 @@ export function JobHubFinancialsTab({
 }: JobHubFinancialsTabProps) {
   const navigate = useNavigate();
 
+  const estimateIds = useMemo(() => projectEstimates.map((e: any) => e.id), [projectEstimates]);
+  const invoiceIds = useMemo(() => projectInvoices.map((i: any) => i.id), [projectInvoices]);
+  const poIds = useMemo(() => projectPurchaseOrders.map((p: any) => p.id), [projectPurchaseOrders]);
+
+  const estimateQBMap = useQBMappingForList(estimateIds, "estimate");
+  const invoiceQBMap = useQBMappingForList(invoiceIds, "invoice");
+  const poQBMap = useQBMappingForList(poIds, "purchase_order");
+
+  const qboColumn = (map: Map<string, string>, docType: "estimate" | "invoice" | "purchase_order") => ({
+    key: "_qbo",
+    header: "",
+    render: (item: any) => {
+      const txnId = map.get(item.id);
+      if (!txnId) return null;
+      return (
+        <div onClick={(e) => e.stopPropagation()}>
+          <QBOPopupLink docType={docType} txnId={txnId} variant="edit" />
+        </div>
+      );
+    },
+  });
+
   const estimateColumns = [
     { key: "number", header: "Estimate #" },
     { key: "customer_name", header: "Customer" },
     { key: "status", header: "Status", render: (item: any) => <StatusBadge status={item.status} /> },
     { key: "total", header: "Total", render: (item: any) => <span className="font-medium">${item.total.toFixed(2)}</span> },
     { key: "created_at", header: "Created", render: (item: any) => format(new Date(item.created_at), "MMM dd, yyyy") },
+    ...(estimateQBMap.size > 0 ? [qboColumn(estimateQBMap, "estimate")] : []),
   ];
 
   const jobOrderColumns = [
@@ -62,6 +88,7 @@ export function JobHubFinancialsTab({
     { key: "status", header: "Status", render: (item: any) => <StatusBadge status={item.status} /> },
     { key: "total", header: "Amount", render: (item: any) => <span className="font-medium">${item.total.toFixed(2)}</span> },
     { key: "due_date", header: "Due Date", render: (item: any) => format(new Date(item.due_date), "MMM dd, yyyy") },
+    ...(invoiceQBMap.size > 0 ? [qboColumn(invoiceQBMap, "invoice")] : []),
   ];
 
   return (
