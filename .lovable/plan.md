@@ -1,114 +1,93 @@
 
 
-# Phase 4c — People Directory
+# Phase 4c — Role-Based Dashboards
 
-## Goal
-Create a unified `/people` directory page that consolidates Personnel, Customers, and Vendors into a single searchable, filterable hub with category tabs — while preserving the existing detail pages (`/personnel/:id`, `/customers/:id`, `/vendors/:id`).
+## Role Mapping
 
-## Architecture Decision
+The user references roles `owner`, `pm`, `field_crew`, `accounting`. The existing `app_role` enum is: `admin`, `manager`, `user`, `personnel`, `vendor`, `accounting`. The mapping:
 
-**Tabbed directory, not a merged table.** Each entity type (Personnel, Customers, Vendors) has fundamentally different schemas, columns, actions, and workflows. Merging them into one table would lose too much context. Instead, we create a **single page with 3 category tabs** and a **shared search bar** that filters whichever tab is active.
+| User's term | Existing `app_role` | Dashboard |
+|---|---|---|
+| owner | `admin` | OwnerDashboard |
+| pm | `manager` | PMDashboard |
+| field_crew | `personnel` (+ `isPersonnel` check) | FieldCrewDashboard |
+| accounting | `accounting` | AccountingDashboard |
+| (fallback) | `user`, `vendor`, null | OwnerDashboard |
+
+No database changes needed. Role detection uses the existing `useUserRole()` hook which already returns `isAdmin`, `isManager`, `isAccounting`, `isPersonnel`, etc.
+
+## Architecture
 
 ```text
-/people
-  [All] [Personnel] [Customers] [Vendors]
-  ┌─────────────────────────────────────┐
-  │ Search across all people...         │
-  └─────────────────────────────────────┘
-  ┌─────────────────────────────────────┐
-  │  Combined stats ribbon              │
-  │  Personnel: 42  Customers: 18  ...  │
-  └─────────────────────────────────────┘
-  ┌─────────────────────────────────────┐
-  │  Filtered list (cards on mobile,    │
-  │  table on desktop)                  │
-  └─────────────────────────────────────┘
+src/pages/Index.tsx
+  └─ RowBasedDashboard (existing, becomes OwnerDashboard wrapper)
+  └─ OR PMDashboard (new)
+  └─ OR FieldCrewDashboard (new)
+  └─ OR AccountingDashboard (new)
 ```
 
-## What Changes
+The `Index.tsx` page uses `useUserRole()` to conditionally render the correct dashboard. The existing `RowBasedDashboard` (with WelcomeStrip, KPIBar, QuickActions, RecentInvoices, RevenueChart, InvoiceAging) becomes the Owner/Admin dashboard — it already shows company-wide KPIs.
 
-### New Files
+## New Files
 
 | File | Purpose |
 |---|---|
-| `src/pages/PeopleDirectory.tsx` | Main directory page with Radix Tabs for Personnel / Customers / Vendors, shared search bar, URL hash persistence (`#personnel`, `#customers`, `#vendors`) |
-| `src/components/people/PeopleDirectoryStats.tsx` | Combined stats ribbon showing counts for all 3 entity types |
-| `src/components/people/PeopleAllTab.tsx` | "All" tab showing a unified card list of all entity types, sorted by name, with a type badge on each card |
+| `src/components/dashboard/roles/PMDashboard.tsx` | My active jobs, upcoming milestones (7 days), pending approvals, crew alerts |
+| `src/components/dashboard/roles/FieldCrewDashboard.tsx` | Today's assignment, clock in/out, job details, daily log form — mobile-first |
+| `src/components/dashboard/roles/AccountingDashboard.tsx` | Pending invoices, overdue payments, QBO sync status, recent financial activity |
 
-### Modified Files
+## Modified Files
 
 | File | Change |
 |---|---|
-| `src/App.tsx` | Add `/people` route pointing to `PeopleDirectory`; keep legacy routes (`/personnel`, `/customers`, `/vendors`) working via redirect or as-is |
-| `src/components/layout/navigation/AppNavigationSidebar.tsx` | Replace 3 separate People links (Personnel, Customers, Vendors) with single "Directory" link to `/people`; keep Applications, Badge Templates, Staffing Map as sub-items |
-| `src/components/layout/navigation/MobileBottomNav.tsx` | Change "People" tab path from `/personnel` to `/people` |
-| `.lovable/plan.md` | Update with Phase 4c completion notes |
+| `src/pages/Index.tsx` | Import `useUserRole`, conditionally render dashboard by role |
+| `src/components/dashboard/rows/RowBasedDashboard.tsx` | No changes — remains the Owner/Admin dashboard as-is |
 
-### Unchanged (preserved)
+## Component Details
 
-- `/personnel`, `/customers`, `/vendors` pages remain intact — they become accessible via the directory tabs or direct URL
-- `/personnel/:id`, `/customers/:id`, `/vendors/:id` detail pages untouched
-- All existing hooks, forms, dialogs, import/export, QB sync, badges — reused as-is inside the tab panels
+### PMDashboard
 
-## Implementation Detail
+Reuses existing hooks:
+- `useProjects()` — filter to projects assigned to current user via `project_assignments`
+- `useMilestonesByProject()` — will need a new `useUpcomingMilestones()` hook or inline query for milestones across all my projects in next 7 days
+- Uses `WelcomeStrip` at top
+- Links each job to `/projects/:id`
 
-### PeopleDirectory.tsx Structure
+New hook needed: `useMyProjects(userId)` — queries `project_assignments` to get the user's assigned projects, then fetches those projects. Or we filter client-side from `useProjects()` if assignment data is available.
 
-The directory page is a thin orchestration layer:
+Actually, looking at the existing `is_assigned_to_project` function and `project_assignments` table, we'll create a lightweight `useMyAssignedProjects` hook that joins `project_assignments` with `projects`.
 
-1. **Shared search bar** at the top — passes `search` state down to whichever tab is active
-2. **Radix Tabs** with 4 triggers: All, Personnel, Customers, Vendors
-3. **Tab content** renders the existing page internals (stats, filters, table/cards) as embedded components — not iframes or re-implementations
-4. URL hash persistence: `#personnel`, `#customers`, `#vendors` (default: `#all`)
+For milestones across projects, we'll create `useUpcomingMilestones(projectIds, days)` that queries milestones due within N days for a set of project IDs.
 
-For the Personnel tab, we extract the core list/filter/action logic from `Personnel.tsx` into a reusable component `PersonnelDirectoryPanel` that can be embedded in both the standalone page and the directory. Same pattern for Customers and Vendors.
+### FieldCrewDashboard
 
-However, to minimize refactoring risk, the simpler approach is to **inline the existing page content directly into tab panels** by importing the key sub-components (stats, filters, table, dialogs) and composing them. The standalone pages (`/personnel`, `/customers`, `/vendors`) can then redirect to `/people#personnel` etc., or remain as legacy access points.
+Reuses:
+- `useTodaysSchedule(personnelId)` — already exists in `usePersonnelSchedules.ts`
+- `useOpenClockEntry(personnelId, projectId)` + `useClockIn`/`useClockOut` from `useTimeClock.ts`
+- `DailyFieldLogForm` component — already built in Phase 4b
+- `get_personnel_id_for_user` DB function — maps auth user to personnel record
 
-### "All" Tab
+Mobile-first layout: single column, large tap targets, clock button prominent at top.
 
-Shows a combined list of all people across types:
-- Each row/card has a **type badge** (Personnel, Customer, Vendor)
-- Sorted alphabetically by name
-- Click navigates to the appropriate detail page
-- Search filters across all three datasets simultaneously
-- Capped display with "load more" or pagination
+### AccountingDashboard
 
-### Navigation Updates
-
-Sidebar "People" section becomes:
-
-```text
-People
-  Directory        → /people
-  Applications     → /staffing/applications
-  Badge Templates  → /badge-templates
-  Staffing Map     → /staffing/map
-```
-
-### URL Structure
-
-- `/people` — defaults to "All" tab
-- `/people#personnel` — Personnel tab active
-- `/people#customers` — Customers tab active
-- `/people#vendors` — Vendors tab active
-- Legacy routes `/personnel`, `/customers`, `/vendors` remain functional (no breaking changes)
+Reuses:
+- `useInvoices()` — filter for pending/overdue
+- `QuickBooksSyncBadge` component
+- `useQuickBooksConfig()` for sync status
+- `RecentInvoicesTable` component (or adapted version)
+- `InvoiceAgingSummary` component from existing dashboard
 
 ## Implementation Steps
 
-1. **Create `PeopleDirectory.tsx`** — tabbed page with shared search, Radix Tabs, URL hash persistence
-2. **Create `PeopleDirectoryStats.tsx`** — combined stats ribbon using existing hooks (`usePersonnel`, `useCustomers`, `useVendors`)
-3. **Create `PeopleAllTab.tsx`** — unified "All" view combining results from all 3 entity hooks
-4. **Compose tab panels** — Personnel tab reuses `PersonnelStats`, `PersonnelFilters`, `PersonnelTable`, and dialog state from the existing page; same for Customers and Vendors
-5. **Add route** in `App.tsx` for `/people`
-6. **Update sidebar** — consolidate People section links
-7. **Update mobile nav** — point People tab to `/people`
+1. **Create `useMyAssignedProjects` hook** — queries `project_assignments` joined with `projects` for the current user
+2. **Create `useUpcomingMilestones` hook** — milestones across multiple projects due within 7 days
+3. **Create `PMDashboard.tsx`** — WelcomeStrip, my jobs list with status indicators, milestones timeline, quick actions scoped to PM work
+4. **Create `FieldCrewDashboard.tsx`** — today's schedule card, clock in/out button, job details, daily log form shortcut, mobile-first
+5. **Create `AccountingDashboard.tsx`** — pending invoices table, overdue payments with days count, QBO sync badge, recent financial activity
+6. **Update `Index.tsx`** — role-based conditional rendering with loading state
 
 ## Risk Assessment
 
-**Low risk.** This is additive — a new page that composes existing components. No database changes. No existing pages are removed. Legacy routes remain functional. The main complexity is managing state (search, filters, dialogs) for 3 entity types within one page, but each tab panel manages its own filter/dialog state independently, with only the search bar shared.
-
-## No Database Changes Required
-
-This is purely a frontend consolidation. All existing tables, hooks, and RLS policies remain unchanged.
+**Low risk.** All dashboards are additive new components. The existing Owner dashboard (`RowBasedDashboard`) is unchanged. Two small new hooks are needed (`useMyAssignedProjects`, `useUpcomingMilestones`) but they follow established query patterns. No database changes required.
 
