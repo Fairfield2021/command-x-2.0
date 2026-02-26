@@ -3139,6 +3139,7 @@ export type Database = {
           product_id: string | null
           product_name: string | null
           quantity: number
+          sov_line_id: string | null
           total: number
           unit_price: number
         }
@@ -3153,6 +3154,7 @@ export type Database = {
           product_id?: string | null
           product_name?: string | null
           quantity: number
+          sov_line_id?: string | null
           total: number
           unit_price: number
         }
@@ -3167,6 +3169,7 @@ export type Database = {
           product_id?: string | null
           product_name?: string | null
           quantity?: number
+          sov_line_id?: string | null
           total?: number
           unit_price?: number
         }
@@ -3190,6 +3193,13 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_line_items_sov_line_id_fkey"
+            columns: ["sov_line_id"]
+            isOneToOne: false
+            referencedRelation: "sov_lines"
             referencedColumns: ["id"]
           },
         ]
