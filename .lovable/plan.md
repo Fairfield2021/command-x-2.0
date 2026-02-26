@@ -1,46 +1,45 @@
 
 
-# Phase 6A — Step 5 of 8: SovTable Component
+# Phase 6A — Step 6 of 8: ContractActions Component
 
 ## New File
 
-**`src/components/project-hub/contract/SovTable.tsx`**
+**`src/components/project-hub/contract/ContractActions.tsx`**
 
 ## Component Structure
 
 ```text
-SovTable
-├── Toolbar: "Add Line" button + line count
-├── DataTable (existing shared component pattern):
-│   ├── Columns: #, Description, Qty, Unit, Unit Price, Markup%, Total Value,
-│   │   Committed, Actual, Billed, Paid, Balance, %Complete, Actions
-│   └── Footer Row: Column totals for financial columns
-├── Inline Edit: Click row → opens edit dialog (or inline inputs)
-├── Add Line Dialog: Form to create new SOV line
-└── Delete Confirmation: AlertDialog before removing a line
+ContractActions
+├── Status Transition Buttons:
+│   ├── Draft → Active ("Activate Contract" button, requires date_signed)
+│   ├── Active → Complete ("Mark Complete" button)
+│   └── Any → Closed ("Close Contract" button, destructive)
+├── Edit Contract Dialog:
+│   └── Form: title, contract_number, scope_of_work, date_signed, original_value
+└── Delete Contract:
+    └── AlertDialog confirmation (only for draft contracts)
 ```
 
 ## Props
 
 | Prop | Type | Source |
 |------|------|--------|
-| contractId | `string` | Parent tab |
-| lines | `SovLine[]` | From `useSovLines` |
-| isLoading | `boolean` | From `useSovLines` |
+| contract | `Contract` | From `useContract` |
+| onContractDeleted | `() => void` | Callback to navigate away after delete |
 
 ## Implementation Details
 
-- Uses `Table/TableHeader/TableBody/TableRow/TableCell/TableFooter` from `@/components/ui/table`
-- Uses `useSovLines`, `useAddSovLine`, `useUpdateSovLine`, `useDeleteSovLine` hooks
-- `formatCurrency` for all money columns
-- Add Line: `Dialog` with form fields (description, quantity, unit, unit_price, markup, notes) using existing `Input`, `Label`, `Button` components
-- Edit: Click pencil icon → same dialog pre-filled with line data
-- Delete: `AlertDialog` confirmation before calling `useDeleteSovLine`
-- Footer row sums: total_value, committed_cost, actual_cost, billed_to_date, paid_to_date, balance_remaining
-- Addendum lines get a `Badge` indicator (blue "Addendum")
-- Compact table styling matching `DataTable` patterns (`text-xs`, tight padding)
-- Auto-calculates `line_number` as max existing + 1 on add
-- `sort_order` defaults to `line_number` value
+- Uses `useUpdateContract` for status transitions and edits
+- Uses `useDeleteContract` for removal (draft only)
+- Status transition logic:
+  - `draft` → `active`: Validates `date_signed` is set; if missing, prompts via toast
+  - `active` → `complete`: Direct status update
+  - Any → `closed`: AlertDialog confirmation first
+- Edit Dialog uses `Dialog` with form fields: `title`, `contract_number`, `scope_of_work`, `date_signed` (Input type="date"), `original_value` (Input type="number")
+- Delete only available when `status === "draft"` — AlertDialog confirmation
+- Buttons rendered as a horizontal toolbar with appropriate variants: `default` for activate, `outline` for edit, `destructive` for close/delete
+- Icons: `CheckCircle2`, `XCircle`, `Pencil`, `Trash2`, `ShieldCheck` from lucide-react
+- Audit logging handled automatically by existing `useUpdateContract` and `useDeleteContract` hooks
 
 ## What Does NOT Change
 
