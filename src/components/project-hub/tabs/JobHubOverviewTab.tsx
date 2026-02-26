@@ -1,15 +1,19 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Progress } from "@/components/ui/progress";
-import { Target, User, Calendar, MapPin, Phone, Mail, Hash, Clock, Camera, StickyNote } from "lucide-react";
+import { Target, User, Calendar, MapPin, Phone, Mail, Hash, Clock, Camera, StickyNote, ClipboardList } from "lucide-react";
 import { format } from "date-fns";
 import { ProjectRoomsSection } from "@/components/project-hub/rooms/ProjectRoomsSection";
 import { EnhancedTimeEntryForm } from "@/components/time-tracking/EnhancedTimeEntryForm";
+import { useContractsByProject } from "@/hooks/useContracts";
+import { useSovLines } from "@/hooks/useSovLines";
+import { formatCurrency } from "@/lib/utils";
 import type { Milestone } from "@/integrations/supabase/hooks/useMilestones";
 
 interface JobHubOverviewTabProps {
+  projectId: string;
   project: any;
   customer: any;
   milestones: Milestone[] | undefined;
@@ -18,6 +22,7 @@ interface JobHubOverviewTabProps {
 }
 
 export function JobHubOverviewTab({
+  projectId,
   project,
   customer,
   milestones,
@@ -25,6 +30,19 @@ export function JobHubOverviewTab({
   projectJobOrders,
 }: JobHubOverviewTabProps) {
   const [timeEntryOpen, setTimeEntryOpen] = useState(false);
+
+  const { data: contracts } = useContractsByProject(projectId);
+  const firstContract = contracts?.[0] ?? null;
+  const { data: sovLines } = useSovLines(firstContract?.id ?? null);
+
+  const sovTotals = useMemo(() => {
+    if (!sovLines || sovLines.length === 0) return null;
+    const committed = sovLines.reduce((s, l) => s + (l.committed_cost || 0), 0);
+    const invoiced = sovLines.reduce((s, l) => s + (l.invoiced_to_date || 0), 0);
+    const remaining = sovLines.reduce((s, l) => s + (l.balance_remaining || 0), 0);
+    const avgComplete = sovLines.reduce((s, l) => s + (l.percent_complete || 0), 0) / sovLines.length;
+    return { committed, invoiced, remaining, avgComplete };
+  }, [sovLines]);
 
   const handleNavigateTab = (hash: string) => {
     window.location.hash = hash;
@@ -55,6 +73,52 @@ export function JobHubOverviewTab({
           </div>
         </CardContent>
       </Card>
+
+      {/* Contract Summary */}
+      {firstContract && sovTotals && (
+        <Card className="glass border-border">
+          <CardHeader className="flex flex-row items-center justify-between py-3">
+            <div className="flex items-center gap-2">
+              <ClipboardList className="h-5 w-5 text-primary" />
+              <CardTitle className="font-heading">Contract</CardTitle>
+            </div>
+            <StatusBadge status={firstContract.status as any} />
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Contract Value</p>
+                <p className="text-lg font-bold">{formatCurrency(firstContract.current_value ?? 0)}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Committed</p>
+                <p className="text-lg font-bold">{formatCurrency(sovTotals.committed)}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Invoiced</p>
+                <p className="text-lg font-bold">{formatCurrency(sovTotals.invoiced)}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Remaining</p>
+                <p className="text-lg font-bold">{formatCurrency(sovTotals.remaining)}</p>
+              </div>
+            </div>
+            <div className="space-y-1">
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>Avg. Completion</span>
+                <span>{Math.round(sovTotals.avgComplete)}%</span>
+              </div>
+              <Progress value={sovTotals.avgComplete} className="h-2" />
+            </div>
+            <button
+              onClick={() => handleNavigateTab("contract")}
+              className="text-sm text-primary hover:underline font-medium"
+            >
+              View Full SOV →
+            </button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Quick Actions */}
       <Card className="glass border-border">

@@ -339,6 +339,7 @@ const ProjectDetail = () => {
 
         <TabsContent value="overview">
           <JobHubOverviewTab
+            projectId={id!}
             project={project}
             customer={customer}
             milestones={milestones}
