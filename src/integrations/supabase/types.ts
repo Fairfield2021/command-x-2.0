@@ -5137,6 +5137,7 @@ export type Database = {
           markup: number
           purchase_order_id: string
           quantity: number
+          sov_line_id: string | null
           total: number
           unit_price: number
         }
@@ -5148,6 +5149,7 @@ export type Database = {
           markup?: number
           purchase_order_id: string
           quantity: number
+          sov_line_id?: string | null
           total: number
           unit_price: number
         }
@@ -5159,6 +5161,7 @@ export type Database = {
           markup?: number
           purchase_order_id?: string
           quantity?: number
+          sov_line_id?: string | null
           total?: number
           unit_price?: number
         }
@@ -5168,6 +5171,13 @@ export type Database = {
             columns: ["purchase_order_id"]
             isOneToOne: false
             referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "po_line_items_sov_line_id_fkey"
+            columns: ["sov_line_id"]
+            isOneToOne: false
+            referencedRelation: "sov_lines"
             referencedColumns: ["id"]
           },
         ]
