@@ -24,7 +24,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { ArrowLeft, Loader2, Download, LayoutDashboard, DollarSign, FileText, Users, Activity, CalendarDays, HardHat } from "lucide-react";
+import { ArrowLeft, Loader2, Download, LayoutDashboard, DollarSign, FileText, Users, Activity, CalendarDays, HardHat, ScrollText } from "lucide-react";
 import { format } from "date-fns";
 import { generateProjectReportPDF } from "@/utils/pdfExport";
 import { AddTMTicketDialog } from "@/components/tm-tickets/AddTMTicketDialog";
@@ -38,8 +38,9 @@ import { JobHubTeamTab } from "@/components/project-hub/tabs/JobHubTeamTab";
 import { JobHubActivityTab } from "@/components/project-hub/tabs/JobHubActivityTab";
 import { JobHubScheduleTab } from "@/components/project-hub/tabs/JobHubScheduleTab";
 import { JobHubFieldTab } from "@/components/project-hub/tabs/JobHubFieldTab";
+import { JobHubContractTab } from "@/components/project-hub/tabs/JobHubContractTab";
 
-const VALID_TABS = ["overview", "financials", "schedule", "field", "documents", "team", "activity"] as const;
+const VALID_TABS = ["overview", "contract", "financials", "schedule", "field", "documents", "team", "activity"] as const;
 type TabValue = typeof VALID_TABS[number];
 
 const ProjectDetail = () => {
@@ -306,6 +307,10 @@ const ProjectDetail = () => {
             <LayoutDashboard className="h-4 w-4" />
             Overview
           </TabsTrigger>
+          <TabsTrigger value="contract" className="gap-1.5">
+            <ScrollText className="h-4 w-4" />
+            Contract
+          </TabsTrigger>
           <TabsTrigger value="financials" className="gap-1.5">
             <DollarSign className="h-4 w-4" />
             Financials
@@ -339,6 +344,15 @@ const ProjectDetail = () => {
             milestones={milestones}
             overallCompletion={overallCompletion}
             projectJobOrders={projectJobOrders}
+          />
+        </TabsContent>
+
+        <TabsContent value="contract">
+          <JobHubContractTab
+            projectId={id!}
+            projectEstimates={projectEstimates}
+            projectName={project.name}
+            customerId={project.customer_id}
           />
         </TabsContent>
 
