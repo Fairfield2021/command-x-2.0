@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
 import {
   Table, TableHeader, TableBody, TableRow,
   TableHead, TableCell, TableFooter,
@@ -65,9 +66,10 @@ const SovTable: React.FC<SovTableProps> = ({ contractId, lines, isLoading }) => 
         actual_cost: acc.actual_cost + l.actual_cost,
         billed_to_date: acc.billed_to_date + l.billed_to_date,
         paid_to_date: acc.paid_to_date + l.paid_to_date,
+        invoiced_to_date: acc.invoiced_to_date + l.invoiced_to_date,
         balance_remaining: acc.balance_remaining + (l.balance_remaining ?? 0),
       }),
-      { total_value: 0, committed_cost: 0, actual_cost: 0, billed_to_date: 0, paid_to_date: 0, balance_remaining: 0 },
+      { total_value: 0, committed_cost: 0, actual_cost: 0, billed_to_date: 0, paid_to_date: 0, invoiced_to_date: 0, balance_remaining: 0 },
     );
   }, [lines]);
 
@@ -143,6 +145,12 @@ const SovTable: React.FC<SovTableProps> = ({ contractId, lines, isLoading }) => 
     return <div className="text-sm text-muted-foreground py-8 text-center">Loading SOV lines…</div>;
   }
 
+  const getProgressColor = (pct: number) => {
+    if (pct >= 100) return "[&>div]:bg-destructive";
+    if (pct >= 80) return "[&>div]:bg-amber-500";
+    return "[&>div]:bg-green-500";
+  };
+
   return (
     <div className="space-y-3">
       {/* Toolbar */}
@@ -160,52 +168,64 @@ const SovTable: React.FC<SovTableProps> = ({ contractId, lines, isLoading }) => 
             <TableRow className="bg-muted/40">
               <TableHead className="w-12 text-xs">#</TableHead>
               <TableHead className="text-xs min-w-[180px]">Description</TableHead>
-              <TableHead className="text-xs text-right w-16">Qty</TableHead>
-              <TableHead className="text-xs w-16">Unit</TableHead>
-              <TableHead className="text-xs text-right w-24">Unit Price</TableHead>
-              <TableHead className="text-xs text-right w-20">Markup%</TableHead>
+              <TableHead className="text-xs text-right w-16 hidden md:table-cell">Qty</TableHead>
+              <TableHead className="text-xs w-16 hidden md:table-cell">Unit</TableHead>
+              <TableHead className="text-xs text-right w-24 hidden md:table-cell">Unit Price</TableHead>
+              <TableHead className="text-xs text-right w-20 hidden md:table-cell">Markup%</TableHead>
               <TableHead className="text-xs text-right w-28">Total Value</TableHead>
-              <TableHead className="text-xs text-right w-28">Committed</TableHead>
-              <TableHead className="text-xs text-right w-28">Actual</TableHead>
-              <TableHead className="text-xs text-right w-28">Billed</TableHead>
-              <TableHead className="text-xs text-right w-28">Paid</TableHead>
+              <TableHead className="text-xs text-right w-28 hidden md:table-cell">Committed</TableHead>
+              <TableHead className="text-xs text-right w-28 hidden md:table-cell">Actual</TableHead>
+              <TableHead className="text-xs text-right w-28 hidden md:table-cell">Billed</TableHead>
+              <TableHead className="text-xs text-right w-28 hidden md:table-cell">Paid</TableHead>
+              <TableHead className="text-xs text-right w-28">Invoiced</TableHead>
               <TableHead className="text-xs text-right w-28">Balance</TableHead>
-              <TableHead className="text-xs text-right w-20">% Comp</TableHead>
+              <TableHead className="text-xs text-right w-24">% Comp</TableHead>
               <TableHead className="text-xs w-20 text-center">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {lines.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={14} className="text-center text-muted-foreground text-xs py-8">
+                <TableCell colSpan={15} className="text-center text-muted-foreground text-xs py-8">
                   No SOV lines yet. Click "Add Line" to get started.
                 </TableCell>
               </TableRow>
             ) : (
               lines.map((line) => (
                 <TableRow key={line.id} className="text-xs">
-                  <TableCell className="font-mono text-muted-foreground">{line.line_number}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1.5">
-                      <span className="truncate max-w-[200px]">{line.description}</span>
+                  <TableCell className="font-mono text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      {line.line_number}
                       {line.is_addendum && (
-                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-accent text-accent-foreground">
-                          Addendum
+                        <Badge variant="default" className="text-[10px] px-1 py-0 leading-tight">
+                          CO
                         </Badge>
                       )}
                     </div>
                   </TableCell>
-                  <TableCell className="text-right font-mono">{line.quantity}</TableCell>
-                  <TableCell className="text-muted-foreground">{line.unit ?? "—"}</TableCell>
-                  <TableCell className="text-right font-mono">{formatCurrency(line.unit_price)}</TableCell>
-                  <TableCell className="text-right font-mono">{line.markup}%</TableCell>
+                  <TableCell>
+                    <span className="truncate max-w-[200px] block">{line.description}</span>
+                  </TableCell>
+                  <TableCell className="text-right font-mono hidden md:table-cell">{line.quantity}</TableCell>
+                  <TableCell className="text-muted-foreground hidden md:table-cell">{line.unit ?? "—"}</TableCell>
+                  <TableCell className="text-right font-mono hidden md:table-cell">{formatCurrency(line.unit_price)}</TableCell>
+                  <TableCell className="text-right font-mono hidden md:table-cell">{line.markup}%</TableCell>
                   <TableCell className="text-right font-mono font-medium">{formatCurrency(line.total_value)}</TableCell>
-                  <TableCell className="text-right font-mono">{formatCurrency(line.committed_cost)}</TableCell>
-                  <TableCell className="text-right font-mono">{formatCurrency(line.actual_cost)}</TableCell>
-                  <TableCell className="text-right font-mono">{formatCurrency(line.billed_to_date)}</TableCell>
-                  <TableCell className="text-right font-mono">{formatCurrency(line.paid_to_date)}</TableCell>
-                  <TableCell className="text-right font-mono">{formatCurrency(line.balance_remaining)}</TableCell>
-                  <TableCell className="text-right font-mono">{line.percent_complete}%</TableCell>
+                  <TableCell className="text-right font-mono text-amber-600 dark:text-amber-400 hidden md:table-cell">{formatCurrency(line.committed_cost)}</TableCell>
+                  <TableCell className="text-right font-mono hidden md:table-cell">{formatCurrency(line.actual_cost)}</TableCell>
+                  <TableCell className="text-right font-mono text-purple-600 dark:text-purple-400 hidden md:table-cell">{formatCurrency(line.billed_to_date)}</TableCell>
+                  <TableCell className="text-right font-mono text-red-600 dark:text-red-400 hidden md:table-cell">{formatCurrency(line.paid_to_date)}</TableCell>
+                  <TableCell className="text-right font-mono text-teal-600 dark:text-teal-400">{formatCurrency(line.invoiced_to_date)}</TableCell>
+                  <TableCell className="text-right font-mono font-semibold">{formatCurrency(line.balance_remaining)}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1.5">
+                      <Progress
+                        value={Math.min(line.percent_complete, 100)}
+                        className={`h-2 w-12 ${getProgressColor(line.percent_complete)}`}
+                      />
+                      <span className="text-[10px] font-mono text-muted-foreground w-8 text-right">{line.percent_complete}%</span>
+                    </div>
+                  </TableCell>
                   <TableCell>
                     <div className="flex items-center justify-center gap-1">
                       <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openEdit(line)}>
@@ -223,13 +243,15 @@ const SovTable: React.FC<SovTableProps> = ({ contractId, lines, isLoading }) => 
           {lines.length > 0 && (
             <TableFooter>
               <TableRow className="text-xs font-semibold">
-                <TableCell colSpan={6} className="text-right">Totals</TableCell>
+                <TableCell colSpan={2} className="text-right md:hidden">Totals</TableCell>
+                <TableCell colSpan={6} className="text-right hidden md:table-cell">Totals</TableCell>
                 <TableCell className="text-right font-mono">{formatCurrency(totals.total_value)}</TableCell>
-                <TableCell className="text-right font-mono">{formatCurrency(totals.committed_cost)}</TableCell>
-                <TableCell className="text-right font-mono">{formatCurrency(totals.actual_cost)}</TableCell>
-                <TableCell className="text-right font-mono">{formatCurrency(totals.billed_to_date)}</TableCell>
-                <TableCell className="text-right font-mono">{formatCurrency(totals.paid_to_date)}</TableCell>
-                <TableCell className="text-right font-mono">{formatCurrency(totals.balance_remaining)}</TableCell>
+                <TableCell className="text-right font-mono text-amber-600 dark:text-amber-400 hidden md:table-cell">{formatCurrency(totals.committed_cost)}</TableCell>
+                <TableCell className="text-right font-mono hidden md:table-cell">{formatCurrency(totals.actual_cost)}</TableCell>
+                <TableCell className="text-right font-mono text-purple-600 dark:text-purple-400 hidden md:table-cell">{formatCurrency(totals.billed_to_date)}</TableCell>
+                <TableCell className="text-right font-mono text-red-600 dark:text-red-400 hidden md:table-cell">{formatCurrency(totals.paid_to_date)}</TableCell>
+                <TableCell className="text-right font-mono text-teal-600 dark:text-teal-400">{formatCurrency(totals.invoiced_to_date)}</TableCell>
+                <TableCell className="text-right font-mono font-semibold">{formatCurrency(totals.balance_remaining)}</TableCell>
                 <TableCell colSpan={2} />
               </TableRow>
             </TableFooter>
