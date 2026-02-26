@@ -18,19 +18,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { FileText, ArrowRightLeft } from "lucide-react";
+import { FileText, ArrowRightLeft, Loader2 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { useContractsByProject, useAddContract } from "@/hooks/useContracts";
 import { useBulkCreateSovLines } from "@/hooks/useSovLines";
+import { useEstimate } from "@/integrations/supabase/hooks/useEstimates";
 import { toast } from "sonner";
-import type {
-  EstimateWithLineItems,
-  EstimateLineItem,
-} from "@/integrations/supabase/hooks/useEstimates";
+import type { Estimate } from "@/integrations/supabase/hooks/useEstimates";
 
 interface ConvertEstimateToContractProps {
   projectId: string;
-  projectEstimates: EstimateWithLineItems[];
+  projectEstimates: Estimate[];
   projectName: string;
 }
 
@@ -39,14 +37,16 @@ export const ConvertEstimateToContract = ({
   projectEstimates,
   projectName,
 }: ConvertEstimateToContractProps) => {
-  const [selectedEstimate, setSelectedEstimate] =
-    useState<EstimateWithLineItems | null>(null);
+  const [selectedEstimateId, setSelectedEstimateId] = useState<string | null>(null);
   const [contractTitle, setContractTitle] = useState("");
   const [isConverting, setIsConverting] = useState(false);
 
   const { data: existingContracts = [] } = useContractsByProject(projectId);
   const addContract = useAddContract();
   const bulkCreateSovLines = useBulkCreateSovLines();
+
+  // Fetch full estimate with line items only when dialog is open
+  const { data: selectedEstimate, isLoading: estimateLoading } = useEstimate(selectedEstimateId ?? "");
 
   // Find which estimate IDs already have contracts linked via qb_estimate_id
   const convertedEstimateIds = new Set(
@@ -62,13 +62,13 @@ export const ConvertEstimateToContract = ({
       !convertedEstimateIds.has(est.id)
   );
 
-  const openDialog = (estimate: EstimateWithLineItems) => {
-    setSelectedEstimate(estimate);
+  const openDialog = (estimate: Estimate) => {
+    setSelectedEstimateId(estimate.id);
     setContractTitle(projectName);
   };
 
   const closeDialog = () => {
-    setSelectedEstimate(null);
+    setSelectedEstimateId(null);
     setContractTitle("");
     setIsConverting(false);
   };
@@ -78,6 +78,8 @@ export const ConvertEstimateToContract = ({
     setIsConverting(true);
 
     try {
+      const lineItems = selectedEstimate.line_items || [];
+
       // 1. Create the contract
       const contract = await addContract.mutateAsync({
         project_id: projectId,
@@ -94,29 +96,27 @@ export const ConvertEstimateToContract = ({
       });
 
       // 2. Create SOV lines from estimate line items
-      const sovLines = selectedEstimate.line_items.map(
-        (item: EstimateLineItem, index: number) => ({
-          contract_id: contract.id,
-          line_number: index + 1,
-          description: item.description,
-          product_id: item.product_id || null,
-          quantity: item.quantity,
-          unit: null,
-          unit_price: item.unit_price,
-          markup: item.markup,
-          committed_cost: 0,
-          actual_cost: 0,
-          billed_to_date: 0,
-          paid_to_date: 0,
-          invoiced_to_date: 0,
-          retention_held: 0,
-          percent_complete: 0,
-          change_order_id: null,
-          is_addendum: false,
-          notes: null,
-          sort_order: index + 1,
-        })
-      );
+      const sovLines = lineItems.map((item, index) => ({
+        contract_id: contract.id,
+        line_number: index + 1,
+        description: item.description,
+        product_id: item.product_id || null,
+        quantity: item.quantity,
+        unit: null,
+        unit_price: item.unit_price,
+        markup: item.markup,
+        committed_cost: 0,
+        actual_cost: 0,
+        billed_to_date: 0,
+        paid_to_date: 0,
+        invoiced_to_date: 0,
+        retention_held: 0,
+        percent_complete: 0,
+        change_order_id: null,
+        is_addendum: false,
+        notes: null,
+        sort_order: index + 1,
+      }));
 
       if (sovLines.length > 0) {
         await bulkCreateSovLines.mutateAsync(sovLines);
@@ -133,6 +133,8 @@ export const ConvertEstimateToContract = ({
   };
 
   if (convertibleEstimates.length === 0) return null;
+
+  const lineItems = selectedEstimate?.line_items || [];
 
   return (
     <>
@@ -167,7 +169,7 @@ export const ConvertEstimateToContract = ({
       </div>
 
       <Dialog
-        open={!!selectedEstimate}
+        open={!!selectedEstimateId}
         onOpenChange={(open) => !open && closeDialog()}
       >
         <DialogContent className="max-w-2xl">
@@ -193,45 +195,51 @@ export const ConvertEstimateToContract = ({
 
             <div className="space-y-2">
               <Label>SOV Lines Preview</Label>
-              <div className="max-h-64 overflow-auto rounded-[var(--density-radius-md)] border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-8">#</TableHead>
-                      <TableHead>Description</TableHead>
-                      <TableHead className="text-right">Qty</TableHead>
-                      <TableHead className="text-right">Unit Price</TableHead>
-                      <TableHead className="text-right">Markup %</TableHead>
-                      <TableHead className="text-right">Total</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {selectedEstimate?.line_items.map((item, idx) => (
-                      <TableRow key={item.id || idx}>
-                        <TableCell className="text-muted-foreground">
-                          {idx + 1}
-                        </TableCell>
-                        <TableCell>{item.description}</TableCell>
-                        <TableCell className="text-right">
-                          {item.quantity}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {formatCurrency(item.unit_price)}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {item.markup}%
-                        </TableCell>
-                        <TableCell className="text-right font-medium">
-                          {formatCurrency(item.total)}
-                        </TableCell>
+              {estimateLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                </div>
+              ) : (
+                <div className="max-h-64 overflow-auto rounded-[var(--density-radius-md)] border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-8">#</TableHead>
+                        <TableHead>Description</TableHead>
+                        <TableHead className="text-right">Qty</TableHead>
+                        <TableHead className="text-right">Unit Price</TableHead>
+                        <TableHead className="text-right">Markup %</TableHead>
+                        <TableHead className="text-right">Total</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+                    </TableHeader>
+                    <TableBody>
+                      {lineItems.map((item, idx) => (
+                        <TableRow key={item.id || idx}>
+                          <TableCell className="text-muted-foreground">
+                            {idx + 1}
+                          </TableCell>
+                          <TableCell>{item.description}</TableCell>
+                          <TableCell className="text-right">
+                            {item.quantity}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {formatCurrency(item.unit_price)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {item.markup}%
+                          </TableCell>
+                          <TableCell className="text-right font-medium">
+                            {formatCurrency(item.total)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
               <p className="text-xs text-muted-foreground">
-                {selectedEstimate?.line_items.length} line item
-                {(selectedEstimate?.line_items.length ?? 0) !== 1 ? "s" : ""}{" "}
+                {lineItems.length} line item
+                {lineItems.length !== 1 ? "s" : ""}{" "}
                 • Total: {formatCurrency(selectedEstimate?.total)}
               </p>
             </div>
@@ -241,7 +249,7 @@ export const ConvertEstimateToContract = ({
             <Button variant="outline" onClick={closeDialog}>
               Cancel
             </Button>
-            <Button onClick={handleConvert} disabled={isConverting}>
+            <Button onClick={handleConvert} disabled={isConverting || estimateLoading}>
               {isConverting ? "Creating…" : "Confirm & Create Contract"}
             </Button>
           </DialogFooter>
