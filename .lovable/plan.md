@@ -1,17 +1,18 @@
 
 
-# Add `sov_line_id` to `po_line_items`
+# Add `sov_line_id` to `vendor_bill_line_items`
 
 ## Database Migration
 
-Single migration with two statements:
+Single migration:
 
 ```sql
-ALTER TABLE public.po_line_items
+ALTER TABLE public.vendor_bill_line_items
   ADD COLUMN sov_line_id UUID REFERENCES public.sov_lines(id) ON DELETE SET NULL;
 
-CREATE INDEX idx_po_line_items_sov_line_id ON public.po_line_items(sov_line_id);
+CREATE INDEX idx_vendor_bill_line_items_sov_line_id
+  ON public.vendor_bill_line_items(sov_line_id);
 ```
 
-No code changes needed — this just adds an optional FK column and index. The column is nullable so existing rows are unaffected.
+No code changes needed — nullable FK column + index on an existing table.
 
