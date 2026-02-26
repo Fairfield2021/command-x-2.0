@@ -1,31 +1,18 @@
 
 
-# Step 7 of 8 — Wire Contract Tab into Job Hub
+# Fix `balance_remaining` Generated Column on `sov_lines`
 
-## What Changes
+## Migration
 
-### 1. New File: `src/components/project-hub/tabs/JobHubContractTab.tsx`
+Single migration with two statements:
 
-Tab component that:
-- Uses `useContractsByProject(projectId)` and `useSovLines(contractId)` to fetch data
-- **No contract state**: Empty state with "No contract yet" message, `ConvertEstimateToContract` component, and a "Create Blank Contract" button (calls `useAddContract` with minimal fields)
-- **Contract exists state**: Renders `ContractHeader`, `ContractActions`, `SovTable`, and `ConvertEstimateToContract` at the bottom for future addendums
+```sql
+ALTER TABLE public.sov_lines DROP COLUMN balance_remaining;
 
-Props: `projectId`, `projectEstimates`, `projectName`
+ALTER TABLE public.sov_lines ADD COLUMN balance_remaining NUMERIC GENERATED ALWAYS AS (((quantity * unit_price) * (1 + markup / 100)) - invoiced_to_date) STORED;
+```
 
-### 2. Modified File: `src/pages/ProjectDetail.tsx`
+Changes formula from `- billed_to_date` to `- invoiced_to_date` so balance tracks remaining invoiceable amount to customer.
 
-Minimal changes:
-- Add `"contract"` to `VALID_TABS` array (after `"overview"`, before `"financials"`)
-- Import `JobHubContractTab` and `Briefcase` icon (or `ScrollText`)
-- Add `TabsTrigger` for "Contract" between Overview and Financials
-- Add `TabsContent` rendering `JobHubContractTab` with `projectId={id!}`, `projectEstimates={projectEstimates}`, `projectName={project.name}`
-
-### Verification Checklist (from Notion)
-- New "Contract" tab appears between Overview and Financials
-- Empty state shows when no contract exists
-- Contract header and SOV table show when contract exists
-- "Add SOV Line" works (handled by SovTable internally)
-- URL hash `#contract` works
-- All existing tabs still function
+No code file changes. No other table changes.
 
