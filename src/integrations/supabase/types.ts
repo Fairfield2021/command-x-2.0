@@ -5976,6 +5976,7 @@ export type Database = {
           job_order_number: string
           notes: string | null
           number: string
+          order_type: string
           project_id: string
           project_name: string
           reopened_at: string | null
@@ -6010,6 +6011,7 @@ export type Database = {
           job_order_number: string
           notes?: string | null
           number: string
+          order_type?: string
           project_id: string
           project_name: string
           reopened_at?: string | null
@@ -6044,6 +6046,7 @@ export type Database = {
           job_order_number?: string
           notes?: string | null
           number?: string
+          order_type?: string
           project_id?: string
           project_name?: string
           reopened_at?: string | null
