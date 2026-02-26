@@ -9103,6 +9103,14 @@ export type Database = {
       }
       is_personnel: { Args: { _user_id: string }; Returns: boolean }
       is_vendor: { Args: { _user_id: string }; Returns: boolean }
+      recalculate_contract_original_value: {
+        Args: { p_contract_id: string }
+        Returns: undefined
+      }
+      recalculate_sov_line_totals: {
+        Args: { p_sov_line_id: string }
+        Returns: undefined
+      }
       reset_vendor_bill_sequence_for_new_year: {
         Args: never
         Returns: undefined
