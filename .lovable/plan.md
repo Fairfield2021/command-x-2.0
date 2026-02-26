@@ -1,50 +1,51 @@
 
 
-# Phase 6A — Step 4 of 8: ContractHeader Component
-
-## What This Step Does
-
-Creates a `ContractHeader` component — a summary bar displayed at the top of the Contract tab showing contract metadata and four financial cards. It follows the same visual patterns used by `ProjectFinancialSummary` (StatCard layout, `glass border-border` cards, `formatCurrency`, status badges).
+# Phase 6A — Step 5 of 8: SovTable Component
 
 ## New File
 
-**`src/components/project-hub/contract/ContractHeader.tsx`**
+**`src/components/project-hub/contract/SovTable.tsx`**
 
 ## Component Structure
 
 ```text
-ContractHeader
-├── Top Row: Contract # | Title | StatusBadge | Customer | Date Signed
-└── Financial Cards (4-column grid):
-    ├── Original Value   (neutral)
-    ├── Addendums        (blue, + prefix)
-    ├── Deductions       (red, - prefix)
-    └── Current Value    (primary, highlighted)
+SovTable
+├── Toolbar: "Add Line" button + line count
+├── DataTable (existing shared component pattern):
+│   ├── Columns: #, Description, Qty, Unit, Unit Price, Markup%, Total Value,
+│   │   Committed, Actual, Billed, Paid, Balance, %Complete, Actions
+│   └── Footer Row: Column totals for financial columns
+├── Inline Edit: Click row → opens edit dialog (or inline inputs)
+├── Add Line Dialog: Form to create new SOV line
+└── Delete Confirmation: AlertDialog before removing a line
 ```
 
 ## Props
 
 | Prop | Type | Source |
 |------|------|--------|
-| contract | `Contract` (from `useContracts`) | Parent tab component |
-| customerName | `string \| null` | Resolved from customer_id |
+| contractId | `string` | Parent tab |
+| lines | `SovLine[]` | From `useSovLines` |
+| isLoading | `boolean` | From `useSovLines` |
 
 ## Implementation Details
 
-- Imports `Contract` type from `src/hooks/useContracts.ts`
-- Uses existing `Card`, `CardContent`, `CardHeader`, `CardTitle` from `@/components/ui/card`
-- Uses existing `StatusBadge` for contract status (draft/active/complete/closed)
-- Uses `formatCurrency` from `@/lib/utils` for all money values
-- Uses `format` from `date-fns` for date_signed display
-- Icons from `lucide-react`: `FileText`, `DollarSign`, `Plus`, `Minus`, `Calendar`, `User`
-- Four financial cards in a responsive grid: `grid-cols-2 sm:grid-cols-4`
-- Current Value card gets `bg-primary/10` highlight treatment matching the StatCard pattern in `ProjectFinancialSummary`
-- Glass card styling: `className="glass border-border"` matching all other Job Hub cards
+- Uses `Table/TableHeader/TableBody/TableRow/TableCell/TableFooter` from `@/components/ui/table`
+- Uses `useSovLines`, `useAddSovLine`, `useUpdateSovLine`, `useDeleteSovLine` hooks
+- `formatCurrency` for all money columns
+- Add Line: `Dialog` with form fields (description, quantity, unit, unit_price, markup, notes) using existing `Input`, `Label`, `Button` components
+- Edit: Click pencil icon → same dialog pre-filled with line data
+- Delete: `AlertDialog` confirmation before calling `useDeleteSovLine`
+- Footer row sums: total_value, committed_cost, actual_cost, billed_to_date, paid_to_date, balance_remaining
+- Addendum lines get a `Badge` indicator (blue "Addendum")
+- Compact table styling matching `DataTable` patterns (`text-xs`, tight padding)
+- Auto-calculates `line_number` as max existing + 1 on add
+- `sort_order` defaults to `line_number` value
 
 ## What Does NOT Change
 
 - No database changes
 - No hook changes
 - No modifications to existing components
-- Component is created but not wired into any tab yet (that happens in Step 7)
+- Component is created but not wired into any tab yet (Step 7)
 
