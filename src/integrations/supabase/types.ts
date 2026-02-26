@@ -8155,6 +8155,7 @@ export type Database = {
           project_id: string | null
           qb_product_mapping_id: string | null
           quantity: number
+          sov_line_id: string | null
           total: number
           unit_cost: number
         }
@@ -8170,6 +8171,7 @@ export type Database = {
           project_id?: string | null
           qb_product_mapping_id?: string | null
           quantity?: number
+          sov_line_id?: string | null
           total?: number
           unit_cost?: number
         }
@@ -8185,6 +8187,7 @@ export type Database = {
           project_id?: string | null
           qb_product_mapping_id?: string | null
           quantity?: number
+          sov_line_id?: string | null
           total?: number
           unit_cost?: number
         }
@@ -8236,6 +8239,13 @@ export type Database = {
             columns: ["qb_product_mapping_id"]
             isOneToOne: false
             referencedRelation: "qb_product_service_mappings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_bill_line_items_sov_line_id_fkey"
+            columns: ["sov_line_id"]
+            isOneToOne: false
+            referencedRelation: "sov_lines"
             referencedColumns: ["id"]
           },
         ]
