@@ -1,50 +1,39 @@
 
 
-# LinkLineItemsToSOV Component
+# Work Order Visual Distinction
 
-## Purpose
-A table UI that displays all line items from a PO, vendor bill, or invoice and lets users link each line to an SOV line via the existing `SovLinePicker`. Includes overcommit validation before saving.
+## Overview
+Add visual differentiation for work orders (`order_type = "work_order"`) vs purchase orders (`order_type = "purchase_order"`) across the PO list page, card component, and detail page.
 
-## Data Flow
-- PO/bill/invoice → `project_id` → look up the contract for that project via `useContractsByProject(projectId)` → pass `contract.id` to `SovLinePicker`
-- Each row shows: line description, quantity, total, and a `SovLinePicker` dropdown
-- On change, validate that assigning this line item won't cause the SOV line's committed/billed/invoiced total to exceed `total_value`
+## Changes
 
-## Component: `src/components/shared/LinkLineItemsToSOV.tsx`
+### 1. Add `order_type` to `PurchaseOrder` interface
+**File:** `src/integrations/supabase/hooks/usePurchaseOrders.ts`
+- Add `order_type: string` to the `PurchaseOrder` interface (it already exists in the DB schema/types)
 
-**Props:**
-- `lineItems: Array<{ id, description, quantity, unit_price, total, sov_line_id }>` — the line items to display
-- `projectId: string` — used to look up the project's contract
-- `contextType: "po" | "bill" | "invoice"`
-- `onSave: (updates: Array<{ lineItemId: string; sovLineId: string | null }>) => Promise<void>`
-- `disabled?: boolean`
+### 2. PO List Page — Type filter toggle + icon/prefix in table
+**File:** `src/pages/PurchaseOrders.tsx`
+- Add `selectedType` state: `"all" | "purchase_order" | "work_order"`
+- Add a toggle group (pills) below search: "All", "Purchase Orders", "Work Orders"
+- Filter `filteredPOs` by `order_type` when not "all"
+- In the `number` column render: show `Wrench` icon (purple) for work orders, `ShoppingCart` icon (blue/primary) for purchase orders
+- Add a purple "WO" badge next to number for work orders
 
-**Behavior:**
-1. Fetches contract via `useContractsByProject(projectId)` — if no contract exists, shows an info message ("No contract found for this project")
-2. Renders a table with columns: Line #, Description, Amount, SOV Line (SovLinePicker)
-3. Tracks local state of `sov_line_id` per line item (initialized from props)
-4. **Overcommit validation**: Before saving, for each SOV line being assigned, sums the total of all line items targeting that SOV line (including existing DB values from `useSovLines`) and compares against `total_value`. If any SOV line would be overcommitted, shows a warning toast and blocks save.
-5. "Save Links" button only enabled when there are unsaved changes
-6. Uses `supabase.from(tableName).update({ sov_line_id }).eq("id", lineItemId)` for each changed row, where `tableName` is derived from `contextType` (`po_line_items`, `vendor_bill_line_items`, `invoice_line_items`)
+### 3. PurchaseOrderCard — visual distinction
+**File:** `src/components/purchase-orders/PurchaseOrderCard.tsx`
+- Accept `order_type` from the PurchaseOrder (already on the type after step 1)
+- Swap `ShoppingCart` → `Wrench` icon when `order_type === "work_order"`
+- Show a small purple "Work Order" badge below the PO number for work orders
+- Use purple left border (`border-purple-500`) instead of the status-based color for work orders
 
-## Integration Points
-- Will be added to `PurchaseOrderDetail.tsx`, `VendorBillDetail` (in `VendorBillTable.tsx`), and `InvoiceDetail.tsx` as a collapsible section below or within the existing line items card
-- Each detail page already has `project_id` available
+### 4. PurchaseOrderDetail — header distinction
+**File:** `src/pages/PurchaseOrderDetail.tsx`
+- Show `Wrench` icon + "Work Order" label instead of `ShoppingCart` + "Purchase Order" when `order_type === "work_order"`
+- Add a purple badge "Work Order" next to the PO number in the header
 
-## Files to Create/Modify
-1. **Create** `src/components/shared/LinkLineItemsToSOV.tsx` — the new component
-2. **Modify** `src/pages/PurchaseOrderDetail.tsx` — add the component below the line items card
-3. **Modify** invoice and bill detail pages similarly (or defer to next prompt)
+### 5. ProjectPurchaseOrdersList — type indicator
+**File:** `src/components/project-hub/ProjectPurchaseOrdersList.tsx`
+- Show `Wrench` icon for work orders, `Truck` icon for POs in the list rows
 
-## Overcommit Validation Logic
-```
-For each SOV line targeted by the pending assignments:
-  existingTotal = sovLine.committed_cost (or billed_to_date / invoiced_to_date per context)
-  pendingAdds = sum of line item totals being newly assigned to this SOV line
-  pendingRemoves = sum of line item totals being unassigned from this SOV line
-  newTotal = existingTotal + pendingAdds - pendingRemoves
-  if newTotal > sovLine.total_value → block with warning
-```
-
-No database changes required — `sov_line_id` FK already exists on all three line item tables.
+No database changes required — `order_type` column already exists with default `"purchase_order"`.
 
