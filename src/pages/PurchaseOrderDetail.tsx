@@ -34,7 +34,8 @@ import { useVendors } from "@/integrations/supabase/hooks/useVendors";
 import { useProjects } from "@/integrations/supabase/hooks/useProjects";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { ArrowLeft, ShoppingCart, Truck, Building, Send, CheckCircle, CheckCheck, XCircle, Loader2, MoreVertical, Receipt, Lock, LockOpen, Printer, Download, Trash2 } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Truck, Building, Send, CheckCircle, CheckCheck, XCircle, Loader2, MoreVertical, Receipt, Lock, LockOpen, Printer, Download, Trash2, Wrench } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -276,7 +277,7 @@ const PurchaseOrderDetail = () => {
   return (
     <PageLayout
       title={purchaseOrder.number}
-      description={`PO for ${purchaseOrder.vendor_name}`}
+      description={`${purchaseOrder.order_type === "work_order" ? "Work Order" : "PO"} for ${purchaseOrder.vendor_name}`}
       actions={
         <div className="flex gap-2">
           {qbTxnId ? (
@@ -461,8 +462,17 @@ const PurchaseOrderDetail = () => {
         <Card className="glass border-border/50">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <ShoppingCart className="h-5 w-5 text-primary" />
-              PO Details
+              {purchaseOrder.order_type === "work_order" ? (
+                <Wrench className="h-5 w-5 text-purple-500" />
+              ) : (
+                <ShoppingCart className="h-5 w-5 text-primary" />
+              )}
+              {purchaseOrder.order_type === "work_order" ? "Work Order Details" : "PO Details"}
+              {purchaseOrder.order_type === "work_order" && (
+                <Badge className="bg-purple-500/10 text-purple-500 border-purple-500/20 text-xs">
+                  Work Order
+                </Badge>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">

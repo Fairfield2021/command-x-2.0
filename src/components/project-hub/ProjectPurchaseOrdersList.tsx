@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import { Truck, Plus, ExternalLink } from "lucide-react";
+import { Truck, Plus, ExternalLink, Wrench } from "lucide-react";
 import { format } from "date-fns";
 import { formatCurrency } from "@/lib/utils";
 import { PurchaseOrder } from "@/integrations/supabase/hooks/usePurchaseOrders";
@@ -62,6 +62,11 @@ export function ProjectPurchaseOrdersList({
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
+                    {po.order_type === "work_order" ? (
+                      <Wrench className="h-4 w-4 text-purple-500 flex-shrink-0" />
+                    ) : (
+                      <Truck className="h-4 w-4 text-primary flex-shrink-0" />
+                    )}
                     <span className="font-medium">{po.number}</span>
                     <StatusBadge status={po.status} />
                   </div>
