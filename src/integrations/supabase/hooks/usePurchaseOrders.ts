@@ -12,6 +12,7 @@ export interface POLineItem {
   markup: number;
   total: number;
   billed_quantity?: number;
+  sov_line_id?: string | null;
 }
 
 export interface PurchaseOrder {
