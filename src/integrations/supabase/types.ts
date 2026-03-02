@@ -1450,6 +1450,8 @@ export type Database = {
           approved_at: string | null
           approved_by: string | null
           change_type: Database["public"]["Enums"]["change_type"]
+          co_value: number
+          contract_id: string | null
           created_at: string
           created_by: string | null
           customer_id: string
@@ -1477,10 +1479,12 @@ export type Database = {
           photos: string[] | null
           project_id: string
           purchase_order_id: string | null
+          qb_estimate_id: string | null
           reason: string
           remaining_amount: number
           scope_reference: string | null
           sent_for_approval_at: string | null
+          sent_to: string | null
           source_estimate_id: string | null
           source_job_order_id: string | null
           status: Database["public"]["Enums"]["change_order_status"]
@@ -1497,6 +1501,8 @@ export type Database = {
           approved_at?: string | null
           approved_by?: string | null
           change_type?: Database["public"]["Enums"]["change_type"]
+          co_value?: number
+          contract_id?: string | null
           created_at?: string
           created_by?: string | null
           customer_id: string
@@ -1524,10 +1530,12 @@ export type Database = {
           photos?: string[] | null
           project_id: string
           purchase_order_id?: string | null
+          qb_estimate_id?: string | null
           reason: string
           remaining_amount?: number
           scope_reference?: string | null
           sent_for_approval_at?: string | null
+          sent_to?: string | null
           source_estimate_id?: string | null
           source_job_order_id?: string | null
           status?: Database["public"]["Enums"]["change_order_status"]
@@ -1544,6 +1552,8 @@ export type Database = {
           approved_at?: string | null
           approved_by?: string | null
           change_type?: Database["public"]["Enums"]["change_type"]
+          co_value?: number
+          contract_id?: string | null
           created_at?: string
           created_by?: string | null
           customer_id?: string
@@ -1571,10 +1581,12 @@ export type Database = {
           photos?: string[] | null
           project_id?: string
           purchase_order_id?: string | null
+          qb_estimate_id?: string | null
           reason?: string
           remaining_amount?: number
           scope_reference?: string | null
           sent_for_approval_at?: string | null
+          sent_to?: string | null
           source_estimate_id?: string | null
           source_job_order_id?: string | null
           status?: Database["public"]["Enums"]["change_order_status"]
@@ -1588,6 +1600,20 @@ export type Database = {
           work_authorized?: boolean
         }
         Relationships: [
+          {
+            foreignKeyName: "change_orders_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "change_orders_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "job_cost_summary"
+            referencedColumns: ["contract_id"]
+          },
           {
             foreignKeyName: "change_orders_customer_id_fkey"
             columns: ["customer_id"]
