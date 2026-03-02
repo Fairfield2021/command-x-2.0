@@ -47,6 +47,7 @@ import { RelatedVendorBills } from "@/components/purchase-orders/RelatedVendorBi
 import { POAddendums } from "@/components/purchase-orders/POAddendums";
 import { RestoreLineItemsDialog } from "@/components/purchase-orders/RestoreLineItemsDialog";
 import { formatCurrency } from "@/lib/utils";
+import { LinkLineItemsToSOV } from "@/components/shared/LinkLineItemsToSOV";
 import { generatePurchaseOrderPDF, ProjectInfoForPDF } from "@/utils/purchaseOrderPdfExport";
 import { downloadWorkOrderPDF, printWorkOrderPDF, mapPurchaseOrderToWorkOrder } from "@/utils/workOrderPdfExport";
 import { FileText, AlertTriangle } from "lucide-react";
@@ -670,6 +671,23 @@ const PurchaseOrderDetail = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* SOV Linking */}
+      {purchaseOrder.project_id && purchaseOrder.line_items.length > 0 && (
+        <LinkLineItemsToSOV
+          lineItems={purchaseOrder.line_items.map((item) => ({
+            id: item.id,
+            description: item.description,
+            quantity: Number(item.quantity),
+            unit_price: Number(item.unit_price),
+            total: Number(item.total),
+            sov_line_id: item.sov_line_id ?? null,
+          }))}
+          projectId={purchaseOrder.project_id}
+          contextType="po"
+          disabled={purchaseOrder.is_closed}
+        />
+      )}
 
       {/* Addendums / Change Orders */}
       <div className="mt-6">
