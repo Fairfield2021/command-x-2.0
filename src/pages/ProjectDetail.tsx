@@ -361,7 +361,6 @@ const ProjectDetail = () => {
         <TabsContent value="financials">
           <JobHubFinancialsTab
             projectId={id!}
-            financialData={financialData}
             projectEstimates={projectEstimates}
             projectJobOrders={projectJobOrders}
             projectInvoices={projectInvoices}
