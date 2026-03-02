@@ -1,45 +1,37 @@
 
 
-# Replace Financial Summary with Job Cost Summary KPI Cards
+# Add Expenses & Open Commitment Columns to SOV Table
 
-## Scope
+## File: `src/components/project-hub/contract/SovTable.tsx`
 
-Only `src/components/project-hub/tabs/JobHubFinancialsTab.tsx` needs modification. `ProjectDetail.tsx` already passes `projectId` — no changes needed there.
+### Column Changes
 
-## Changes to `JobHubFinancialsTab.tsx`
+**Header row (lines 179–182):**
+- Rename "Committed" → "Total Committed" (keep `hidden md:table-cell`, amber color)
+- Insert **"Expenses"** column after it — `text-green-600 dark:text-green-400`, visible on both mobile and desktop
+- Insert **"Open"** column after Expenses — `text-amber-600 dark:text-amber-400`, `hidden md:table-cell`
+- Remove the old standalone "Actual" and "Paid" columns (replaced by Expenses=paid_to_date; Actual was redundant)
 
-### 1. Replace the old `<ProjectFinancialSummary>` call (line 96) with a new inline KPI section
+**Body row (lines 234–244):**
+- Rename Committed cell to Total Committed (no logic change)
+- Add **Expenses** cell: `formatCurrency(line.paid_to_date)`, green text, always visible
+- Add **Open** cell: compute `openAmt = line.committed_cost - line.paid_to_date`
+  - If 0 → show "—" muted
+  - If negative → red text
+  - Otherwise → amber text with same warning logic as committed (icon when ≥80% of remaining budget)
+  - `hidden md:table-cell`
+- Remove old Actual and Paid cells
 
-- Import `useJobCostSummary` from `@/hooks/useJobCostSummary`
-- Import additional icons: `Clock`, `FileWarning`, `DollarSign`, `Send`, `Wallet`, `TrendingUp`
-- Import `Badge` from `@/components/ui/badge` and `Progress` from `@/components/ui/progress`
-- Import `formatCurrency` from `@/lib/utils`
-- Remove the `ProjectFinancialSummary` import and the `financialData` prop (no longer needed)
+**Footer row (lines 278–288):**
+- Add totals for Expenses (`totals.paid_to_date`, green) and Open (`totals.committed_cost - totals.paid_to_date`, amber)
+- Update `colSpan` values to account for new column count (was 15 → now 15 still: removed 2 old, added 2 new)
 
-### 2. New KPI Section Structure
+**Mobile visibility:**
+- Mobile shows: `#`, Description, Total Value, **Expenses**, Invoiced, Balance, % Complete, Actions
+- Hidden on mobile: Qty, Unit, Unit Price, Markup%, **Total Committed**, **Open**, Billed
 
-Call `useJobCostSummary(projectId)` inside the component. Render a `Card` with:
+**colSpan on empty state** stays at same total column count (15).
 
-**Row 1 — Contract & Commitments (4-col grid):**
-- Contract Value (FileText, neutral)
-- Open Commitments (Clock, amber, subtitle)
-- Billed AP (FileWarning, purple, subtitle)
-- Expenses Paid (DollarSign, red, subtitle)
-
-**Row 2 — Revenue & Profit (3-col grid filling to 4):**
-- Invoiced AR (Send, teal, subtitle)
-- Remaining (Wallet, default, subtitle)
-- Gross Profit (TrendingUp, green/red conditional, margin_percent badge)
-
-**Progress bar** below cards: `avg_percent_complete` with "Overall Completion: X%" label.
-
-**No-contract fallback**: If `contract_id` is null, show $0 values with a muted message.
-
-### 3. Everything below line 97 stays unchanged
-
-The `ProjectLaborAllocation`, estimates table, job orders table, invoices table, vendor bills, change orders, T&M tickets, POs, and time entries all remain as-is.
-
-### Technical Detail
-
-- `financialData` prop can be removed from the interface and the component since the view replaces it, but `ProjectDetail.tsx` still computes it — we'll keep the prop in the interface for backward compatibility and simply not use it, OR remove it cleanly from both files. Given the instruction says "modify only these two files", we'll remove it from the interface and ignore it in ProjectDetail (removing that one prop from the JSX).
+### Totals memo
+Add `open_commitments` to the totals reducer: `committed_cost - paid_to_date` per line.
 
