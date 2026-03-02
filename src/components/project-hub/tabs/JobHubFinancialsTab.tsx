@@ -20,7 +20,9 @@ import { formatCurrency } from "@/lib/utils";
 import { useJobCostSummary } from "@/hooks/useJobCostSummary";
 import { ProjectLaborAllocation } from "@/components/project-hub/ProjectLaborAllocation";
 import { JobCostChart } from "@/components/project-hub/contract/JobCostChart";
-import { ProjectTMTicketsList } from "@/components/project-hub/ProjectTMTicketsList";
+import { useTMTicketsByProject } from "@/integrations/supabase/hooks/useTMTickets";
+import { CreateTMTicketDialog } from "@/components/project-hub/tm/CreateTMTicketDialog";
+import { TMTicketCard } from "@/components/project-hub/tm/TMTicketCard";
 import { ProjectPurchaseOrdersList } from "@/components/project-hub/ProjectPurchaseOrdersList";
 import { ProjectVendorBillsList } from "@/components/project-hub/ProjectVendorBillsList";
 import { ProjectTimeEntriesList } from "@/components/project-hub/ProjectTimeEntriesList";
@@ -72,6 +74,26 @@ export function JobHubFinancialsTab({
   const [approveConfirmCO, setApproveConfirmCO] = useState<any>(null);
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const [coSectionOpen, setCoSectionOpen] = useState(true);
+  const [tmSectionOpen, setTmSectionOpen] = useState(true);
+  const [tmDialogOpen, setTmDialogOpen] = useState(false);
+
+  // T&M tickets data
+  const { data: tmTicketsData } = useTMTicketsByProject(projectId);
+
+  const sortedTMTickets = useMemo(() => {
+    if (!tmTicketsData) return [];
+    const priority: Record<string, number> = { cap_reached: 0, open: 1, approved: 2, invoiced: 3, converted_to_co: 4 };
+    return [...tmTicketsData].sort((a, b) => (priority[a.status] ?? 5) - (priority[b.status] ?? 5));
+  }, [tmTicketsData]);
+
+  const tmTotalHours = useMemo(() =>
+    tmTicketsData?.reduce((sum, t) => sum + (Number((t as any).hours_logged) || 0), 0) ?? 0, [tmTicketsData]);
+  const tmTotalAmount = useMemo(() =>
+    tmTicketsData?.reduce((sum, t) => sum + (Number(t.total) || 0), 0) ?? 0, [tmTicketsData]);
+  const tmOpenCount = useMemo(() =>
+    tmTicketsData?.filter(t => (t.status as string) === 'open' || (t.status as string) === 'draft').length ?? 0, [tmTicketsData]);
+  const hasCapReached = useMemo(() =>
+    tmTicketsData?.some(t => (t as any).status === 'cap_reached') ?? false, [tmTicketsData]);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -406,7 +428,58 @@ export function JobHubFinancialsTab({
         onOpenChange={setCoDialogOpen}
       />
 
-      <ProjectTMTicketsList tickets={tmTickets} projectId={projectId} onAddNew={onAddTMTicket} />
+      {/* T&M Tickets — Collapsible Section */}
+      <Collapsible open={tmSectionOpen} onOpenChange={setTmSectionOpen}>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <CollapsibleTrigger asChild>
+              <button className="flex items-center gap-2 group cursor-pointer">
+                <Receipt className="h-5 w-5 text-primary" />
+                <h3 className="font-heading text-lg font-semibold">T&M Tickets</h3>
+                <Badge variant="secondary" className="text-xs">{tmTicketsData?.length ?? 0}</Badge>
+                {hasCapReached && (
+                  <span className="h-2.5 w-2.5 rounded-full bg-amber-500 animate-pulse" title="Cap reached on one or more tickets" />
+                )}
+                <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${tmSectionOpen ? "rotate-180" : ""}`} />
+              </button>
+            </CollapsibleTrigger>
+            <Button size="sm" onClick={() => setTmDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-1" />New T&M Ticket
+            </Button>
+          </div>
+
+          {(tmTicketsData?.length ?? 0) > 0 && (
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+              <span>Total Hours: <span className="font-medium text-foreground">{tmTotalHours.toFixed(1)}</span></span>
+              <span>Total Amount: <span className="font-medium text-foreground">{formatCurrency(tmTotalAmount)}</span></span>
+              <span>{tmOpenCount} ticket{tmOpenCount !== 1 ? "s" : ""} open</span>
+            </div>
+          )}
+
+          <CollapsibleContent>
+            {sortedTMTickets.length === 0 ? (
+              <Card className="glass border-border">
+                <CardContent className="py-8 text-center text-muted-foreground">
+                  No T&M tickets yet. Create one when unplanned work arises.
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-3">
+                {sortedTMTickets.map((t) => (
+                  <TMTicketCard key={t.id} ticket={t} currentUserId={currentUserId} />
+                ))}
+              </div>
+            )}
+          </CollapsibleContent>
+        </div>
+      </Collapsible>
+
+      <CreateTMTicketDialog
+        projectId={projectId}
+        contractId={summary?.contract_id ?? null}
+        open={tmDialogOpen}
+        onOpenChange={setTmDialogOpen}
+      />
       <ProjectPurchaseOrdersList purchaseOrders={projectPurchaseOrders} projectId={projectId} />
       <ProjectTimeEntriesList projectId={projectId} />
     </div>

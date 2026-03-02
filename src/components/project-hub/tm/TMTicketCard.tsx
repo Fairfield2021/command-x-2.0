@@ -17,22 +17,23 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 // Extended ticket type for the hourly-rate T&M flow
-interface TMTicketData {
+export interface TMTicketData {
   id: string;
   ticket_number: string;
   description: string | null;
   status: string;
-  hourly_rate: number | null;
-  cap_hours: number | null;
-  hours_logged: number | null;
-  materials_cost: number | null;
+  hourly_rate?: number | null;
+  cap_hours?: number | null;
+  hours_logged?: number | null;
+  materials_cost?: number | null;
   total: number;
-  before_photo_url: string | null;
-  after_photo_url: string | null;
-  approved_by: string | null;
-  approval_date: string | null;
+  before_photo_url?: string | null;
+  after_photo_url?: string | null;
+  approved_by?: string | null;
+  approval_date?: string | null;
   work_date: string;
   created_at: string;
+  [key: string]: any; // allow extra fields from TMTicketWithLineItems
 }
 
 interface TMTicketCardProps {
