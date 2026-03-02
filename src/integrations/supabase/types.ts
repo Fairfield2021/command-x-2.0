@@ -7962,6 +7962,44 @@ export type Database = {
           },
         ]
       }
+      tm_ticket_entries: {
+        Row: {
+          created_at: string
+          description: string | null
+          entry_date: string
+          hours: number
+          id: string
+          personnel_id: string | null
+          tm_ticket_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          entry_date?: string
+          hours?: number
+          id?: string
+          personnel_id?: string | null
+          tm_ticket_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          entry_date?: string
+          hours?: number
+          id?: string
+          personnel_id?: string | null
+          tm_ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tm_ticket_entries_tm_ticket_id_fkey"
+            columns: ["tm_ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tm_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tm_ticket_line_items: {
         Row: {
           created_at: string
@@ -8021,8 +8059,15 @@ export type Database = {
       }
       tm_tickets: {
         Row: {
+          after_photo_url: string | null
+          approval_date: string | null
           approval_token: string | null
+          approved_by: string | null
+          before_photo_url: string | null
+          cap_hours: number
+          change_order_id: string | null
           change_type: Database["public"]["Enums"]["change_type"]
+          contract_id: string | null
           created_at: string
           created_by: string | null
           created_in_field: boolean | null
@@ -8031,7 +8076,11 @@ export type Database = {
           customer_rep_name: string | null
           customer_rep_title: string | null
           description: string | null
+          hourly_rate: number
+          hours_approved: number
+          hours_logged: number
           id: string
+          materials_cost: number
           notes: string | null
           project_id: string
           purchase_order_id: string | null
@@ -8043,13 +8092,21 @@ export type Database = {
           tax_rate: number
           ticket_number: string
           total: number
+          total_amount: number | null
           updated_at: string
           vendor_id: string | null
           work_date: string
         }
         Insert: {
+          after_photo_url?: string | null
+          approval_date?: string | null
           approval_token?: string | null
+          approved_by?: string | null
+          before_photo_url?: string | null
+          cap_hours?: number
+          change_order_id?: string | null
           change_type?: Database["public"]["Enums"]["change_type"]
+          contract_id?: string | null
           created_at?: string
           created_by?: string | null
           created_in_field?: boolean | null
@@ -8058,7 +8115,11 @@ export type Database = {
           customer_rep_name?: string | null
           customer_rep_title?: string | null
           description?: string | null
+          hourly_rate?: number
+          hours_approved?: number
+          hours_logged?: number
           id?: string
+          materials_cost?: number
           notes?: string | null
           project_id: string
           purchase_order_id?: string | null
@@ -8070,13 +8131,21 @@ export type Database = {
           tax_rate?: number
           ticket_number: string
           total?: number
+          total_amount?: number | null
           updated_at?: string
           vendor_id?: string | null
           work_date?: string
         }
         Update: {
+          after_photo_url?: string | null
+          approval_date?: string | null
           approval_token?: string | null
+          approved_by?: string | null
+          before_photo_url?: string | null
+          cap_hours?: number
+          change_order_id?: string | null
           change_type?: Database["public"]["Enums"]["change_type"]
+          contract_id?: string | null
           created_at?: string
           created_by?: string | null
           created_in_field?: boolean | null
@@ -8085,7 +8154,11 @@ export type Database = {
           customer_rep_name?: string | null
           customer_rep_title?: string | null
           description?: string | null
+          hourly_rate?: number
+          hours_approved?: number
+          hours_logged?: number
           id?: string
+          materials_cost?: number
           notes?: string | null
           project_id?: string
           purchase_order_id?: string | null
@@ -8097,11 +8170,33 @@ export type Database = {
           tax_rate?: number
           ticket_number?: string
           total?: number
+          total_amount?: number | null
           updated_at?: string
           vendor_id?: string | null
           work_date?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "tm_tickets_change_order_id_fkey"
+            columns: ["change_order_id"]
+            isOneToOne: false
+            referencedRelation: "change_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tm_tickets_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tm_tickets_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "job_cost_summary"
+            referencedColumns: ["contract_id"]
+          },
           {
             foreignKeyName: "tm_tickets_customer_id_fkey"
             columns: ["customer_id"]
