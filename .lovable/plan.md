@@ -1,46 +1,27 @@
 
 
-# Enhance ContractHeader with CO Context
+# Cannot Create Requested Tables — They Already Exist
 
-## Files to modify
-1. `src/components/project-hub/contract/ContractHeader.tsx`
-2. `src/components/project-hub/tabs/JobHubContractTab.tsx`
+The database already has both `tm_tickets` and `tm_ticket_line_items` tables with RLS policies enabled.
 
-## ContractHeader.tsx
+## Current State
 
-### New prop
-Accept `changeOrders` array (same shape already available from `useChangeOrdersByContract`):
-```ts
-changeOrders?: { id: string; change_type: string; status: string; co_value?: number }[];
-```
+**`tm_tickets`** already exists with columns: `id`, `ticket_number`, `project_id`, `customer_id`, `vendor_id`, `purchase_order_id`, `status` (enum `tm_ticket_status`), `description`, `work_date`, `created_in_field`, customer rep fields, signature fields, `subtotal`, `tax_rate`, `tax_amount`, `total`, `notes`, `created_by`, `created_at`, `updated_at`, `change_type`.
 
-### Financial card enhancements
-- Compute from `changeOrders`:
-  - `approvedAdditive` = count where `change_type === 'additive'` and `status === 'approved'`
-  - `approvedDeductive` = count where `change_type === 'deductive'` and `status === 'approved'`
-  - `pendingCount` = count where `status === 'pending_approval'`
-  - `totalCount` = total length
-  - `approvedCount` = count where `status === 'approved'`
-- Addendums card: add subtitle `"{N} approved COs"`, make card clickable (scrolls to CO section via `document.getElementById`)
-- Deductions card: same pattern with deductive count
-- Both cards get `cursor-pointer hover:ring-1` styling when COs exist
+**`tm_ticket_line_items`** exists with: `id`, `tm_ticket_id`, `product_id`, `description`, `quantity`, `unit_price`, `markup`, `total`, `is_taxable`, `sort_order`, `created_at`.
 
-### CO mini summary strip
-Below the 4 financial cards, render a compact horizontal strip:
-- Format: `"X pending approval | Y approved | Z total"`
-- If `pendingCount > 0`, show an amber dot before the pending count
-- Styled as a small muted-text row with flex layout
+**RLS policies** are already in place on both tables.
 
-### Pending approval banner
-If `contract.status === 'active'` and `pendingCount > 0`:
-- Render a subtle amber banner below the summary strip
-- Text: `"⚠ X change orders awaiting approval"`
-- Uses `bg-amber-50 dark:bg-amber-950/20 border-amber-200` styling
+The `generate_tm_ticket_number()` function also already exists.
 
-## JobHubContractTab.tsx
+## Options
 
-Line 99: Pass `changeOrders` to `ContractHeader`:
-```tsx
-<ContractHeader contract={contract} customerName={null} changeOrders={changeOrders} />
-```
+The requested schema differs significantly from what's already in the database (e.g., your request has `hourly_rate`, `hours_logged`, `cap_hours`, `tm_ticket_entries` vs the existing `tm_ticket_line_items` with product-based line items). Creating these tables would conflict with the existing ones.
+
+**Recommended paths forward:**
+1. **Alter the existing tables** — Add the missing columns (`hourly_rate`, `hours_logged`, `cap_hours`, `contract_id`, `before_photo_url`, `after_photo_url`, `change_order_id`, `approved_by`, `approval_date`) to the existing `tm_tickets` table, and create `tm_ticket_entries` as a new companion table alongside the existing `tm_ticket_line_items`.
+2. **Rename and replace** — Drop the existing tables and recreate with the new schema (destructive, not recommended if data exists).
+3. **Use a different table name** — e.g., `tm_work_tickets` and `tm_work_entries` to avoid conflicts.
+
+Please let me know which approach you'd like to take, and I'll prepare the migration accordingly.
 
