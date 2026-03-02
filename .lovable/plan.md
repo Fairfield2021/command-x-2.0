@@ -1,42 +1,46 @@
 
 
-# Replace T&M Section in JobHubFinancialsTab
+# Create ConvertTMToChangeOrder + Wire into TMTicketCard
 
-## What Changes
+## New file: `src/components/project-hub/tm/ConvertTMToChangeOrder.tsx`
 
-Replace line 409 (`<ProjectTMTicketsList .../>`) with a full collapsible T&M section matching the Change Orders pattern above it.
+AlertDialog component that:
+- Takes `ticket`, `projectId`, `contractId`, `onConvert` props
+- Shows summary: hours, rate, materials, total
+- On confirm:
+  1. Insert `change_orders` record (reason = "T&M Conversion: " + description, change_type = 'additive', co_value = total, status/approval_status = 'draft')
+  2. Insert `change_order_line_items` — one for labor (qty = hours_logged, unit_price = hourly_rate), and if materials_cost > 0, a second line for materials (qty = 1, unit_price = materials_cost)
+  3. Update `tm_tickets` set status = 'converted_to_co', change_order_id = new CO id
+  4. Toast with ticket number and CO number
+  5. Call `onConvert()` and invalidate queries
 
-## Implementation (single file: `JobHubFinancialsTab.tsx`)
+Uses `AlertDialog` from shadcn/ui, direct Supabase inserts, and `useQueryClient` for cache invalidation.
 
-### New imports
-- `useTMTicketsByProject` from `@/integrations/supabase/hooks/useTMTickets`
-- `CreateTMTicketDialog` from `@/components/project-hub/tm/CreateTMTicketDialog`
-- `TMTicketCard` from `@/components/project-hub/tm/TMTicketCard`
+## Modified: `src/components/project-hub/tm/TMTicketCard.tsx`
 
-### New state & data
-- `const [tmSectionOpen, setTmSectionOpen] = useState(true)`
-- `const [tmDialogOpen, setTmDialogOpen] = useState(false)`
-- `const { data: tmTicketsData } = useTMTicketsByProject(projectId)` — replaces the prop-based `tmTickets`
+- Import `ConvertTMToChangeOrder`
+- Add `projectId` and `contractId` to props interface
+- Add `convertDialogOpen` state
+- Replace the placeholder "Convert to Change Order" button (line 340-342) to set `convertDialogOpen = true`
+- Render `<ConvertTMToChangeOrder>` at the bottom of the component
+- For `converted_to_co` status, optionally show the linked CO reference
 
-### Sorted tickets
-Sort `tmTicketsData` by status priority: `cap_reached` first, then `open`, then `approved`, then everything else.
+## Technical Details
 
-### Summary stats
-- Total hours: sum of `hours_logged` across all tickets
-- Total amount: sum of `total` across all tickets
-- Open count: tickets with status `open`
+```
+ConvertTMToChangeOrder.tsx (new ~100 lines)
+├── AlertDialog with summary text
+├── useMutation:
+│   ├── INSERT change_orders → get id + number
+│   ├── INSERT change_order_line_items (labor + optional materials)
+│   ├── UPDATE tm_tickets SET status='converted_to_co', change_order_id
+│   └── invalidate ['change_orders'], ['tm-tickets'], ['change-orders-by-contract']
+└── Toast on success
 
-### Attention indicator
-Amber dot next to heading if any ticket has `status === 'cap_reached'`.
-
-### Replace line 409 with collapsible section
-Follows the exact Change Orders pattern (lines 275-375):
-- `Collapsible` wrapper with `tmSectionOpen` state
-- Header: `Receipt` icon + "T&M Tickets" + count `Badge` + amber dot if cap_reached + chevron + "+ New T&M Ticket" button
-- Summary line: "Total Hours: X | Total Amount: $Y | Z tickets open"
-- `CollapsibleContent`: map sorted tickets to `<TMTicketCard ticket={t} currentUserId={currentUserId} />`, or empty state card
-- `<CreateTMTicketDialog>` at the bottom with `summary?.contract_id`
-
-### Props cleanup
-The `tmTickets` prop and `onAddTMTicket` prop are still accepted (no interface change) but ignored in favor of the hook-fetched data and local dialog state. No other files are modified.
+TMTicketCard.tsx (modify)
+├── Add props: projectId, contractId
+├── Add state: convertDialogOpen
+├── Wire "Convert to Change Order" button → open dialog
+└── Render <ConvertTMToChangeOrder> component
+```
 
