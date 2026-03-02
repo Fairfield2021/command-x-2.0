@@ -176,10 +176,10 @@ const SovTable: React.FC<SovTableProps> = ({ contractId, lines, isLoading }) => 
               <TableHead className="text-xs text-right w-24 hidden md:table-cell">Unit Price</TableHead>
               <TableHead className="text-xs text-right w-20 hidden md:table-cell">Markup%</TableHead>
               <TableHead className="text-xs text-right w-28">Total Value</TableHead>
-              <TableHead className="text-xs text-right w-28 hidden md:table-cell">Committed</TableHead>
-              <TableHead className="text-xs text-right w-28 hidden md:table-cell">Actual</TableHead>
-              <TableHead className="text-xs text-right w-28 hidden md:table-cell">Billed</TableHead>
-              <TableHead className="text-xs text-right w-28 hidden md:table-cell">Paid</TableHead>
+               <TableHead className="text-xs text-right w-28 text-amber-600 dark:text-amber-400 hidden md:table-cell">Total Committed</TableHead>
+               <TableHead className="text-xs text-right w-28 text-green-600 dark:text-green-400">Expenses</TableHead>
+               <TableHead className="text-xs text-right w-28 text-amber-600 dark:text-amber-400 hidden md:table-cell">Open</TableHead>
+               <TableHead className="text-xs text-right w-28 text-purple-600 dark:text-purple-400 hidden md:table-cell">Billed</TableHead>
               <TableHead className="text-xs text-right w-28">Invoiced</TableHead>
               <TableHead className="text-xs text-right w-28">Balance</TableHead>
               <TableHead className="text-xs text-right w-24">% Comp</TableHead>
@@ -239,9 +239,26 @@ const SovTable: React.FC<SovTableProps> = ({ contractId, lines, isLoading }) => 
                       {formatCurrency(line.committed_cost)}
                     </div>
                   </TableCell>
-                  <TableCell className="text-right font-mono hidden md:table-cell">{formatCurrency(line.actual_cost)}</TableCell>
+                  <TableCell className="text-right font-mono text-green-600 dark:text-green-400">{formatCurrency(line.paid_to_date)}</TableCell>
+                  {(() => {
+                    const openAmt = line.committed_cost - line.paid_to_date;
+                    const openPct = totalValue > 0 ? (openAmt / totalValue) * 100 : 0;
+                    return (
+                      <TableCell className={`text-right font-mono hidden md:table-cell ${openAmt < 0 ? "text-destructive" : "text-amber-600 dark:text-amber-400"} ${openPct >= 100 ? "bg-red-500/10" : openPct >= 80 ? "bg-amber-500/10" : ""}`}>
+                        {openAmt === 0 ? (
+                          <span className="text-muted-foreground">—</span>
+                        ) : (
+                          <div className="flex items-center justify-end gap-1">
+                            {openPct >= 80 && openAmt > 0 && (
+                              <AlertTriangle className={`h-3 w-3 flex-shrink-0 ${openPct >= 100 ? "text-destructive" : "text-amber-500"}`} />
+                            )}
+                            {formatCurrency(openAmt)}
+                          </div>
+                        )}
+                      </TableCell>
+                    );
+                  })()}
                   <TableCell className="text-right font-mono text-purple-600 dark:text-purple-400 hidden md:table-cell">{formatCurrency(line.billed_to_date)}</TableCell>
-                  <TableCell className="text-right font-mono text-red-600 dark:text-red-400 hidden md:table-cell">{formatCurrency(line.paid_to_date)}</TableCell>
                   <TableCell className={`text-right font-mono text-teal-600 dark:text-teal-400 ${isOverbilled ? "bg-red-500/10" : ""}`}>
                     <div className="flex items-center justify-end gap-1">
                       {isOverbilled && <AlertTriangle className="h-3 w-3 flex-shrink-0 text-destructive" />}
@@ -280,9 +297,9 @@ const SovTable: React.FC<SovTableProps> = ({ contractId, lines, isLoading }) => 
                 <TableCell colSpan={6} className="text-right hidden md:table-cell">Totals</TableCell>
                 <TableCell className="text-right font-mono">{formatCurrency(totals.total_value)}</TableCell>
                 <TableCell className="text-right font-mono text-amber-600 dark:text-amber-400 hidden md:table-cell">{formatCurrency(totals.committed_cost)}</TableCell>
-                <TableCell className="text-right font-mono hidden md:table-cell">{formatCurrency(totals.actual_cost)}</TableCell>
+                <TableCell className="text-right font-mono text-green-600 dark:text-green-400">{formatCurrency(totals.paid_to_date)}</TableCell>
+                <TableCell className="text-right font-mono text-amber-600 dark:text-amber-400 hidden md:table-cell">{formatCurrency(totals.committed_cost - totals.paid_to_date)}</TableCell>
                 <TableCell className="text-right font-mono text-purple-600 dark:text-purple-400 hidden md:table-cell">{formatCurrency(totals.billed_to_date)}</TableCell>
-                <TableCell className="text-right font-mono text-red-600 dark:text-red-400 hidden md:table-cell">{formatCurrency(totals.paid_to_date)}</TableCell>
                 <TableCell className="text-right font-mono text-teal-600 dark:text-teal-400">{formatCurrency(totals.invoiced_to_date)}</TableCell>
                 <TableCell className="text-right font-mono font-semibold">{formatCurrency(totals.balance_remaining)}</TableCell>
                 <TableCell colSpan={2} />
