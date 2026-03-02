@@ -9682,6 +9682,10 @@ export type Database = {
         | "approved"
         | "invoiced"
         | "void"
+        | "open"
+        | "cap_reached"
+        | "pending_approval"
+        | "converted_to_co"
       unit_status: "not_started" | "in_progress" | "complete" | "verified"
       vendor_bill_status: "draft" | "open" | "paid" | "partially_paid" | "void"
       vendor_status: "active" | "inactive"
@@ -9957,6 +9961,10 @@ export const Constants = {
         "approved",
         "invoiced",
         "void",
+        "open",
+        "cap_reached",
+        "pending_approval",
+        "converted_to_co",
       ],
       unit_status: ["not_started", "in_progress", "complete", "verified"],
       vendor_bill_status: ["draft", "open", "paid", "partially_paid", "void"],
