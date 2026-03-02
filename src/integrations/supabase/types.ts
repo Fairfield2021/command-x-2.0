@@ -5977,6 +5977,7 @@ export type Database = {
           notes: string | null
           number: string
           order_type: string
+          payment_status: string
           project_id: string
           project_name: string
           reopened_at: string | null
@@ -6012,6 +6013,7 @@ export type Database = {
           notes?: string | null
           number: string
           order_type?: string
+          payment_status?: string
           project_id: string
           project_name: string
           reopened_at?: string | null
@@ -6047,6 +6049,7 @@ export type Database = {
           notes?: string | null
           number?: string
           order_type?: string
+          payment_status?: string
           project_id?: string
           project_name?: string
           reopened_at?: string | null
@@ -8351,6 +8354,7 @@ export type Database = {
       vendor_bills: {
         Row: {
           account: string | null
+          amount_paid: number
           bill_date: string
           class: string | null
           created_at: string
@@ -8363,6 +8367,7 @@ export type Database = {
           notes: string | null
           number: string
           paid_amount: number
+          payment_status: string
           purchase_order_id: string | null
           purchase_order_number: string | null
           remaining_amount: number
@@ -8379,6 +8384,7 @@ export type Database = {
         }
         Insert: {
           account?: string | null
+          amount_paid?: number
           bill_date: string
           class?: string | null
           created_at?: string
@@ -8391,6 +8397,7 @@ export type Database = {
           notes?: string | null
           number: string
           paid_amount?: number
+          payment_status?: string
           purchase_order_id?: string | null
           purchase_order_number?: string | null
           remaining_amount?: number
@@ -8407,6 +8414,7 @@ export type Database = {
         }
         Update: {
           account?: string | null
+          amount_paid?: number
           bill_date?: string
           class?: string | null
           created_at?: string
@@ -8419,6 +8427,7 @@ export type Database = {
           notes?: string | null
           number?: string
           paid_amount?: number
+          payment_status?: string
           purchase_order_id?: string | null
           purchase_order_number?: string | null
           remaining_amount?: number
