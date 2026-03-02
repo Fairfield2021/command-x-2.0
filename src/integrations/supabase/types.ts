@@ -9284,6 +9284,10 @@ export type Database = {
         Args: { _invitation_id: string; _user_id: string }
         Returns: Json
       }
+      approve_change_order: {
+        Args: { p_approved_by: string; p_change_order_id: string }
+        Returns: undefined
+      }
       complete_personnel_onboarding: {
         Args: {
           p_address?: string
@@ -9446,6 +9450,10 @@ export type Database = {
       }
       recalculate_sov_line_totals: {
         Args: { p_sov_line_id: string }
+        Returns: undefined
+      }
+      reject_change_order: {
+        Args: { p_change_order_id: string; p_rejected_by: string }
         Returns: undefined
       }
       reset_vendor_bill_sequence_for_new_year: {
