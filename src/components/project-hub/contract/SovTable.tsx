@@ -1,5 +1,8 @@
 import React, { useState, useMemo } from "react";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, AlertTriangle, Lock } from "lucide-react";
+import {
+  Tooltip, TooltipTrigger, TooltipContent, TooltipProvider,
+} from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -191,7 +194,14 @@ const SovTable: React.FC<SovTableProps> = ({ contractId, lines, isLoading }) => 
                 </TableCell>
               </TableRow>
             ) : (
-              lines.map((line) => (
+              lines.map((line) => {
+                const totalValue = line.total_value ?? 0;
+                const committedPct = totalValue > 0 ? (line.committed_cost / totalValue) * 100 : 0;
+                const isNoPO = line.committed_cost === 0 && totalValue > 0;
+                const isOverbilled = line.invoiced_to_date > totalValue;
+                const isNegativeBalance = (line.balance_remaining ?? 0) < 0;
+
+                return (
                 <TableRow key={line.id} className="text-xs">
                   <TableCell className="font-mono text-muted-foreground">
                     <div className="flex items-center gap-1">
@@ -200,6 +210,16 @@ const SovTable: React.FC<SovTableProps> = ({ contractId, lines, isLoading }) => 
                         <Badge variant="default" className="text-[10px] px-1 py-0 leading-tight">
                           CO
                         </Badge>
+                      )}
+                      {isNoPO && (
+                        <TooltipProvider delayDuration={200}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Lock className="h-3 w-3 text-muted-foreground/60" />
+                            </TooltipTrigger>
+                            <TooltipContent side="right">No PO linked</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       )}
                     </div>
                   </TableCell>
@@ -211,12 +231,24 @@ const SovTable: React.FC<SovTableProps> = ({ contractId, lines, isLoading }) => 
                   <TableCell className="text-right font-mono hidden md:table-cell">{formatCurrency(line.unit_price)}</TableCell>
                   <TableCell className="text-right font-mono hidden md:table-cell">{line.markup}%</TableCell>
                   <TableCell className="text-right font-mono font-medium">{formatCurrency(line.total_value)}</TableCell>
-                  <TableCell className="text-right font-mono text-amber-600 dark:text-amber-400 hidden md:table-cell">{formatCurrency(line.committed_cost)}</TableCell>
+                  <TableCell className={`text-right font-mono text-amber-600 dark:text-amber-400 hidden md:table-cell ${committedPct >= 100 ? "bg-red-500/10" : committedPct >= 80 ? "bg-amber-500/10" : ""}`}>
+                    <div className="flex items-center justify-end gap-1">
+                      {committedPct >= 80 && (
+                        <AlertTriangle className={`h-3 w-3 flex-shrink-0 ${committedPct >= 100 ? "text-destructive" : "text-amber-500"}`} />
+                      )}
+                      {formatCurrency(line.committed_cost)}
+                    </div>
+                  </TableCell>
                   <TableCell className="text-right font-mono hidden md:table-cell">{formatCurrency(line.actual_cost)}</TableCell>
                   <TableCell className="text-right font-mono text-purple-600 dark:text-purple-400 hidden md:table-cell">{formatCurrency(line.billed_to_date)}</TableCell>
                   <TableCell className="text-right font-mono text-red-600 dark:text-red-400 hidden md:table-cell">{formatCurrency(line.paid_to_date)}</TableCell>
-                  <TableCell className="text-right font-mono text-teal-600 dark:text-teal-400">{formatCurrency(line.invoiced_to_date)}</TableCell>
-                  <TableCell className="text-right font-mono font-semibold">{formatCurrency(line.balance_remaining)}</TableCell>
+                  <TableCell className={`text-right font-mono text-teal-600 dark:text-teal-400 ${isOverbilled ? "bg-red-500/10" : ""}`}>
+                    <div className="flex items-center justify-end gap-1">
+                      {isOverbilled && <AlertTriangle className="h-3 w-3 flex-shrink-0 text-destructive" />}
+                      {formatCurrency(line.invoiced_to_date)}
+                    </div>
+                  </TableCell>
+                  <TableCell className={`text-right font-mono font-semibold ${isNegativeBalance ? "text-destructive" : ""}`}>{formatCurrency(line.balance_remaining)}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1.5">
                       <Progress
@@ -237,7 +269,8 @@ const SovTable: React.FC<SovTableProps> = ({ contractId, lines, isLoading }) => 
                     </div>
                   </TableCell>
                 </TableRow>
-              ))
+                );
+              })
             )}
           </TableBody>
           {lines.length > 0 && (
