@@ -5,7 +5,8 @@ import { PageLayout } from "@/components/layout/PageLayout";
 import { EnhancedDataTable, EnhancedColumn } from "@/components/shared/EnhancedDataTable";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { Plus, Eye, ShoppingCart, Loader2 } from "lucide-react";
+import { Plus, Eye, ShoppingCart, Loader2, Wrench } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { SearchInput } from "@/components/ui/search-input";
 import { usePurchaseOrders, PurchaseOrder } from "@/integrations/supabase/hooks/usePurchaseOrders";
 import { useVendors } from "@/integrations/supabase/hooks/useVendors";
@@ -27,6 +28,7 @@ const PurchaseOrders = () => {
 
   const [search, setSearch] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("all");
+  const [selectedType, setSelectedType] = useState<"all" | "purchase_order" | "work_order">("all");
 
   // QB mappings for per-row "Edit in QBO" buttons
   const poIds = useMemo(() => purchaseOrders?.map((po) => po.id) ?? [], [purchaseOrders]);
@@ -39,12 +41,13 @@ const PurchaseOrders = () => {
         po.project_name.toLowerCase().includes(search.toLowerCase()) ||
         po.customer_name.toLowerCase().includes(search.toLowerCase());
       const matchesStatus = selectedStatus === "all" || po.status === selectedStatus;
+      const matchesType = selectedType === "all" || po.order_type === selectedType;
       
-      return matchesSearch && matchesStatus;
+      return matchesSearch && matchesStatus && matchesType;
     }) || [];
-  }, [purchaseOrders, search, selectedStatus]);
+  }, [purchaseOrders, search, selectedStatus, selectedType]);
 
-  const hasActiveFilters = selectedStatus !== "all" || !!search;
+  const hasActiveFilters = selectedStatus !== "all" || !!search || selectedType !== "all";
 
   const columns: EnhancedColumn<PurchaseOrder>[] = [
     {
@@ -53,18 +56,30 @@ const PurchaseOrders = () => {
       sortable: true,
       filterable: true,
       getValue: (item) => item.number,
-      render: (item) => (
-        <div className="flex items-center gap-2">
-          <ShoppingCart className="h-4 w-4 text-primary" />
-          <Link
-            to={`/purchase-orders/${item.id}`}
-            className="font-medium text-primary hover:underline"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {item.number}
-          </Link>
-        </div>
-      ),
+      render: (item) => {
+        const isWO = item.order_type === "work_order";
+        return (
+          <div className="flex items-center gap-2">
+            {isWO ? (
+              <Wrench className="h-4 w-4 text-purple-500" />
+            ) : (
+              <ShoppingCart className="h-4 w-4 text-primary" />
+            )}
+            <Link
+              to={`/purchase-orders/${item.id}`}
+              className="font-medium text-primary hover:underline"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {item.number}
+            </Link>
+            {isWO && (
+              <Badge className="bg-purple-500/10 text-purple-500 border-purple-500/20 text-[10px] px-1.5 py-0">
+                WO
+              </Badge>
+            )}
+          </div>
+        );
+      },
     },
     { 
       key: "vendor_name", 
@@ -228,6 +243,31 @@ const PurchaseOrders = () => {
               onChange={setSearch}
               className="bg-secondary border-border"
             />
+          </div>
+
+          {/* Type filter toggle */}
+          <div className="flex flex-wrap gap-2 mb-4">
+            {([
+              { value: "all" as const, label: "All" },
+              { value: "purchase_order" as const, label: "Purchase Orders" },
+              { value: "work_order" as const, label: "Work Orders" },
+            ]).map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => setSelectedType(opt.value)}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
+                  selectedType === opt.value
+                    ? opt.value === "work_order"
+                      ? "bg-purple-500 text-white shadow-lg shadow-purple-500/25"
+                      : "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
+                    : "bg-secondary text-muted-foreground hover:bg-secondary/80"
+                }`}
+              >
+                {opt.value === "work_order" && <Wrench className="inline h-3.5 w-3.5 mr-1 -mt-0.5" />}
+                {opt.value === "purchase_order" && <ShoppingCart className="inline h-3.5 w-3.5 mr-1 -mt-0.5" />}
+                {opt.label}
+              </button>
+            ))}
           </div>
 
           {/* Loading & Error States */}

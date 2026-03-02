@@ -42,6 +42,7 @@ export interface PurchaseOrder {
   approved_at?: string;
   submitted_for_approval_at?: string;
   submitted_by?: string;
+  order_type: string;
   created_at: string;
   updated_at: string;
 }
@@ -127,7 +128,7 @@ export const useAddPurchaseOrder = () => {
 
   return useMutation({
     mutationFn: async (data: {
-      purchaseOrder: Omit<PurchaseOrder, "id" | "created_at" | "updated_at" | "billed_amount" | "is_closed" | "total_addendum_amount">;
+      purchaseOrder: Omit<PurchaseOrder, "id" | "created_at" | "updated_at" | "billed_amount" | "is_closed" | "total_addendum_amount" | "order_type"> & { order_type?: string };
       lineItems: Omit<POLineItem, "id" | "created_at" | "billed_quantity">[];
     }) => {
       // Insert purchase order
