@@ -354,6 +354,7 @@ const ProjectDetail = () => {
             projectEstimates={projectEstimates}
             projectName={project.name}
             customerId={project.customer_id}
+            projectPurchaseOrders={projectPurchaseOrders}
           />
         </TabsContent>
 
