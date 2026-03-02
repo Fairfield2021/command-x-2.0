@@ -436,10 +436,26 @@ export const useApproveTMTicket = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async ({ id, approved_by }: { id: string; approved_by: string }) => {
+      // Fetch current cap_hours to increment
+      const { data: current, error: fetchError } = await supabase
+        .from("tm_tickets")
+        .select("cap_hours")
+        .eq("id", id)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      const newCapHours = (current?.cap_hours ?? 0) + 10;
+
       const { data, error } = await supabase
         .from("tm_tickets")
-        .update({ status: 'approved' })
+        .update({
+          status: 'open' as any,
+          approved_by,
+          approval_date: new Date().toISOString(),
+          cap_hours: newCapHours,
+        })
         .eq("id", id)
         .select()
         .single();
@@ -449,7 +465,9 @@ export const useApproveTMTicket = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tm-tickets"] });
-      toast.success("T&M ticket approved successfully");
+      queryClient.invalidateQueries({ queryKey: ["tm-ticket"] });
+      queryClient.invalidateQueries({ queryKey: ["tm-ticket-entries"] });
+      toast.success("T&M ticket approved — cap increased by 10 hours");
     },
     onError: (error: Error) => {
       toast.error(`Failed to approve T&M ticket: ${error.message}`);
