@@ -1,37 +1,20 @@
 
 
-# SovTable Warnings — Committed Thresholds, No-PO Lock, Overbill Alert
+# Database Migration: Payment Status Columns & SOV Recalculation
 
-## What Changes
+## Single Migration File
+**Create:** `supabase/migrations/20260302_add_payment_status_columns.sql`
 
-Enhance each SOV table row with inline visual warnings based on financial thresholds:
+### Contents
 
-### 1. Committed % warnings (Committed cell)
-- **80–99% committed**: Amber background tint on the Committed cell + small `AlertTriangle` icon
-- **≥100% committed**: Red background tint + `AlertTriangle` icon in red
+1. **`purchase_orders.payment_status`** — `TEXT NOT NULL DEFAULT 'committed'` (values: committed, partially_paid, paid)
+2. **`vendor_bills.payment_status`** — `TEXT NOT NULL DEFAULT 'unpaid'` (values: unpaid, partially_paid, paid)
+3. **`vendor_bills.amount_paid`** — `NUMERIC NOT NULL DEFAULT 0`
+4. **Replace `recalculate_sov_line_totals`** — adds `paid_to_date` calculation by joining `vendor_bill_line_items` → `vendor_bills` where `payment_status = 'paid'`; uses `total_value` from `sov_lines` for percent_complete instead of `quantity * unit_price`
+5. **New trigger function `trigger_recalc_sov_from_bill_payment`** — fires `AFTER UPDATE OF payment_status ON vendor_bills` and recalculates all linked SOV lines
 
-Calculation: `committedPct = (committed_cost / total_value) * 100`
-
-### 2. "No PO" lock icon (new indicator in the # column)
-- If `committed_cost === 0` and `total_value > 0`, show a small `Lock` icon (muted) with a tooltip "No PO linked"
-- Signals the line has contract value but no procurement commitment yet
-
-### 3. Overbill alert (Invoiced cell)
-- If `invoiced_to_date > total_value`, show red background tint + `AlertTriangle` icon on the Invoiced cell
-- Additional: if `balance_remaining < 0`, render Balance in red with `text-destructive`
-
-### File: `src/components/project-hub/contract/SovTable.tsx`
-
-**Implementation details:**
-- Add imports: `AlertTriangle`, `Lock` from lucide-react; `Tooltip` components from radix
-- Per-row computed values via inline logic (no useMemo needed per row — these are simple comparisons):
-  - `committedPct = totalValue > 0 ? (committed_cost / totalValue) * 100 : 0`
-  - `isNoPO = committed_cost === 0 && totalValue > 0`
-  - `isOverbilled = invoiced_to_date > totalValue`
-- Modify the `#` column cell: append `Lock` icon when `isNoPO`
-- Modify the Committed cell: add conditional `bg-amber-500/10` or `bg-red-500/10` wrapper + icon
-- Modify the Invoiced cell: add conditional `bg-red-500/10` + icon when overbilled
-- Modify the Balance cell: use `text-destructive` when `balance_remaining < 0`
-
-No new files. No database changes. Single file edit to `SovTable.tsx`.
+### Technical Notes
+- The replaced function keeps `SECURITY DEFINER` and `SET search_path TO 'public'` consistent with existing conventions
+- The `percent_complete` formula references `total_value` (a generated column on `sov_lines`) instead of raw `quantity * unit_price`, which is safer since `total_value` already accounts for markup
+- No code file changes — migration only
 
