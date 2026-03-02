@@ -1,36 +1,60 @@
 
 
-# Enhance useChangeOrders Hook
+# Create `CreateChangeOrderDialog` Component
 
-The existing hook at `src/integrations/supabase/hooks/useChangeOrders.ts` already has most of the requested functionality. Here's what needs to change:
+## Context
 
-## 1. Update `ChangeOrder` interface (lines 26-71)
-Add the new columns from the migration:
-- `contract_id: string | null`
-- `co_value: number`
-- `sent_to: string | null`
-- `qb_estimate_id: string | null`
-- `approval_status: string` (the new column, distinct from existing `status`)
-- `approval_date: string | null`
+The existing `useAddChangeOrder` mutation requires several fields: `customer_id`, `customer_name`, `reason`, `project_id`, `tax_rate`, `number`, and `line_items`. The `number` is auto-assigned by a DB trigger. The `change_orders` Insert schema requires `customer_id`, `customer_name`, `reason`, `number`, and `project_id` as non-optional.
 
-Note: `co_number` maps to existing `number` column, `co_type` maps to existing `change_type` — no changes needed for those.
+Since this dialog is a simplified version for creating COs from the Financials tab (not the full `ChangeOrderForm`), it will directly insert via Supabase rather than using `useAddChangeOrder` (which demands customer info that may not be available in this context). Instead, it will insert directly into `change_orders` and `change_order_line_items`.
 
-## 2. Add `useChangeOrdersByContract` (new function, after line ~175)
-- Queries `change_orders` WHERE `contract_id = contractId` and `deleted_at IS NULL`
-- Ordered by `number` ASC
-- Query key: `['change-orders-by-contract', contractId]`
-- Enabled only when `contractId` is truthy
+## Plan
 
-## 3. Add `useApproveChangeOrder` (new function, after existing status hooks ~line 500)
-- Calls `supabase.rpc('approve_change_order', { p_change_order_id, p_approved_by })`
-- On success: invalidates `['change_orders']`, `['sov_lines']`, `['contracts']`, `['job-cost-summary']`
-- Toast success/error messages
+**New file:** `src/components/project-hub/contract/CreateChangeOrderDialog.tsx`
 
-## 4. Add `useRejectChangeOrder` (new function, after approve)
-- Calls `supabase.rpc('reject_change_order', { p_change_order_id, p_rejected_by })`
-- On success: invalidates `['change_orders']`
-- Toast success/error messages
+### Props
+- `projectId: string`
+- `contractId: string | null`
+- `open: boolean`
+- `onOpenChange: (open: boolean) => void`
 
-## No breaking changes
-All existing exports remain intact. The `useAddChangeOrder` already serves as "create" — no new create hook needed since the user's request maps to the existing one. The `useChangeOrdersByProject` already exists and selects `*` (which includes all new columns automatically).
+### Form Fields
+1. **Description** — `Input` (required), maps to `reason` column
+2. **Type** — `RadioGroup` with "Additive (+)" / "Deductive (-)", default additive, maps to `change_type`
+3. **CO Value** — numeric `Input` (required), maps to `co_value`
+4. **Sent To** — `Input` (optional), maps to `sent_to`
+5. **Line Items** — repeatable rows with:
+   - Description (text), Qty (number), Unit (text, optional), Unit Price (currency)
+   - Calculated line total per row
+   - "+ Add Line" button
+   - Running subtotal at bottom
+
+### Submit Logic
+- Insert into `change_orders` directly via `supabase.from("change_orders").insert(...)`:
+  - `project_id`, `contract_id`, `reason` (from description), `change_type`, `co_value`, `sent_to`
+  - `customer_id` and `customer_name`: will need to be derived from the project's customer or passed as empty defaults — since the schema requires them, the component will query the project to get customer info
+  - `number`: set to a placeholder since the DB trigger auto-assigns it (actually the Insert type requires it — so we'll use the `generate_change_order_number` pattern or let the trigger handle it)
+  - `tax_rate`: default 0
+  - `subtotal`, `total`: calculated from line items
+- Insert line items into `change_order_line_items`
+- Invalidate `['change_orders']` queries
+- Toast success, close dialog
+
+### Approach Adjustment
+Looking at the Insert type, `number`, `customer_id`, `customer_name`, `reason` are all required. The existing trigger `set_change_order_number` sets `number` before insert, but the TypeScript type still requires it. We'll pass a placeholder `''` for `number` (the trigger overwrites it). For `customer_id`/`customer_name`, we'll fetch the project's customer from the project record or accept them as optional props with fallback.
+
+Actually, a simpler approach: add `customerId` and `customerName` as optional props (the parent component in the Financials tab likely has this context).
+
+### Components Used
+- `Dialog`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogFooter` from shadcn
+- `Input`, `Label`, `Button`, `RadioGroup`, `RadioGroupItem`
+- `toast` from sonner
+
+### Technical Details
+- Local state for form fields and line items array
+- Line item type: `{ id: string; description: string; quantity: number; unit: string; unit_price: number }`
+- Computed running total from line items
+- Direct Supabase insert (bypassing `useAddChangeOrder` to avoid needing all the fields the full form requires)
+- Uses `useMutation` + `useQueryClient` for invalidation
+- No QB integration — purely internal record
 
