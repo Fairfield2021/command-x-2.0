@@ -11,6 +11,7 @@ import { format } from "date-fns";
 import { formatCurrency } from "@/lib/utils";
 import { useJobCostSummary } from "@/hooks/useJobCostSummary";
 import { ProjectLaborAllocation } from "@/components/project-hub/ProjectLaborAllocation";
+import { JobCostChart } from "@/components/project-hub/contract/JobCostChart";
 import { ProjectChangeOrdersList } from "@/components/project-hub/ProjectChangeOrdersList";
 import { ProjectTMTicketsList } from "@/components/project-hub/ProjectTMTicketsList";
 import { ProjectPurchaseOrdersList } from "@/components/project-hub/ProjectPurchaseOrdersList";
@@ -200,6 +201,7 @@ export function JobHubFinancialsTab({
         </CardContent>
       </Card>
 
+      <JobCostChart summary={summary ?? null} />
       <ProjectLaborAllocation projectId={projectId} />
 
       {/* Estimates */}
