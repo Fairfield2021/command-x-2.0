@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { StatusBadge } from "@/components/shared/StatusBadge";
@@ -6,19 +6,34 @@ import { DataTable } from "@/components/shared/DataTable";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { FileText, Briefcase, Receipt, Plus, Clock, AlertTriangle, DollarSign, Send, Wallet, TrendingUp } from "lucide-react";
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  FileText, Briefcase, Receipt, Plus, Clock, AlertTriangle, DollarSign,
+  Send, Wallet, TrendingUp, ChevronDown, CheckCircle, XCircle, RotateCcw,
+} from "lucide-react";
 import { format } from "date-fns";
 import { formatCurrency } from "@/lib/utils";
 import { useJobCostSummary } from "@/hooks/useJobCostSummary";
 import { ProjectLaborAllocation } from "@/components/project-hub/ProjectLaborAllocation";
 import { JobCostChart } from "@/components/project-hub/contract/JobCostChart";
-import { ProjectChangeOrdersList } from "@/components/project-hub/ProjectChangeOrdersList";
 import { ProjectTMTicketsList } from "@/components/project-hub/ProjectTMTicketsList";
 import { ProjectPurchaseOrdersList } from "@/components/project-hub/ProjectPurchaseOrdersList";
 import { ProjectVendorBillsList } from "@/components/project-hub/ProjectVendorBillsList";
 import { ProjectTimeEntriesList } from "@/components/project-hub/ProjectTimeEntriesList";
+import { CreateChangeOrderDialog } from "@/components/project-hub/contract/CreateChangeOrderDialog";
 import { QBOPopupLink } from "@/components/quickbooks/QBOPopupLink";
 import { useQBMappingForList } from "@/integrations/supabase/hooks/useQBMappingForList";
+import {
+  useChangeOrdersByProject,
+  useApproveChangeOrder,
+  useRejectChangeOrder,
+  useUpdateChangeOrderStatus,
+} from "@/integrations/supabase/hooks/useChangeOrders";
+import { supabase } from "@/integrations/supabase/client";
 
 interface JobHubFinancialsTabProps {
   projectId: string;
@@ -38,7 +53,7 @@ export function JobHubFinancialsTab({
   projectEstimates,
   projectJobOrders,
   projectInvoices,
-  changeOrders,
+  changeOrders: _changeOrders,
   tmTickets,
   projectPurchaseOrders,
   onAddTMTicket,
@@ -47,6 +62,33 @@ export function JobHubFinancialsTab({
 }: JobHubFinancialsTabProps) {
   const navigate = useNavigate();
   const { data: summary } = useJobCostSummary(projectId);
+
+  // Change order state
+  const { data: changeOrders } = useChangeOrdersByProject(projectId);
+  const approveChangeOrder = useApproveChangeOrder();
+  const rejectChangeOrder = useRejectChangeOrder();
+  const updateStatus = useUpdateChangeOrderStatus();
+  const [coDialogOpen, setCoDialogOpen] = useState(false);
+  const [approveConfirmCO, setApproveConfirmCO] = useState<any>(null);
+  const [currentUserId, setCurrentUserId] = useState<string>("");
+  const [coSectionOpen, setCoSectionOpen] = useState(true);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) setCurrentUserId(data.user.id);
+    });
+  }, []);
+
+  // CO summary calculations
+  const totalAddendums = useMemo(() =>
+    changeOrders?.filter((co: any) => co.change_type === "additive")
+      .reduce((sum: number, co: any) => sum + (Number(co.co_value) || 0), 0) || 0,
+    [changeOrders]);
+  const totalDeductions = useMemo(() =>
+    changeOrders?.filter((co: any) => co.change_type === "deductive")
+      .reduce((sum: number, co: any) => sum + (Number(co.co_value) || 0), 0) || 0,
+    [changeOrders]);
+  const netChange = totalAddendums - totalDeductions;
 
   const estimateIds = useMemo(() => projectEstimates.map((e: any) => e.id), [projectEstimates]);
   const invoiceIds = useMemo(() => projectInvoices.map((i: any) => i.id), [projectInvoices]);
@@ -98,59 +140,40 @@ export function JobHubFinancialsTab({
   const s = summary;
 
   const kpiCards = [
+    { label: "Contract Value", value: formatCurrency(s?.total_contract_value ?? 0), icon: FileText, colorClass: "text-foreground", subtitle: null },
+    { label: "Open Commitments", value: formatCurrency(s?.open_commitments ?? 0), icon: Clock, colorClass: "text-amber-600", subtitle: "POs/WOs issued, not yet paid" },
+    { label: "Billed (AP)", value: formatCurrency(s?.total_billed ?? 0), icon: AlertTriangle, colorClass: "text-purple-600", subtitle: "Vendor bills received" },
+    { label: "Expenses (Paid)", value: formatCurrency(s?.total_expenses ?? 0), icon: DollarSign, colorClass: "text-destructive", subtitle: "Actual cash out" },
+    { label: "Invoiced (AR)", value: formatCurrency(s?.total_invoiced ?? 0), icon: Send, colorClass: "text-teal-600", subtitle: "Billed to customer" },
+    { label: "Remaining", value: formatCurrency(s?.total_remaining ?? 0), icon: Wallet, colorClass: "text-foreground", subtitle: "Available to invoice" },
     {
-      label: "Contract Value",
-      value: formatCurrency(s?.total_contract_value ?? 0),
-      icon: FileText,
-      colorClass: "text-foreground",
-      subtitle: null,
-    },
-    {
-      label: "Open Commitments",
-      value: formatCurrency(s?.open_commitments ?? 0),
-      icon: Clock,
-      colorClass: "text-amber-600",
-      subtitle: "POs/WOs issued, not yet paid",
-    },
-    {
-      label: "Billed (AP)",
-      value: formatCurrency(s?.total_billed ?? 0),
-      icon: AlertTriangle,
-      colorClass: "text-purple-600",
-      subtitle: "Vendor bills received",
-    },
-    {
-      label: "Expenses (Paid)",
-      value: formatCurrency(s?.total_expenses ?? 0),
-      icon: DollarSign,
-      colorClass: "text-destructive",
-      subtitle: "Actual cash out",
-    },
-    {
-      label: "Invoiced (AR)",
-      value: formatCurrency(s?.total_invoiced ?? 0),
-      icon: Send,
-      colorClass: "text-teal-600",
-      subtitle: "Billed to customer",
-    },
-    {
-      label: "Remaining",
-      value: formatCurrency(s?.total_remaining ?? 0),
-      icon: Wallet,
-      colorClass: "text-foreground",
-      subtitle: "Available to invoice",
-    },
-    {
-      label: "Gross Profit",
-      value: formatCurrency(s?.gross_profit ?? 0),
-      icon: TrendingUp,
+      label: "Gross Profit", value: formatCurrency(s?.gross_profit ?? 0), icon: TrendingUp,
       colorClass: (s?.gross_profit ?? 0) >= 0 ? "text-green-600" : "text-destructive",
-      subtitle: null,
-      badge: s ? `${s.margin_percent.toFixed(1)}%` : "0.0%",
+      subtitle: null, badge: s ? `${s.margin_percent.toFixed(1)}%` : "0.0%",
     },
   ];
 
   const completionPercent = s?.avg_percent_complete ?? 0;
+
+  const statusBadgeClass = (status: string) => {
+    switch (status) {
+      case "draft": return "bg-muted text-muted-foreground";
+      case "pending_approval": return "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400";
+      case "approved": return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400";
+      case "rejected": return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400";
+      default: return "bg-muted text-muted-foreground";
+    }
+  };
+
+  const statusLabel = (status: string) => {
+    switch (status) {
+      case "draft": return "Draft";
+      case "pending_approval": return "Pending Approval";
+      case "approved": return "Approved";
+      case "rejected": return "Rejected";
+      default: return status;
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -167,24 +190,18 @@ export function JobHubFinancialsTab({
                     <span className="text-xs font-medium">{kpi.label}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className={`text-lg font-bold ${kpi.colorClass}`}>
-                      {kpi.value}
-                    </span>
+                    <span className={`text-lg font-bold ${kpi.colorClass}`}>{kpi.value}</span>
                     {"badge" in kpi && kpi.badge && (
                       <Badge variant={(s?.gross_profit ?? 0) >= 0 ? "default" : "destructive"} className="text-[10px] px-1.5 py-0">
                         {kpi.badge}
                       </Badge>
                     )}
                   </div>
-                  {kpi.subtitle && (
-                    <p className="text-[10px] text-muted-foreground leading-tight">{kpi.subtitle}</p>
-                  )}
+                  {kpi.subtitle && <p className="text-[10px] text-muted-foreground leading-tight">{kpi.subtitle}</p>}
                 </div>
               );
             })}
           </div>
-
-          {/* Progress bar */}
           <div className="mt-4 space-y-1">
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span>Overall Completion</span>
@@ -192,11 +209,8 @@ export function JobHubFinancialsTab({
             </div>
             <Progress value={completionPercent} className="h-2" />
           </div>
-
           {!hasContract && (
-            <p className="mt-3 text-xs text-muted-foreground italic">
-              Create a contract to see financial tracking.
-            </p>
+            <p className="mt-3 text-xs text-muted-foreground italic">Create a contract to see financial tracking.</p>
           )}
         </CardContent>
       </Card>
@@ -226,10 +240,7 @@ export function JobHubFinancialsTab({
             <Briefcase className="h-5 w-5 text-primary" />
             <h3 className="font-heading text-lg font-semibold">Job Orders ({projectJobOrders.length})</h3>
           </div>
-          <Button size="sm" onClick={onAddJobOrder}>
-            <Plus className="h-4 w-4 mr-1" />
-            Create JO
-          </Button>
+          <Button size="sm" onClick={onAddJobOrder}><Plus className="h-4 w-4 mr-1" />Create JO</Button>
         </div>
         {projectJobOrders.length === 0 ? (
           <Card className="glass border-border">
@@ -247,10 +258,7 @@ export function JobHubFinancialsTab({
             <Receipt className="h-5 w-5 text-primary" />
             <h3 className="font-heading text-lg font-semibold">Invoices ({projectInvoices.length})</h3>
           </div>
-          <Button size="sm" onClick={onAddInvoice}>
-            <Plus className="h-4 w-4 mr-1" />
-            Create Invoice
-          </Button>
+          <Button size="sm" onClick={onAddInvoice}><Plus className="h-4 w-4 mr-1" />Create Invoice</Button>
         </div>
         {projectInvoices.length === 0 ? (
           <Card className="glass border-border">
@@ -262,7 +270,142 @@ export function JobHubFinancialsTab({
       </div>
 
       <ProjectVendorBillsList projectId={projectId} />
-      <ProjectChangeOrdersList changeOrders={changeOrders} projectId={projectId} onAddNew={() => navigate(`/change-orders/new?projectId=${projectId}`)} />
+
+      {/* Change Orders — Enhanced Approval Workflow */}
+      <Collapsible open={coSectionOpen} onOpenChange={setCoSectionOpen}>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <CollapsibleTrigger asChild>
+              <button className="flex items-center gap-2 group cursor-pointer">
+                <FileText className="h-5 w-5 text-primary" />
+                <h3 className="font-heading text-lg font-semibold">Change Orders</h3>
+                <Badge variant="secondary" className="text-xs">{changeOrders?.length ?? 0}</Badge>
+                <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${coSectionOpen ? "rotate-180" : ""}`} />
+              </button>
+            </CollapsibleTrigger>
+            <Button size="sm" onClick={() => setCoDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-1" />New Change Order
+            </Button>
+          </div>
+
+          {/* Summary line */}
+          {(changeOrders?.length ?? 0) > 0 && (
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+              <span>Addendums: <span className="font-medium text-green-600">+{formatCurrency(totalAddendums)}</span></span>
+              <span>Deductions: <span className="font-medium text-destructive">-{formatCurrency(totalDeductions)}</span></span>
+              <span>Net Change: <span className={`font-medium ${netChange >= 0 ? "text-green-600" : "text-destructive"}`}>{netChange >= 0 ? "+" : ""}{formatCurrency(netChange)}</span></span>
+            </div>
+          )}
+
+          <CollapsibleContent>
+            {!changeOrders || changeOrders.length === 0 ? (
+              <Card className="glass border-border">
+                <CardContent className="py-8 text-center text-muted-foreground">No change orders for this project yet.</CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-3">
+                {changeOrders.map((co: any) => {
+                  const coValue = Number(co.co_value) || Number(co.total) || 0;
+                  const isAdditive = co.change_type === "additive";
+                  const lineCount = co.line_items?.length ?? 0;
+
+                  return (
+                    <Card key={co.id} className="border-border hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate(`/change-orders/${co.id}`)}>
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1 min-w-0 space-y-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-bold text-sm">{co.number}</span>
+                              <Badge className={`text-[10px] px-1.5 py-0 ${isAdditive ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"}`}>
+                                {isAdditive ? "Additive" : "Deductive"}
+                              </Badge>
+                              <Badge className={`text-[10px] px-1.5 py-0 ${statusBadgeClass(co.status)}`}>
+                                {statusLabel(co.status)}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground line-clamp-2">{co.reason}</p>
+                            <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
+                              <span className={`font-semibold ${isAdditive ? "text-green-600" : "text-destructive"}`}>
+                                {isAdditive ? "+" : "-"}{formatCurrency(coValue)}
+                              </span>
+                              {co.sent_to && <span>Sent to: {co.sent_to}</span>}
+                              <span>{format(new Date(co.created_at), "MMM dd, yyyy")}</span>
+                              {co.status === "approved" && co.approved_at && (
+                                <span className="text-green-600">Approved {format(new Date(co.approved_at), "MMM dd, yyyy")}</span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Action buttons */}
+                          <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                            {co.status === "draft" && (
+                              <Button size="sm" variant="outline" className="text-xs h-7"
+                                onClick={() => updateStatus.mutate({ id: co.id, status: "pending_approval" })}>
+                                <Send className="h-3 w-3 mr-1" />Submit
+                              </Button>
+                            )}
+                            {co.status === "pending_approval" && (
+                              <>
+                                <Button size="sm" variant="outline" className="text-xs h-7 border-green-300 text-green-700 hover:bg-green-50 dark:border-green-700 dark:text-green-400 dark:hover:bg-green-900/20"
+                                  onClick={() => setApproveConfirmCO(co)}>
+                                  <CheckCircle className="h-3 w-3 mr-1" />Approve
+                                </Button>
+                                <Button size="sm" variant="outline" className="text-xs h-7 border-red-300 text-red-700 hover:bg-red-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-900/20"
+                                  onClick={() => rejectChangeOrder.mutate({ changeOrderId: co.id, rejectedBy: currentUserId })}>
+                                  <XCircle className="h-3 w-3 mr-1" />Reject
+                                </Button>
+                              </>
+                            )}
+                            {co.status === "rejected" && (
+                              <Button size="sm" variant="outline" className="text-xs h-7"
+                                onClick={() => updateStatus.mutate({ id: co.id, status: "draft" })}>
+                                <RotateCcw className="h-3 w-3 mr-1" />Reopen
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </CollapsibleContent>
+        </div>
+      </Collapsible>
+
+      {/* Approve confirmation dialog */}
+      <AlertDialog open={!!approveConfirmCO} onOpenChange={(open) => { if (!open) setApproveConfirmCO(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Approve Change Order {approveConfirmCO?.number}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Approving this CO will add {approveConfirmCO?.line_items?.length ?? 0} new SOV line(s) and{" "}
+              {approveConfirmCO?.change_type === "additive" ? "increase" : "decrease"} the contract value by{" "}
+              {formatCurrency(Number(approveConfirmCO?.co_value) || 0)}. Proceed?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              if (approveConfirmCO) {
+                approveChangeOrder.mutate({ changeOrderId: approveConfirmCO.id, approvedBy: currentUserId });
+                setApproveConfirmCO(null);
+              }
+            }}>
+              Approve
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <CreateChangeOrderDialog
+        projectId={projectId}
+        contractId={summary?.contract_id ?? null}
+        open={coDialogOpen}
+        onOpenChange={setCoDialogOpen}
+      />
+
       <ProjectTMTicketsList tickets={tmTickets} projectId={projectId} onAddNew={onAddTMTicket} />
       <ProjectPurchaseOrdersList purchaseOrders={projectPurchaseOrders} projectId={projectId} />
       <ProjectTimeEntriesList projectId={projectId} />
