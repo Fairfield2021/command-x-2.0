@@ -1,20 +1,20 @@
 
 
-# Database Migration: Payment Status Columns & SOV Recalculation
+# Database Migration: `job_cost_summary` View
 
 ## Single Migration File
-**Create:** `supabase/migrations/20260302_add_payment_status_columns.sql`
+
+**Create:** `supabase/migrations/20260302_create_job_cost_summary_view.sql`
 
 ### Contents
 
-1. **`purchase_orders.payment_status`** — `TEXT NOT NULL DEFAULT 'committed'` (values: committed, partially_paid, paid)
-2. **`vendor_bills.payment_status`** — `TEXT NOT NULL DEFAULT 'unpaid'` (values: unpaid, partially_paid, paid)
-3. **`vendor_bills.amount_paid`** — `NUMERIC NOT NULL DEFAULT 0`
-4. **Replace `recalculate_sov_line_totals`** — adds `paid_to_date` calculation by joining `vendor_bill_line_items` → `vendor_bills` where `payment_status = 'paid'`; uses `total_value` from `sov_lines` for percent_complete instead of `quantity * unit_price`
-5. **New trigger function `trigger_recalc_sov_from_bill_payment`** — fires `AFTER UPDATE OF payment_status ON vendor_bills` and recalculates all linked SOV lines
+1. **`CREATE OR REPLACE VIEW public.job_cost_summary`** — aggregates financial data per project/contract by joining `projects`, `contracts`, and `sov_lines`. Computes totals for committed, billed, paid, invoiced, open commitments, gross profit, margin %, avg percent complete, and SOV line count.
+
+2. **`GRANT SELECT ON public.job_cost_summary TO authenticated`** — matches existing RLS access pattern on projects.
 
 ### Technical Notes
-- The replaced function keeps `SECURITY DEFINER` and `SET search_path TO 'public'` consistent with existing conventions
-- The `percent_complete` formula references `total_value` (a generated column on `sov_lines`) instead of raw `quantity * unit_price`, which is safer since `total_value` already accounts for markup
-- No code file changes — migration only
+- View only, no table modifications
+- Uses LEFT JOINs so projects without contracts or SOV lines still appear with zero totals
+- Margin and profit calculations use `invoiced_to_date - paid_to_date` (revenue minus expenses)
+- No RLS on views directly — access control relies on the `authenticated` role grant and any downstream query filtering
 
