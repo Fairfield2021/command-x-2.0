@@ -1,46 +1,46 @@
 
 
-# Enhance SovTable with Addendum Line Styling
+# Enhance ContractHeader with CO Context
 
 ## Files to modify
-1. `src/components/project-hub/contract/SovTable.tsx`
+1. `src/components/project-hub/contract/ContractHeader.tsx`
 2. `src/components/project-hub/tabs/JobHubContractTab.tsx`
 
-## SovTable.tsx changes
+## ContractHeader.tsx
 
-### Props update
-Add optional `changeOrders` prop:
+### New prop
+Accept `changeOrders` array (same shape already available from `useChangeOrdersByContract`):
 ```ts
-interface SovTableProps {
-  contractId: string;
-  lines: SovLine[];
-  isLoading: boolean;
-  changeOrders?: { id: string; number: string; change_type: string }[];
-}
+changeOrders?: { id: string; change_type: string; status: string; co_value?: number }[];
 ```
 
-### Sorting and divider
-- Use `useMemo` to split `lines` into `originalLines` (where `!is_addendum`) and `addendumLines` (where `is_addendum`)
-- Render original lines first, then a divider row (`<TableRow>` with a single cell spanning all columns containing centered "— Addendums —" in muted text), then addendum lines
-- Only show divider if addendum lines exist
+### Financial card enhancements
+- Compute from `changeOrders`:
+  - `approvedAdditive` = count where `change_type === 'additive'` and `status === 'approved'`
+  - `approvedDeductive` = count where `change_type === 'deductive'` and `status === 'approved'`
+  - `pendingCount` = count where `status === 'pending_approval'`
+  - `totalCount` = total length
+  - `approvedCount` = count where `status === 'approved'`
+- Addendums card: add subtitle `"{N} approved COs"`, make card clickable (scrolls to CO section via `document.getElementById`)
+- Deductions card: same pattern with deductive count
+- Both cards get `cursor-pointer hover:ring-1` styling when COs exist
 
-### Row styling per addendum line
-- If `line.is_addendum`: add `bg-blue-50 dark:bg-blue-950/20` to the `<TableRow>`
-- Look up CO number from `changeOrders` array via `line.change_order_id`
-- If linked CO has `change_type === 'deductive'`: show red "DED" badge instead of blue "CO" badge; show total value in red with `line-through`
-- Otherwise: show blue "CO" badge with the CO number (e.g. "CO-01")
+### CO mini summary strip
+Below the 4 financial cards, render a compact horizontal strip:
+- Format: `"X pending approval | Y approved | Z total"`
+- If `pendingCount > 0`, show an amber dot before the pending count
+- Styled as a small muted-text row with flex layout
 
-### Footer enhancement
-Replace the single "Totals" row with four rows:
-1. **Original Scope**: sum of `total_value` for non-addendum lines
-2. **+ Addendums**: sum of `total_value` for addendum lines linked to additive COs
-3. **- Deductions**: sum of `total_value` for addendum lines linked to deductive COs (shown negative)
-4. **Total** (bold): grand total (existing `totals.total_value`)
+### Pending approval banner
+If `contract.status === 'active'` and `pendingCount > 0`:
+- Render a subtle amber banner below the summary strip
+- Text: `"⚠ X change orders awaiting approval"`
+- Uses `bg-amber-50 dark:bg-amber-950/20 border-amber-200` styling
 
-Only the Total Value column needs these subtotals; other financial columns keep the existing single total row.
+## JobHubContractTab.tsx
 
-## JobHubContractTab.tsx changes
-- Import `useChangeOrdersByContract` from `useChangeOrders` hook
-- Fetch change orders for the active contract: `useChangeOrdersByContract(contract?.id ?? null)`
-- Pass the result as `changeOrders` prop to `<SovTable>`
+Line 99: Pass `changeOrders` to `ContractHeader`:
+```tsx
+<ContractHeader contract={contract} customerName={null} changeOrders={changeOrders} />
+```
 
