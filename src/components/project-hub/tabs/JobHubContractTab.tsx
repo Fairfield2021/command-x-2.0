@@ -96,7 +96,7 @@ export function JobHubContractTab({
   // ── Contract exists ──
   return (
     <div className="space-y-6">
-      <ContractHeader contract={contract} customerName={null} />
+      <ContractHeader contract={contract} customerName={null} changeOrders={changeOrders} />
 
       <ContractActions
         contract={contract}
