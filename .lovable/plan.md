@@ -1,30 +1,51 @@
 
 
-# Create `src/components/project-hub/tm/CreateTMTicketDialog.tsx`
+# Create `src/components/project-hub/tm/TMTicketCard.tsx`
 
-New file, no existing files modified.
+New file only — no existing files modified.
 
-## Implementation
+## Component Structure
 
-A simple form dialog following the `AddRoomDialog` pattern:
-- Uses `useAddTMTicket` from `src/integrations/supabase/hooks/useTMTickets.ts` to insert
-- Insert payload: `project_id`, `contract_id`, `description`, `hourly_rate`, `cap_hours`, `materials_cost`, `status: 'open'`, plus minimal required fields for the existing mutation (`ticket_number: ''`, `work_date: today`, `customer_id` from project lookup, `lineItems: []`, `tax_rate: 0`)
-- On success: show toast with ticket number from response, reset form, close dialog
-- Four fields: Description (textarea, required), Hourly Rate (number input, step 0.01, required), Hour Cap (number input, default 10, min 1), Initial Materials Estimate (number input, default 0)
+An expandable card using `Collapsible` from shadcn/ui that displays a T&M ticket with time entry logging.
 
-**Note:** The existing `useAddTMTicket` mutation requires `customer_id`, `work_date`, `lineItems`, and `tax_rate`. Since the new dialog is for a simpler T&M workflow (hourly + materials, no line items), I'll insert directly via Supabase instead of using `useAddTMTicket`, then invalidate `['tm-tickets']` manually. This avoids coupling to the line-item-based flow.
+### Props
+- `ticket`: uses the DB row type from `tm_tickets` (with `cap_hours`, `hours_logged`, `hourly_rate`, `materials_cost`, `total_amount`, `before_photo_url`, `after_photo_url`, `approved_by`, `approval_date`, `status`)
+- `currentUserId: string | null`
 
-## Technical Details
+### Header (always visible)
+- **Ticket number** (bold) + **description** (1-line truncated)
+- **Custom status badge** (not using `StatusBadge` since it lacks `cap_reached`/`converted_to_co`/`invoiced`):
+  - `open` → blue
+  - `cap_reached` → amber, "Cap Reached - Approval Required"
+  - `pending_approval` → amber
+  - `approved` → green
+  - `invoiced` → teal
+  - `converted_to_co` → purple
+- **Hours progress bar** using `Progress` component with dynamic color:
+  - Green `<80%`, amber `80-99%`, red `≥100%`
+  - Label: `"X / Y hrs"`
+- **Total amount** + **hourly rate** (`@ $XX/hr`)
 
-```
-src/components/project-hub/tm/CreateTMTicketDialog.tsx (new)
-├── Props: projectId, contractId, open, onOpenChange
-├── State: description, hourlyRate, capHours (default 10), materialsCost (default 0)
-├── Submit: supabase.from('tm_tickets').insert({...}).select().single()
-│   → ticket_number: '' (auto by trigger)
-│   → status: 'open'
-│   → project_id, contract_id, description, hourly_rate, cap_hours, materials_cost
-├── On success: toast("T&M Ticket {ticket_number} created"), invalidate queries, close
-└── UI: Dialog > form > Textarea + 3 Inputs + Cancel/Create buttons
-```
+### Expanded Content (Collapsible)
+- Full description
+- Materials cost (inline editable via `useUpdateTMTicket` if status is `open`)
+- Before/after photo thumbnails (display if URL exists, placeholder otherwise)
+- **Time entries section**:
+  - List from `useTMTicketEntries(ticket.id)` — date, hours, description
+  - Inline "Log Hours" form: date picker, hours (step 0.25), description, Add button
+  - Form **disabled** when status is `cap_reached`, `converted_to_co`, or `invoiced` with message
+- **Action buttons** by status:
+  - `cap_reached`: "Approve & Extend (+10 hrs)" green button → `useApproveTMTicket`, "Convert to Change Order" purple button (placeholder)
+  - `approved`: show approval info text
+
+### Hooks Used
+- `useTMTicketEntries` + `useCreateTMTicketEntry` + `useDeleteTMTicketEntry` from `src/hooks/useTMTicketEntries.ts`
+- `useApproveTMTicket` from `src/integrations/supabase/hooks/useTMTickets.ts`
+- `useUpdateTMTicket` from same file (for inline materials cost edit)
+
+### UI Components
+- `Card`, `Collapsible`/`CollapsibleTrigger`/`CollapsibleContent`, `Progress`, `Badge`, `Button`, `Input`, `Label`, date picker via `Popover` + `Calendar`
+
+### File
+- `src/components/project-hub/tm/TMTicketCard.tsx` (new, ~300 lines)
 
