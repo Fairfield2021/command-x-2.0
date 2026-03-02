@@ -1,60 +1,67 @@
 
 
-# Create `CreateChangeOrderDialog` Component
+# Replace Change Orders Section in JobHubFinancialsTab
 
-## Context
+## What Changes
 
-The existing `useAddChangeOrder` mutation requires several fields: `customer_id`, `customer_name`, `reason`, `project_id`, `tax_rate`, `number`, and `line_items`. The `number` is auto-assigned by a DB trigger. The `change_orders` Insert schema requires `customer_id`, `customer_name`, `reason`, `number`, and `project_id` as non-optional.
+**File:** `src/components/project-hub/tabs/JobHubFinancialsTab.tsx` (only file modified)
 
-Since this dialog is a simplified version for creating COs from the Financials tab (not the full `ChangeOrderForm`), it will directly insert via Supabase rather than using `useAddChangeOrder` (which demands customer info that may not be available in this context). Instead, it will insert directly into `change_orders` and `change_order_line_items`.
+### New Imports
+- `useState, useEffect` from React
+- `useChangeOrdersByProject, useApproveChangeOrder, useRejectChangeOrder, useUpdateChangeOrderStatus` from `useChangeOrders` hook
+- `CreateChangeOrderDialog` from `contract/CreateChangeOrderDialog`
+- `Collapsible, CollapsibleTrigger, CollapsibleContent` from `@/components/ui/collapsible`
+- `AlertDialog` components for approve confirmation
+- `supabase` for getting current user
+- `ChevronDown, CheckCircle, XCircle, RotateCcw` icons
 
-## Plan
+### Remove
+- `ProjectChangeOrdersList` import and usage (line 15, line 265)
+- `changeOrders` from props interface and destructuring (no longer passed in — fetched internally via `useChangeOrdersByProject`)
 
-**New file:** `src/components/project-hub/contract/CreateChangeOrderDialog.tsx`
+### Add State
+- `coDialogOpen` for CreateChangeOrderDialog
+- `approveConfirmCO` for the confirmation dialog (stores the CO being approved)
+- `currentUserId` from `supabase.auth.getUser()` on mount
 
-### Props
-- `projectId: string`
-- `contractId: string | null`
-- `open: boolean`
-- `onOpenChange: (open: boolean) => void`
+### Replace the `<ProjectChangeOrdersList>` line (265) with new inline section:
 
-### Form Fields
-1. **Description** — `Input` (required), maps to `reason` column
-2. **Type** — `RadioGroup` with "Additive (+)" / "Deductive (-)", default additive, maps to `change_type`
-3. **CO Value** — numeric `Input` (required), maps to `co_value`
-4. **Sent To** — `Input` (optional), maps to `sent_to`
-5. **Line Items** — repeatable rows with:
-   - Description (text), Qty (number), Unit (text, optional), Unit Price (currency)
-   - Calculated line total per row
-   - "+ Add Line" button
-   - Running subtotal at bottom
+**Section Structure:**
+1. `Collapsible` wrapper (default open)
+2. Header row with:
+   - Section title: "Change Orders" + count badge
+   - Summary: "Addendums: +$X | Deductions: -$Y | Net: $Z" (computed from `useChangeOrdersByProject` data)
+   - "+ New Change Order" button → opens `CreateChangeOrderDialog`
+   - Chevron toggle for collapsible
+3. `CollapsibleContent` with card-based list:
+   - Each CO renders as a card showing:
+     - `co.number` bold heading
+     - `co.reason` truncated to 2 lines (via `line-clamp-2`)
+     - Type badge: green "Additive" or red "Deductive" based on `change_type`
+     - Value with +/- prefix, formatted currency (uses `co_value` or falls back to `co.total`)
+     - Approval status badge with colors (draft=gray, pending_approval=amber, approved=green, rejected=red)
+     - `sent_to` if present
+     - `created_at` formatted date
+   - Action buttons per status:
+     - **draft**: "Submit for Approval" → calls `useUpdateChangeOrderStatus` with `pending_approval`
+     - **pending_approval**: Green "Approve" + Red "Reject" buttons
+       - Approve opens AlertDialog confirmation: "Approving this CO will add N new SOV lines and increase/decrease contract value by $Y. Proceed?"
+       - On confirm → calls `useApproveChangeOrder({ changeOrderId, approvedBy: currentUserId })`
+       - Reject → calls `useRejectChangeOrder({ changeOrderId, rejectedBy: currentUserId })`
+     - **approved**: No buttons, show `approval_date` and "Approved" info
+     - **rejected**: "Reopen as Draft" → calls `useUpdateChangeOrderStatus` with `draft`
 
-### Submit Logic
-- Insert into `change_orders` directly via `supabase.from("change_orders").insert(...)`:
-  - `project_id`, `contract_id`, `reason` (from description), `change_type`, `co_value`, `sent_to`
-  - `customer_id` and `customer_name`: will need to be derived from the project's customer or passed as empty defaults — since the schema requires them, the component will query the project to get customer info
-  - `number`: set to a placeholder since the DB trigger auto-assigns it (actually the Insert type requires it — so we'll use the `generate_change_order_number` pattern or let the trigger handle it)
-  - `tax_rate`: default 0
-  - `subtotal`, `total`: calculated from line items
-- Insert line items into `change_order_line_items`
-- Invalidate `['change_orders']` queries
-- Toast success, close dialog
+4. `CreateChangeOrderDialog` rendered with `projectId`, `contractId` from `summary?.contract_id`, `open`, `onOpenChange`
 
-### Approach Adjustment
-Looking at the Insert type, `number`, `customer_id`, `customer_name`, `reason` are all required. The existing trigger `set_change_order_number` sets `number` before insert, but the TypeScript type still requires it. We'll pass a placeholder `''` for `number` (the trigger overwrites it). For `customer_id`/`customer_name`, we'll fetch the project's customer from the project record or accept them as optional props with fallback.
+### Summary Calculation
+```
+totalAddendums = sum of co_value where change_type === 'additive'
+totalDeductions = sum of co_value where change_type === 'deductive'
+netChange = totalAddendums - totalDeductions
+```
 
-Actually, a simpler approach: add `customerId` and `customerName` as optional props (the parent component in the Financials tab likely has this context).
-
-### Components Used
-- `Dialog`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogFooter` from shadcn
-- `Input`, `Label`, `Button`, `RadioGroup`, `RadioGroupItem`
-- `toast` from sonner
-
-### Technical Details
-- Local state for form fields and line items array
-- Line item type: `{ id: string; description: string; quantity: number; unit: string; unit_price: number }`
-- Computed running total from line items
-- Direct Supabase insert (bypassing `useAddChangeOrder` to avoid needing all the fields the full form requires)
-- Uses `useMutation` + `useQueryClient` for invalidation
-- No QB integration — purely internal record
+### Technical Notes
+- The `changeOrders` prop and `ProjectChangeOrdersList` are removed from this component. The CO data is now fetched directly via `useChangeOrdersByProject(projectId)`.
+- The parent component passing `changeOrders` prop will need its interface updated — but since we're only modifying this file, we keep the prop in the interface but simply ignore it, using the hook data instead.
+- Actually, to avoid breaking the parent, we'll keep `changeOrders` in the props interface but won't use it. The hook-fetched data takes precedence.
 
