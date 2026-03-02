@@ -1,33 +1,31 @@
 
 
-# Add SOV Line Auto-Recalculation Triggers
+# SovLinePicker Dropdown Component
 
-## Single Migration
+## What it does
+A reusable dropdown that lets users pick an SOV line when creating/editing PO line items, vendor bill line items, or invoice line items. Each option shows the line number, description, and remaining balance. Lines with zero or negative balance are visually disabled.
 
-Creates the following in one migration file:
+## Component: `src/components/shared/SovLinePicker.tsx`
 
-### 1. `recalculate_sov_line_totals(p_sov_line_id UUID)` function
-- Updates `sov_lines` SET:
-  - `committed_cost` = SUM of `po_line_items.total` where `sov_line_id` matches
-  - `billed_to_date` = SUM of `vendor_bill_line_items.total` where `sov_line_id` matches
-  - `invoiced_to_date` = SUM of `invoice_line_items.total` where `sov_line_id` matches
-  - `percent_complete` = ROUND((invoiced_to_date / total_value) * 100, 2) when total_value > 0, else 0
+**Props:**
+- `contractId: string` — fetches SOV lines for this contract
+- `value: string | null` — currently selected sov_line_id
+- `onChange: (sovLineId: string | null) => void`
+- `contextType: "po" | "bill" | "invoice"` — determines which balance column to show (committed vs billed vs invoiced)
+- `disabled?: boolean`
+- `placeholder?: string`
 
-### 2. Three trigger functions (one per source table)
-- `trigger_recalc_sov_from_po_line_items()` — fires on po_line_items INSERT/UPDATE/DELETE
-- `trigger_recalc_sov_from_vendor_bill_line_items()` — fires on vendor_bill_line_items INSERT/UPDATE/DELETE
-- `trigger_recalc_sov_from_invoice_line_items()` — fires on invoice_line_items INSERT/UPDATE/DELETE
+**Behavior:**
+- Uses `useSovLines(contractId)` hook to fetch lines
+- Renders a Popover + Command (cmdk) searchable list (consistent with existing shadcn patterns in the project)
+- Each item shows: `#{line_number} — {description}` on the left, remaining balance on the right
+- Balance calculation per context:
+  - `po`: `total_value - committed_cost`
+  - `bill`: `total_value - billed_to_date`  
+  - `invoice`: `balance_remaining` (already computed as `total_value - invoiced_to_date`)
+- Lines where remaining balance <= 0 are shown greyed out with `(Fully Used)` label and are non-selectable
+- Includes a "None" option to clear the selection
+- Color-codes balance using the existing SOV color convention (amber for committed, purple for billed, teal for invoiced)
 
-Each handles OLD/NEW sov_line_id (recalculates both if changed on UPDATE), skips NULLs.
-
-### 3. `recalculate_contract_original_value(p_contract_id UUID)` function
-- Updates `contracts` SET:
-  - `original_value` = SUM of `sov_lines.total_value` WHERE `is_addendum = false`
-  - `addendum_value` = SUM of `sov_lines.total_value` WHERE `is_addendum = true`
-
-### 4. Trigger function + trigger on `sov_lines`
-- `trigger_recalc_contract_from_sov_lines()` — fires AFTER INSERT/UPDATE/DELETE on sov_lines
-- Calls `recalculate_contract_original_value()` for affected contract_id (handles OLD/NEW)
-
-No existing functions or code files modified.
+**Implementation pattern:** Follows the existing Popover + Command combobox pattern already used in the project's Select/Command primitives. Single file, no database changes.
 
