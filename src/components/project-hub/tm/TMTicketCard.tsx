@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ConvertTMToChangeOrder } from "./ConvertTMToChangeOrder";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,6 +40,10 @@ export interface TMTicketData {
 interface TMTicketCardProps {
   ticket: TMTicketData;
   currentUserId: string | null;
+  projectId?: string;
+  contractId?: string | null;
+  customerId?: string;
+  customerName?: string;
 }
 
 const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
@@ -50,8 +55,9 @@ const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
   converted_to_co: { label: "Converted to CO", className: "bg-purple-500/20 text-purple-500 border-purple-500/30" },
 };
 
-export function TMTicketCard({ ticket, currentUserId }: TMTicketCardProps) {
+export function TMTicketCard({ ticket, currentUserId, projectId, contractId, customerId, customerName }: TMTicketCardProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [convertDialogOpen, setConvertDialogOpen] = useState(false);
   const [entryDate, setEntryDate] = useState<Date>(new Date());
   const [entryHours, setEntryHours] = useState("");
   const [entryDescription, setEntryDescription] = useState("");
@@ -337,7 +343,12 @@ export function TMTicketCard({ ticket, currentUserId }: TMTicketCardProps) {
                   <CheckCircle2 className="h-4 w-4 mr-1" />
                   Approve & Extend (+10 hrs)
                 </Button>
-                <Button variant="outline" size="sm" className="text-purple-500 border-purple-500/30 hover:bg-purple-500/10">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-purple-500 border-purple-500/30 hover:bg-purple-500/10"
+                  onClick={() => setConvertDialogOpen(true)}
+                >
                   Convert to Change Order
                 </Button>
               </div>
@@ -349,9 +360,29 @@ export function TMTicketCard({ ticket, currentUserId }: TMTicketCardProps) {
                 {ticket.approved_by && ` by ${ticket.approved_by}`}
               </div>
             )}
+
+            {ticket.status === "converted_to_co" && (
+              <div className="text-xs text-purple-500 pt-2 border-t border-border font-medium">
+                Converted to Change Order
+                {ticket.change_order_id && " — see Change Orders section"}
+              </div>
+            )}
           </CardContent>
         </CollapsibleContent>
       </Collapsible>
+
+      {projectId && customerId && customerName && (
+        <ConvertTMToChangeOrder
+          open={convertDialogOpen}
+          onOpenChange={setConvertDialogOpen}
+          ticket={ticket}
+          projectId={projectId}
+          contractId={contractId ?? null}
+          customerId={customerId}
+          customerName={customerName}
+          onConvert={() => {}}
+        />
+      )}
     </Card>
   );
 }

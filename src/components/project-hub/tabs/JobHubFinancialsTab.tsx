@@ -466,7 +466,15 @@ export function JobHubFinancialsTab({
             ) : (
               <div className="grid gap-3">
                 {sortedTMTickets.map((t) => (
-                  <TMTicketCard key={t.id} ticket={t} currentUserId={currentUserId} />
+                  <TMTicketCard
+                    key={t.id}
+                    ticket={t}
+                    currentUserId={currentUserId}
+                    projectId={projectId}
+                    contractId={summary?.contract_id}
+                    customerId={(t as any).customer_id}
+                    customerName={(t as any).customer?.name ?? ""}
+                  />
                 ))}
               </div>
             )}
