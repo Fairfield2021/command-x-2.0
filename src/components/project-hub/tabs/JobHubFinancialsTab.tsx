@@ -4,9 +4,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { DataTable } from "@/components/shared/DataTable";
 import { Button } from "@/components/ui/button";
-import { FileText, Briefcase, Receipt, Plus } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { FileText, Briefcase, Receipt, Plus, Clock, AlertTriangle, DollarSign, Send, Wallet, TrendingUp } from "lucide-react";
 import { format } from "date-fns";
-import { ProjectFinancialSummary } from "@/components/project-hub/ProjectFinancialSummary";
+import { formatCurrency } from "@/lib/utils";
+import { useJobCostSummary } from "@/hooks/useJobCostSummary";
 import { ProjectLaborAllocation } from "@/components/project-hub/ProjectLaborAllocation";
 import { ProjectChangeOrdersList } from "@/components/project-hub/ProjectChangeOrdersList";
 import { ProjectTMTicketsList } from "@/components/project-hub/ProjectTMTicketsList";
@@ -18,7 +21,6 @@ import { useQBMappingForList } from "@/integrations/supabase/hooks/useQBMappingF
 
 interface JobHubFinancialsTabProps {
   projectId: string;
-  financialData: any;
   projectEstimates: any[];
   projectJobOrders: any[];
   projectInvoices: any[];
@@ -32,7 +34,6 @@ interface JobHubFinancialsTabProps {
 
 export function JobHubFinancialsTab({
   projectId,
-  financialData,
   projectEstimates,
   projectJobOrders,
   projectInvoices,
@@ -44,6 +45,7 @@ export function JobHubFinancialsTab({
   onAddInvoice,
 }: JobHubFinancialsTabProps) {
   const navigate = useNavigate();
+  const { data: summary } = useJobCostSummary(projectId);
 
   const estimateIds = useMemo(() => projectEstimates.map((e: any) => e.id), [projectEstimates]);
   const invoiceIds = useMemo(() => projectInvoices.map((i: any) => i.id), [projectInvoices]);
@@ -91,9 +93,113 @@ export function JobHubFinancialsTab({
     ...(invoiceQBMap.size > 0 ? [qboColumn(invoiceQBMap, "invoice")] : []),
   ];
 
+  const hasContract = summary?.contract_id != null;
+  const s = summary;
+
+  const kpiCards = [
+    {
+      label: "Contract Value",
+      value: formatCurrency(s?.total_contract_value ?? 0),
+      icon: FileText,
+      colorClass: "text-foreground",
+      subtitle: null,
+    },
+    {
+      label: "Open Commitments",
+      value: formatCurrency(s?.open_commitments ?? 0),
+      icon: Clock,
+      colorClass: "text-amber-600",
+      subtitle: "POs/WOs issued, not yet paid",
+    },
+    {
+      label: "Billed (AP)",
+      value: formatCurrency(s?.total_billed ?? 0),
+      icon: AlertTriangle,
+      colorClass: "text-purple-600",
+      subtitle: "Vendor bills received",
+    },
+    {
+      label: "Expenses (Paid)",
+      value: formatCurrency(s?.total_expenses ?? 0),
+      icon: DollarSign,
+      colorClass: "text-destructive",
+      subtitle: "Actual cash out",
+    },
+    {
+      label: "Invoiced (AR)",
+      value: formatCurrency(s?.total_invoiced ?? 0),
+      icon: Send,
+      colorClass: "text-teal-600",
+      subtitle: "Billed to customer",
+    },
+    {
+      label: "Remaining",
+      value: formatCurrency(s?.total_remaining ?? 0),
+      icon: Wallet,
+      colorClass: "text-foreground",
+      subtitle: "Available to invoice",
+    },
+    {
+      label: "Gross Profit",
+      value: formatCurrency(s?.gross_profit ?? 0),
+      icon: TrendingUp,
+      colorClass: (s?.gross_profit ?? 0) >= 0 ? "text-green-600" : "text-destructive",
+      subtitle: null,
+      badge: s ? `${s.margin_percent.toFixed(1)}%` : "0.0%",
+    },
+  ];
+
+  const completionPercent = s?.avg_percent_complete ?? 0;
+
   return (
     <div className="space-y-6">
-      <ProjectFinancialSummary data={financialData} />
+      {/* Job Cost Summary KPI Cards */}
+      <Card className="border-border">
+        <CardContent className="p-[var(--density-card-padding)]">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {kpiCards.map((kpi) => {
+              const Icon = kpi.icon;
+              return (
+                <div key={kpi.label} className="space-y-1">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Icon className={`h-4 w-4 ${kpi.colorClass}`} />
+                    <span className="text-xs font-medium">{kpi.label}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-lg font-bold ${kpi.colorClass}`}>
+                      {kpi.value}
+                    </span>
+                    {"badge" in kpi && kpi.badge && (
+                      <Badge variant={(s?.gross_profit ?? 0) >= 0 ? "default" : "destructive"} className="text-[10px] px-1.5 py-0">
+                        {kpi.badge}
+                      </Badge>
+                    )}
+                  </div>
+                  {kpi.subtitle && (
+                    <p className="text-[10px] text-muted-foreground leading-tight">{kpi.subtitle}</p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Progress bar */}
+          <div className="mt-4 space-y-1">
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>Overall Completion</span>
+              <span className="font-medium">{completionPercent.toFixed(0)}%</span>
+            </div>
+            <Progress value={completionPercent} className="h-2" />
+          </div>
+
+          {!hasContract && (
+            <p className="mt-3 text-xs text-muted-foreground italic">
+              Create a contract to see financial tracking.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
       <ProjectLaborAllocation projectId={projectId} />
 
       {/* Estimates */}
