@@ -31,6 +31,7 @@ interface SovTableProps {
   contractId: string;
   lines: SovLine[];
   isLoading: boolean;
+  changeOrders?: { id: string; number: string; change_type: string }[];
 }
 
 interface LineFormData {
@@ -51,7 +52,7 @@ const emptyForm: LineFormData = {
   notes: "",
 };
 
-const SovTable: React.FC<SovTableProps> = ({ contractId, lines, isLoading }) => {
+const SovTable: React.FC<SovTableProps> = ({ contractId, lines, isLoading, changeOrders = [] }) => {
   const addLine = useAddSovLine();
   const updateLine = useUpdateSovLine();
   const deleteLine = useDeleteSovLine();
@@ -60,6 +61,43 @@ const SovTable: React.FC<SovTableProps> = ({ contractId, lines, isLoading }) => 
   const [editingLine, setEditingLine] = useState<SovLine | null>(null);
   const [form, setForm] = useState<LineFormData>(emptyForm);
   const [deleteTarget, setDeleteTarget] = useState<SovLine | null>(null);
+
+  // Build a lookup map for change orders
+  const coMap = useMemo(() => {
+    const map = new Map<string, { number: string; change_type: string }>();
+    changeOrders.forEach((co) => map.set(co.id, { number: co.number, change_type: co.change_type }));
+    return map;
+  }, [changeOrders]);
+
+  // Split lines into original and addendum groups
+  const { originalLines, addendumLines } = useMemo(() => {
+    const orig: SovLine[] = [];
+    const addendum: SovLine[] = [];
+    lines.forEach((l) => {
+      if (l.is_addendum) {
+        addendum.push(l);
+      } else {
+        orig.push(l);
+      }
+    });
+    return { originalLines: orig, addendumLines: addendum };
+  }, [lines]);
+
+  // Compute footer subtotals
+  const subtotals = useMemo(() => {
+    const originalTotal = originalLines.reduce((s, l) => s + (l.total_value ?? 0), 0);
+    let addendumTotal = 0;
+    let deductionTotal = 0;
+    addendumLines.forEach((l) => {
+      const co = l.change_order_id ? coMap.get(l.change_order_id) : null;
+      if (co?.change_type === "deductive") {
+        deductionTotal += l.total_value ?? 0;
+      } else {
+        addendumTotal += l.total_value ?? 0;
+      }
+    });
+    return { originalTotal, addendumTotal, deductionTotal };
+  }, [originalLines, addendumLines, coMap]);
 
   const totals = useMemo(() => {
     return lines.reduce(
@@ -154,6 +192,122 @@ const SovTable: React.FC<SovTableProps> = ({ contractId, lines, isLoading }) => 
     return "[&>div]:bg-green-500";
   };
 
+  const renderLineRow = (line: SovLine) => {
+    const totalValue = line.total_value ?? 0;
+    const committedPct = totalValue > 0 ? (line.committed_cost / totalValue) * 100 : 0;
+    const isNoPO = line.committed_cost === 0 && totalValue > 0;
+    const isOverbilled = line.invoiced_to_date > totalValue;
+    const isNegativeBalance = (line.balance_remaining ?? 0) < 0;
+
+    const co = line.change_order_id ? coMap.get(line.change_order_id) : null;
+    const isDeductive = co?.change_type === "deductive";
+    const isAddendum = line.is_addendum;
+
+    const rowClassName = [
+      "text-xs",
+      isAddendum && !isDeductive ? "bg-blue-50 dark:bg-blue-950/20" : "",
+      isAddendum && isDeductive ? "bg-red-50 dark:bg-red-950/20" : "",
+    ].filter(Boolean).join(" ");
+
+    return (
+      <TableRow key={line.id} className={rowClassName}>
+        <TableCell className="font-mono text-muted-foreground">
+          <div className="flex items-center gap-1">
+            {line.line_number}
+            {isAddendum && isDeductive && (
+              <Badge variant="destructive" className="text-[10px] px-1 py-0 leading-tight">
+                DED
+              </Badge>
+            )}
+            {isAddendum && !isDeductive && (
+              <Badge className="text-[10px] px-1 py-0 leading-tight bg-blue-600 hover:bg-blue-700 text-white">
+                {co?.number ? co.number : "CO"}
+              </Badge>
+            )}
+            {isNoPO && !isAddendum && (
+              <TooltipProvider delayDuration={200}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Lock className="h-3 w-3 text-muted-foreground/60" />
+                  </TooltipTrigger>
+                  <TooltipContent side="right">No PO linked</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </div>
+        </TableCell>
+        <TableCell>
+          <span className={`truncate max-w-[200px] block ${isDeductive ? "line-through text-destructive" : ""}`}>
+            {line.description}
+          </span>
+        </TableCell>
+        <TableCell className="text-right font-mono hidden md:table-cell">{line.quantity}</TableCell>
+        <TableCell className="text-muted-foreground hidden md:table-cell">{line.unit ?? "—"}</TableCell>
+        <TableCell className="text-right font-mono hidden md:table-cell">{formatCurrency(line.unit_price)}</TableCell>
+        <TableCell className="text-right font-mono hidden md:table-cell">{line.markup}%</TableCell>
+        <TableCell className={`text-right font-mono font-medium ${isDeductive ? "text-destructive line-through" : ""}`}>
+          {isDeductive ? `-${formatCurrency(totalValue)}` : formatCurrency(totalValue)}
+        </TableCell>
+        <TableCell className={`text-right font-mono text-amber-600 dark:text-amber-400 hidden md:table-cell ${committedPct >= 100 ? "bg-red-500/10" : committedPct >= 80 ? "bg-amber-500/10" : ""}`}>
+          <div className="flex items-center justify-end gap-1">
+            {committedPct >= 80 && (
+              <AlertTriangle className={`h-3 w-3 flex-shrink-0 ${committedPct >= 100 ? "text-destructive" : "text-amber-500"}`} />
+            )}
+            {formatCurrency(line.committed_cost)}
+          </div>
+        </TableCell>
+        <TableCell className="text-right font-mono text-green-600 dark:text-green-400">{formatCurrency(line.paid_to_date)}</TableCell>
+        {(() => {
+          const openAmt = line.committed_cost - line.paid_to_date;
+          const openPct = totalValue > 0 ? (openAmt / totalValue) * 100 : 0;
+          return (
+            <TableCell className={`text-right font-mono hidden md:table-cell ${openAmt < 0 ? "text-destructive" : "text-amber-600 dark:text-amber-400"} ${openPct >= 100 ? "bg-red-500/10" : openPct >= 80 ? "bg-amber-500/10" : ""}`}>
+              {openAmt === 0 ? (
+                <span className="text-muted-foreground">—</span>
+              ) : (
+                <div className="flex items-center justify-end gap-1">
+                  {openPct >= 80 && openAmt > 0 && (
+                    <AlertTriangle className={`h-3 w-3 flex-shrink-0 ${openPct >= 100 ? "text-destructive" : "text-amber-500"}`} />
+                  )}
+                  {formatCurrency(openAmt)}
+                </div>
+              )}
+            </TableCell>
+          );
+        })()}
+        <TableCell className="text-right font-mono text-purple-600 dark:text-purple-400 hidden md:table-cell">{formatCurrency(line.billed_to_date)}</TableCell>
+        <TableCell className={`text-right font-mono text-teal-600 dark:text-teal-400 ${isOverbilled ? "bg-red-500/10" : ""}`}>
+          <div className="flex items-center justify-end gap-1">
+            {isOverbilled && <AlertTriangle className="h-3 w-3 flex-shrink-0 text-destructive" />}
+            {formatCurrency(line.invoiced_to_date)}
+          </div>
+        </TableCell>
+        <TableCell className={`text-right font-mono font-semibold ${isNegativeBalance ? "text-destructive" : ""}`}>{formatCurrency(line.balance_remaining)}</TableCell>
+        <TableCell>
+          <div className="flex items-center gap-1.5">
+            <Progress
+              value={Math.min(line.percent_complete, 100)}
+              className={`h-2 w-12 ${getProgressColor(line.percent_complete)}`}
+            />
+            <span className="text-[10px] font-mono text-muted-foreground w-8 text-right">{line.percent_complete}%</span>
+          </div>
+        </TableCell>
+        <TableCell>
+          <div className="flex items-center justify-center gap-1">
+            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openEdit(line)}>
+              <Pencil className="h-3 w-3" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive" onClick={() => setDeleteTarget(line)}>
+              <Trash2 className="h-3 w-3" />
+            </Button>
+          </div>
+        </TableCell>
+      </TableRow>
+    );
+  };
+
+  const COL_COUNT = 15;
+
   return (
     <div className="space-y-3">
       {/* Toolbar */}
@@ -189,112 +343,62 @@ const SovTable: React.FC<SovTableProps> = ({ contractId, lines, isLoading }) => 
           <TableBody>
             {lines.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={15} className="text-center text-muted-foreground text-xs py-8">
+                <TableCell colSpan={COL_COUNT} className="text-center text-muted-foreground text-xs py-8">
                   No SOV lines yet. Click "Add Line" to get started.
                 </TableCell>
               </TableRow>
             ) : (
-              lines.map((line) => {
-                const totalValue = line.total_value ?? 0;
-                const committedPct = totalValue > 0 ? (line.committed_cost / totalValue) * 100 : 0;
-                const isNoPO = line.committed_cost === 0 && totalValue > 0;
-                const isOverbilled = line.invoiced_to_date > totalValue;
-                const isNegativeBalance = (line.balance_remaining ?? 0) < 0;
+              <>
+                {originalLines.map(renderLineRow)}
 
-                return (
-                <TableRow key={line.id} className="text-xs">
-                  <TableCell className="font-mono text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      {line.line_number}
-                      {line.is_addendum && (
-                        <Badge variant="default" className="text-[10px] px-1 py-0 leading-tight">
-                          CO
-                        </Badge>
-                      )}
-                      {isNoPO && (
-                        <TooltipProvider delayDuration={200}>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Lock className="h-3 w-3 text-muted-foreground/60" />
-                            </TooltipTrigger>
-                            <TooltipContent side="right">No PO linked</TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <span className="truncate max-w-[200px] block">{line.description}</span>
-                  </TableCell>
-                  <TableCell className="text-right font-mono hidden md:table-cell">{line.quantity}</TableCell>
-                  <TableCell className="text-muted-foreground hidden md:table-cell">{line.unit ?? "—"}</TableCell>
-                  <TableCell className="text-right font-mono hidden md:table-cell">{formatCurrency(line.unit_price)}</TableCell>
-                  <TableCell className="text-right font-mono hidden md:table-cell">{line.markup}%</TableCell>
-                  <TableCell className="text-right font-mono font-medium">{formatCurrency(line.total_value)}</TableCell>
-                  <TableCell className={`text-right font-mono text-amber-600 dark:text-amber-400 hidden md:table-cell ${committedPct >= 100 ? "bg-red-500/10" : committedPct >= 80 ? "bg-amber-500/10" : ""}`}>
-                    <div className="flex items-center justify-end gap-1">
-                      {committedPct >= 80 && (
-                        <AlertTriangle className={`h-3 w-3 flex-shrink-0 ${committedPct >= 100 ? "text-destructive" : "text-amber-500"}`} />
-                      )}
-                      {formatCurrency(line.committed_cost)}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right font-mono text-green-600 dark:text-green-400">{formatCurrency(line.paid_to_date)}</TableCell>
-                  {(() => {
-                    const openAmt = line.committed_cost - line.paid_to_date;
-                    const openPct = totalValue > 0 ? (openAmt / totalValue) * 100 : 0;
-                    return (
-                      <TableCell className={`text-right font-mono hidden md:table-cell ${openAmt < 0 ? "text-destructive" : "text-amber-600 dark:text-amber-400"} ${openPct >= 100 ? "bg-red-500/10" : openPct >= 80 ? "bg-amber-500/10" : ""}`}>
-                        {openAmt === 0 ? (
-                          <span className="text-muted-foreground">—</span>
-                        ) : (
-                          <div className="flex items-center justify-end gap-1">
-                            {openPct >= 80 && openAmt > 0 && (
-                              <AlertTriangle className={`h-3 w-3 flex-shrink-0 ${openPct >= 100 ? "text-destructive" : "text-amber-500"}`} />
-                            )}
-                            {formatCurrency(openAmt)}
-                          </div>
-                        )}
-                      </TableCell>
-                    );
-                  })()}
-                  <TableCell className="text-right font-mono text-purple-600 dark:text-purple-400 hidden md:table-cell">{formatCurrency(line.billed_to_date)}</TableCell>
-                  <TableCell className={`text-right font-mono text-teal-600 dark:text-teal-400 ${isOverbilled ? "bg-red-500/10" : ""}`}>
-                    <div className="flex items-center justify-end gap-1">
-                      {isOverbilled && <AlertTriangle className="h-3 w-3 flex-shrink-0 text-destructive" />}
-                      {formatCurrency(line.invoiced_to_date)}
-                    </div>
-                  </TableCell>
-                  <TableCell className={`text-right font-mono font-semibold ${isNegativeBalance ? "text-destructive" : ""}`}>{formatCurrency(line.balance_remaining)}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1.5">
-                      <Progress
-                        value={Math.min(line.percent_complete, 100)}
-                        className={`h-2 w-12 ${getProgressColor(line.percent_complete)}`}
-                      />
-                      <span className="text-[10px] font-mono text-muted-foreground w-8 text-right">{line.percent_complete}%</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center justify-center gap-1">
-                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openEdit(line)}>
-                        <Pencil className="h-3 w-3" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive" onClick={() => setDeleteTarget(line)}>
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-                );
-              })
+                {addendumLines.length > 0 && (
+                  <TableRow className="border-t-2 border-dashed border-muted-foreground/30">
+                    <TableCell colSpan={COL_COUNT} className="text-center py-1.5">
+                      <span className="text-[11px] text-muted-foreground font-medium tracking-wide">
+                        — Addendums —
+                      </span>
+                    </TableCell>
+                  </TableRow>
+                )}
+
+                {addendumLines.map(renderLineRow)}
+              </>
             )}
           </TableBody>
           {lines.length > 0 && (
             <TableFooter>
+              {/* Original Scope subtotal */}
+              <TableRow className="text-xs text-muted-foreground">
+                <TableCell colSpan={2} className="text-right md:hidden">Original Scope</TableCell>
+                <TableCell colSpan={6} className="text-right hidden md:table-cell">Original Scope</TableCell>
+                <TableCell className="text-right font-mono">{formatCurrency(subtotals.originalTotal)}</TableCell>
+                <TableCell colSpan={6} className="hidden md:table-cell" />
+                <TableCell colSpan={4} className="md:hidden" />
+              </TableRow>
+              {/* + Addendums subtotal */}
+              {subtotals.addendumTotal > 0 && (
+                <TableRow className="text-xs text-blue-600 dark:text-blue-400">
+                  <TableCell colSpan={2} className="text-right md:hidden">+ Addendums</TableCell>
+                  <TableCell colSpan={6} className="text-right hidden md:table-cell">+ Addendums</TableCell>
+                  <TableCell className="text-right font-mono">+{formatCurrency(subtotals.addendumTotal)}</TableCell>
+                  <TableCell colSpan={6} className="hidden md:table-cell" />
+                  <TableCell colSpan={4} className="md:hidden" />
+                </TableRow>
+              )}
+              {/* - Deductions subtotal */}
+              {subtotals.deductionTotal > 0 && (
+                <TableRow className="text-xs text-destructive">
+                  <TableCell colSpan={2} className="text-right md:hidden">- Deductions</TableCell>
+                  <TableCell colSpan={6} className="text-right hidden md:table-cell">- Deductions</TableCell>
+                  <TableCell className="text-right font-mono">-{formatCurrency(subtotals.deductionTotal)}</TableCell>
+                  <TableCell colSpan={6} className="hidden md:table-cell" />
+                  <TableCell colSpan={4} className="md:hidden" />
+                </TableRow>
+              )}
+              {/* Grand total */}
               <TableRow className="text-xs font-semibold">
-                <TableCell colSpan={2} className="text-right md:hidden">Totals</TableCell>
-                <TableCell colSpan={6} className="text-right hidden md:table-cell">Totals</TableCell>
+                <TableCell colSpan={2} className="text-right md:hidden">Total</TableCell>
+                <TableCell colSpan={6} className="text-right hidden md:table-cell">Total</TableCell>
                 <TableCell className="text-right font-mono">{formatCurrency(totals.total_value)}</TableCell>
                 <TableCell className="text-right font-mono text-amber-600 dark:text-amber-400 hidden md:table-cell">{formatCurrency(totals.committed_cost)}</TableCell>
                 <TableCell className="text-right font-mono text-green-600 dark:text-green-400">{formatCurrency(totals.paid_to_date)}</TableCell>

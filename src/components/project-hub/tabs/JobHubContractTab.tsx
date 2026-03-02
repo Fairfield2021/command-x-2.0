@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useContractsByProject, useAddContract } from "@/hooks/useContracts";
 import { useSovLines } from "@/hooks/useSovLines";
+import { useChangeOrdersByContract } from "@/integrations/supabase/hooks/useChangeOrders";
 import { ContractHeader } from "@/components/project-hub/contract/ContractHeader";
 import ContractActions from "@/components/project-hub/contract/ContractActions";
 import SovTable from "@/components/project-hub/contract/SovTable";
@@ -35,6 +36,7 @@ export function JobHubContractTab({
   const contract = contracts[0] ?? null;
 
   const { data: sovLines = [], isLoading: sovLoading } = useSovLines(contract?.id ?? null);
+  const { data: changeOrders = [] } = useChangeOrdersByContract(contract?.id ?? null);
 
   const handleCreateBlank = () => {
     addContract.mutate({
@@ -107,6 +109,11 @@ export function JobHubContractTab({
         contractId={contract.id}
         lines={sovLines}
         isLoading={sovLoading}
+        changeOrders={changeOrders.map((co: any) => ({
+          id: co.id,
+          number: co.number,
+          change_type: co.change_type,
+        }))}
       />
 
       <ContractCoverageSummary sovLines={sovLines} />
