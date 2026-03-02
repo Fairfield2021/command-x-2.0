@@ -1,22 +1,30 @@
 
 
-# T&M Hooks + Enum Migration
+# Create `src/components/project-hub/tm/CreateTMTicketDialog.tsx`
 
-## 1. Database migration — extend `tm_ticket_status` enum
-Add values: `open`, `cap_reached`, `pending_approval`, `converted_to_co` to existing `tm_ticket_status` enum.
+New file, no existing files modified.
 
-## 2. Create `src/hooks/useTMTicketEntries.ts` (new file)
-- **`useTMTicketEntries(ticketId)`** — select from `tm_ticket_entries` where `tm_ticket_id = ticketId`, order by `entry_date DESC, created_at DESC`, key `['tm-ticket-entries', ticketId]`
-- **`useCreateTMTicketEntry()`** — insert mutation; pre-fetch ticket status, reject with toast if `cap_reached`; invalidate `['tm-ticket-entries']` and `['tm-tickets']`
-- **`useDeleteTMTicketEntry()`** — delete mutation; invalidate same keys
+## Implementation
 
-## 3. Enhance `useApproveTMTicket` in `src/integrations/supabase/hooks/useTMTickets.ts`
-- Accept `{ id, approved_by }` 
-- Set `approved_by`, `approval_date`, increment `cap_hours` by 10, reset status to `open`
-- Invalidate `['tm-tickets']`, `['tm-ticket']`, **and `['tm-ticket-entries']`** so entry form disabled state refreshes
+A simple form dialog following the `AddRoomDialog` pattern:
+- Uses `useAddTMTicket` from `src/integrations/supabase/hooks/useTMTickets.ts` to insert
+- Insert payload: `project_id`, `contract_id`, `description`, `hourly_rate`, `cap_hours`, `materials_cost`, `status: 'open'`, plus minimal required fields for the existing mutation (`ticket_number: ''`, `work_date: today`, `customer_id` from project lookup, `lineItems: []`, `tax_rate: 0`)
+- On success: show toast with ticket number from response, reset form, close dialog
+- Four fields: Description (textarea, required), Hourly Rate (number input, step 0.01, required), Hour Cap (number input, default 10, min 1), Initial Materials Estimate (number input, default 0)
 
-## Files
-- New migration SQL
-- `src/hooks/useTMTicketEntries.ts` (new)
-- `src/integrations/supabase/hooks/useTMTickets.ts` (modify `useApproveTMTicket` only)
+**Note:** The existing `useAddTMTicket` mutation requires `customer_id`, `work_date`, `lineItems`, and `tax_rate`. Since the new dialog is for a simpler T&M workflow (hourly + materials, no line items), I'll insert directly via Supabase instead of using `useAddTMTicket`, then invalidate `['tm-tickets']` manually. This avoids coupling to the line-item-based flow.
+
+## Technical Details
+
+```
+src/components/project-hub/tm/CreateTMTicketDialog.tsx (new)
+├── Props: projectId, contractId, open, onOpenChange
+├── State: description, hourlyRate, capHours (default 10), materialsCost (default 0)
+├── Submit: supabase.from('tm_tickets').insert({...}).select().single()
+│   → ticket_number: '' (auto by trigger)
+│   → status: 'open'
+│   → project_id, contract_id, description, hourly_rate, cap_hours, materials_cost
+├── On success: toast("T&M Ticket {ticket_number} created"), invalidate queries, close
+└── UI: Dialog > form > Textarea + 3 Inputs + Cancel/Create buttons
+```
 
