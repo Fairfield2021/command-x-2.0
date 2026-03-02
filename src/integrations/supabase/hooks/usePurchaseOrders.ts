@@ -365,6 +365,22 @@ export const useReopenPurchaseOrder = () => {
   });
 };
 
+export const usePOLineItems = (poId: string | null, enabled = true) => {
+  return useQuery({
+    queryKey: ["po_line_items", poId],
+    queryFn: async () => {
+      if (!poId) return [];
+      const { data, error } = await supabase
+        .from("po_line_items")
+        .select("*")
+        .eq("purchase_order_id", poId);
+      if (error) throw error;
+      return data as POLineItem[];
+    },
+    enabled: !!poId && enabled,
+  });
+};
+
 export const useDeletePurchaseOrder = () => {
   const queryClient = useQueryClient();
   const { logAction } = useAuditLog();

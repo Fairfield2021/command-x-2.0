@@ -7,14 +7,18 @@ import { useSovLines } from "@/hooks/useSovLines";
 import { ContractHeader } from "@/components/project-hub/contract/ContractHeader";
 import ContractActions from "@/components/project-hub/contract/ContractActions";
 import SovTable from "@/components/project-hub/contract/SovTable";
+import { ContractCoverageSummary } from "@/components/project-hub/contract/ContractCoverageSummary";
+import { ContractPOAccordion } from "@/components/project-hub/contract/ContractPOAccordion";
 import { ConvertEstimateToContract } from "@/components/project-hub/contract/ConvertEstimateToContract";
 import type { Estimate } from "@/integrations/supabase/hooks/useEstimates";
+import type { PurchaseOrder } from "@/integrations/supabase/hooks/usePurchaseOrders";
 
 interface JobHubContractTabProps {
   projectId: string;
   projectEstimates: Estimate[];
   projectName: string;
   customerId?: string;
+  projectPurchaseOrders?: PurchaseOrder[];
 }
 
 export function JobHubContractTab({
@@ -22,6 +26,7 @@ export function JobHubContractTab({
   projectEstimates,
   projectName,
   customerId,
+  projectPurchaseOrders = [],
 }: JobHubContractTabProps) {
   const { data: contracts = [], isLoading: contractsLoading } = useContractsByProject(projectId);
   const addContract = useAddContract();
@@ -102,6 +107,13 @@ export function JobHubContractTab({
         contractId={contract.id}
         lines={sovLines}
         isLoading={sovLoading}
+      />
+
+      <ContractCoverageSummary sovLines={sovLines} />
+
+      <ContractPOAccordion
+        projectPurchaseOrders={projectPurchaseOrders}
+        projectId={projectId}
       />
 
       {/* Allow converting additional estimates as addendums */}
