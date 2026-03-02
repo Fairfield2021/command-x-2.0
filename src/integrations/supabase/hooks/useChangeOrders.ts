@@ -55,6 +55,13 @@ export interface ChangeOrder {
   source_job_order_id: string | null;
   invoiced_amount: number;
   remaining_amount: number;
+  // New columns
+  contract_id: string | null;
+  co_value: number;
+  sent_to: string | null;
+  qb_estimate_id: string | null;
+  approval_status: string;
+  approval_date: string | null;
   // Workflow fields
   work_authorized: boolean;
   customer_wo_number: string | null;
@@ -171,6 +178,27 @@ export function useChangeOrdersByProject(projectId: string | undefined) {
       return data as unknown as ChangeOrder[];
     },
     enabled: !!projectId,
+  });
+}
+
+// Fetch change orders by contract
+export function useChangeOrdersByContract(contractId: string | null) {
+  return useQuery({
+    queryKey: ["change-orders-by-contract", contractId],
+    queryFn: async () => {
+      if (!contractId) return [];
+
+      const { data, error } = await supabase
+        .from("change_orders")
+        .select("*")
+        .eq("contract_id", contractId)
+        .is("deleted_at", null)
+        .order("number", { ascending: true });
+
+      if (error) throw error;
+      return data as unknown as ChangeOrder[];
+    },
+    enabled: !!contractId,
   });
 }
 
@@ -564,5 +592,54 @@ export function useChangeOrderVendorBills(changeOrderId: string | undefined) {
       return data;
     },
     enabled: !!changeOrderId,
+  });
+}
+
+// Approve change order via RPC
+export function useApproveChangeOrder() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ changeOrderId, approvedBy }: { changeOrderId: string; approvedBy: string }) => {
+      const { error } = await supabase.rpc('approve_change_order', {
+        p_change_order_id: changeOrderId,
+        p_approved_by: approvedBy,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["change_orders"] });
+      queryClient.invalidateQueries({ queryKey: ["change-orders-by-contract"] });
+      queryClient.invalidateQueries({ queryKey: ["sov_lines"] });
+      queryClient.invalidateQueries({ queryKey: ["contracts"] });
+      queryClient.invalidateQueries({ queryKey: ["job-cost-summary"] });
+      toast.success("Change order approved successfully");
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to approve change order: ${error.message}`);
+    },
+  });
+}
+
+// Reject change order via RPC
+export function useRejectChangeOrder() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ changeOrderId, rejectedBy }: { changeOrderId: string; rejectedBy: string }) => {
+      const { error } = await supabase.rpc('reject_change_order', {
+        p_change_order_id: changeOrderId,
+        p_rejected_by: rejectedBy,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["change_orders"] });
+      queryClient.invalidateQueries({ queryKey: ["change-orders-by-contract"] });
+      toast.success("Change order rejected");
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to reject change order: ${error.message}`);
+    },
   });
 }
