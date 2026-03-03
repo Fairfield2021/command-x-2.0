@@ -147,8 +147,6 @@ import AiDevAssistant from "./pages/admin/AiDevAssistant";
 import Trash from "./pages/admin/Trash";
 import DocumentCenter from "./pages/DocumentCenter";
 import { UpdateNotification } from "./components/electron/UpdateNotification";
-import NetworkMapDemo from "./pages/NetworkMapDemo";
-import USANetworkMapDemo from "./pages/USANetworkMapDemo";
 import VendorOnboarding from "./pages/VendorOnboarding";
 import VendorOnboardingComplete from "./pages/VendorOnboardingComplete";
 
@@ -161,7 +159,6 @@ const NativeStatusBarManager = () => {
 };
 
 const App = () => {
-
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
@@ -243,15 +240,7 @@ const App = () => {
                       path="/contractor/success"
                       element={<ContractorSubmissionSuccess />}
                     />
-                    {/* Network Map Demo */}
-                    <Route
-                      path="/network-map-demo"
-                      element={<NetworkMapDemo />}
-                    />
-                    <Route
-                      path="/usa-network-map-demo"
-                      element={<USANetworkMapDemo />}
-                    />
+
                     {/* Admin Contractor Routes - moved to SidebarLayout group below */}
                     {/* Portal Routes */}
                     <Route path="/portal/login" element={<PortalLogin />} />
@@ -416,7 +405,10 @@ const App = () => {
                       <Route path="/invoices" element={<Invoices />} />
                       <Route path="/invoices/:id" element={<InvoiceDetail />} />
                       <Route path="/time-tracking" element={<TimeTracking />} />
-                      <Route path="/overhead-analysis" element={<OverheadAnalysis />} />
+                      <Route
+                        path="/overhead-analysis"
+                        element={<OverheadAnalysis />}
+                      />
                       <Route path="/reports" element={<Reports />} />
                       <Route
                         path="/team-timesheet"
@@ -444,7 +436,10 @@ const App = () => {
                         path="/badge-templates/:id"
                         element={<BadgeTemplateEditor />}
                       />
-                      <Route path="/settings" element={<Navigate to="/company" replace />} />
+                      <Route
+                        path="/settings"
+                        element={<Navigate to="/company" replace />}
+                      />
                       <Route path="/company" element={<CompanyHub />} />
                       <Route
                         path="/document-center"
