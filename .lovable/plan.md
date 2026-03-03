@@ -1,33 +1,35 @@
 
 
-# Commitment Report + Change Order Summary Report
+# AP Aging Report Implementation
 
-## Create `src/components/reports/CommitmentReport.tsx`
+## Create `src/components/reports/APAgingReport.tsx`
 
-- **Data**: Use `usePurchaseOrders()` hook (already fetches all non-deleted POs). Filter client-side for `payment_status !== 'paid'` (the PO interface doesn't have `payment_status` but the DB does — will need to add it or use `status` field). Since the hook fetches `*`, the data includes `order_type`, `project_name`, `vendor_name`, `total`, `status`, `created_at`, `number`.
-- **Filters**: Type (All/POs/WOs) filtering on `order_type`, Project dropdown, Vendor dropdown — all derived from the fetched data
-- **3 KPI cards**: Open POs count+amount, Open WOs count+amount, Total Commitment Exposure (amber)
-- **Sortable table**: Type (Truck+blue "PO" badge or Wrench+purple "WO" badge), Number, Vendor, Project, Amount, Status (badge), Created Date
-- **Row click**: Navigate to PO detail page (existing route pattern)
-- **Footer**: Total amount row
-- **Export CSV**: Same Blob pattern as JobCostReport
+Follows the exact same structure as the other report components (JobCostReport, CommitmentReport).
 
-Note: The `PurchaseOrder` interface has `status` but not `payment_status`. The existing hook fetches `*` so the raw data includes all columns. Will filter on `status` not being `completed`/`closed`/`cancelled` to represent "open" commitments, since that aligns with the operational data model.
+### Data
+- Query `ap_aging_summary` view via `useQuery` + Supabase client directly
+- View columns: `bill_id`, `bill_number`, `vendor_name`, `project_name`, `total_amount`, `amount_paid`, `balance_due`, `payment_status`, `bill_date`, `due_date`, `aging_bucket`, `days_past_due`
 
-## Create `src/components/reports/ChangeOrderSummaryReport.tsx`
+### UI Structure
+1. **Filter bar**: Aging Bucket (All/Current/1-30/31-60/61-90/90+), Project dropdown, Vendor dropdown + Export CSV button
+2. **5 aging bucket KPI cards** in a row — each shows sum of `balance_due` for that bucket with color coding:
+   - Current → green, 1-30 → amber, 31-60 → orange, 61-90 → red-orange (via `text-red-500`), 90+ → red
+   - Below cards: bold "Total Outstanding: $X"
+3. **Stacked bar chart** (Recharts `BarChart` with stacked `Bar` components) — single bar, 5 segments matching bucket colors, max height ~60px
+4. **Sortable detail table**: Bill #, Vendor, Project, Bill Date, Due Date, Total, Paid, Balance Due, Days Past Due, Aging (colored badge)
+   - Default sort: `days_past_due` descending
+5. **Export CSV**: Same Blob pattern
 
-- **Data**: Use `useChangeOrders()` hook (already fetches all COs with project join, `deleted_at IS NULL`). The returned data includes `change_type`, `co_value`, `approval_status`, `number`, `reason`, `description`, `created_at`, and `project: { name }`.
-- **Filters**: Status (All/Draft/Pending/Approved/Rejected), Project dropdown
-- **4 KPI cards**: Total Addendums (green), Total Deductions (red), Net Change (bold), Pending Approval (amber)
-- **Sortable table**: CO #, Project, Description (use `reason`), Type badge (green Additive / red Deductive), Value, Status badge, Date
-- **Export CSV**: Same pattern
+### Color map (reused across cards, chart, badges)
+```
+current: green-500/600
+1-30: amber-500/600
+31-60: orange-500/600
+61-90: red-400/500
+90+: red-600/700
+```
 
 ## Modify `src/pages/ReportsPage.tsx`
-
-- Import both components
-- Render `<CommitmentReport />` when `activeReport === "commitments"`
-- Render `<ChangeOrderSummaryReport />` when `activeReport === "change-orders"`
-- Keep AP Aging as "Coming soon" placeholder
-
-Both components follow the exact same structure as `JobCostReport`: filter bar + KPI cards + sortable table + footer + CSV export.
+- Import `APAgingReport`
+- Replace the "Coming soon" placeholder: render `<APAgingReport />` when `activeReport === "ap-aging"`
 
