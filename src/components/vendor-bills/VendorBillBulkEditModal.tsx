@@ -25,7 +25,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { VendorBill } from "@/integrations/supabase/hooks/useVendorBills";
 
-interface BulkEditUpdates {
+export interface BulkEditUpdates {
   vendor_id?: string;
   vendor_name?: string;
   category_id?: string;

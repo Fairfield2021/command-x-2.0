@@ -5,11 +5,11 @@ import { SSNInput } from "@/components/personnel/registration/SSNInput";
 import { ITINInput } from "@/components/personnel/registration/ITINInput";
 import { CategoryDocumentUpload } from "@/components/personnel/registration/CategoryDocumentUpload";
 import type { VendorOnboardingFormData } from "@/integrations/supabase/hooks/useVendorOnboarding";
-import type { RegistrationDocument } from "@/integrations/supabase/hooks/usePersonnelRegistrations";
+import type { RegistrationDocument, DocumentType } from "@/integrations/supabase/hooks/usePersonnelRegistrations";
 
 interface VendorWorkAuthorizationFormProps {
   formData: VendorOnboardingFormData;
-  onUpdate: (field: keyof VendorOnboardingFormData, value: any) => void;
+  onUpdate: (field: keyof VendorOnboardingFormData, value: VendorOnboardingFormData[keyof VendorOnboardingFormData]) => void;
   sessionId: string;
 }
 
@@ -39,7 +39,7 @@ export const VendorWorkAuthorizationForm = ({
     );
   };
 
-  const getExistingDoc = (docType: string): (RegistrationDocument & { verification?: any }) | undefined => {
+  const getExistingDoc = (docType: string): (RegistrationDocument & { verification?: unknown }) | undefined => {
     const doc = (formData.documents || []).find((d) => d.type === docType);
     if (!doc) return undefined;
     return {
@@ -47,7 +47,7 @@ export const VendorWorkAuthorizationForm = ({
       path: doc.path,
       type: doc.fileType,
       uploaded_at: new Date().toISOString(),
-      document_type: doc.type as any,
+      document_type: doc.type as DocumentType,
     };
   };
 

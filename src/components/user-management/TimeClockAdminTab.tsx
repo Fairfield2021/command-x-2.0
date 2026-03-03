@@ -85,10 +85,10 @@ export function TimeClockAdminTab() {
 
       setDialogOpen(false);
       setEditingEntry(null);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Error updating clock-in time",
-        description: error.message || "Failed to update. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to update. Please try again.",
         variant: "destructive",
       });
     }

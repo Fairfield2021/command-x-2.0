@@ -83,8 +83,8 @@ export function NotificationPreferences({ userId, onSave }: NotificationPreferen
           po_rejected: data.po_rejected ?? true,
           po_sent: data.po_sent ?? true,
           po_status_changed: data.po_status_changed ?? true,
-          co_submitted_for_approval: (data as any).co_submitted_for_approval ?? true,
-          personnel_registration_pending: (data as any).personnel_registration_pending ?? true,
+          co_submitted_for_approval: (data as unknown as Record<string, unknown>).co_submitted_for_approval as boolean ?? true,
+          personnel_registration_pending: (data as unknown as Record<string, unknown>).personnel_registration_pending as boolean ?? true,
           notification_toast: data.notification_toast ?? true,
           notification_sound: data.notification_sound ?? false,
           notification_browser: data.notification_browser ?? false,
@@ -177,10 +177,10 @@ export function NotificationPreferences({ userId, onSave }: NotificationPreferen
       });
       
       onSave?.(preferences);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Error",
-        description: error.message || "Failed to save preferences",
+        description: error instanceof Error ? error.message : "Failed to save preferences",
         variant: "destructive",
       });
     } finally {

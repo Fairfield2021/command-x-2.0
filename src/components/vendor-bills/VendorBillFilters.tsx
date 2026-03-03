@@ -31,7 +31,7 @@ export function VendorBillFilters({ filters, onFiltersChange }: VendorBillFilter
             value={filters.status || "all"}
             onValueChange={(value) => onFiltersChange({ 
               ...filters, 
-              status: value === "all" ? undefined : value as any 
+              status: value === "all" ? undefined : value as FilterType["status"]
             })}
           >
             <SelectTrigger className="w-full sm:w-[140px] truncate">

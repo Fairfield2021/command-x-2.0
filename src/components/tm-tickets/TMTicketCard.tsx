@@ -1,3 +1,4 @@
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Calendar, FileText, User, Building2 } from "lucide-react";
@@ -24,7 +25,7 @@ export function TMTicketCard({ ticket, onClick }: TMTicketCardProps) {
               {ticket.description || "No description"}
             </p>
           </div>
-          <StatusBadge status={ticket.status as any} />
+          <StatusBadge status={ticket.status as React.ComponentProps<typeof StatusBadge>["status"]} />
         </div>
       </CardHeader>
       <CardContent className="space-y-3">

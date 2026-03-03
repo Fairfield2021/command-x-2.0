@@ -15,7 +15,7 @@ import { VendorBill, useDeleteVendorBill, useHardDeleteVendorBill } from "@/inte
 import { useQuickBooksConfig, useQuickBooksBillMapping, useSyncVendorBillToQB } from "@/integrations/supabase/hooks/useQuickBooks";
 import { VendorBillPaymentDialog } from "./VendorBillPaymentDialog";
 import { BulkBillPaymentDialog } from "./BulkBillPaymentDialog";
-import { VendorBillBulkEditModal } from "./VendorBillBulkEditModal";
+import { VendorBillBulkEditModal, type BulkEditUpdates, type BulkEditProgress } from "./VendorBillBulkEditModal";
 import { VendorBillCard } from "./VendorBillCard";
 import { VendorBillSyncErrorDialog } from "./VendorBillSyncErrorDialog";
 import { useIsMobile, useIsTablet } from "@/hooks/use-mobile";
@@ -355,9 +355,9 @@ export function VendorBillTable({ bills }: VendorBillTableProps) {
     setSelectedIds(new Set());
   };
 
-  const handleBulkEdit = async (updates: Record<string, any>, onProgress: (p: { current: number; total: number; phase: "updating" | "syncing" }) => void): Promise<{ success: number; failed: number }> => {
+  const handleBulkEdit = async (updates: BulkEditUpdates, onProgress: (p: BulkEditProgress) => void): Promise<{ success: number; failed: number }> => {
     const ids = Array.from(selectedIds);
-    const billUpdates: Record<string, any> = {};
+    const billUpdates: Record<string, unknown> = {};
     
     // Bill-level fields
     if (updates.vendor_id) billUpdates.vendor_id = updates.vendor_id;

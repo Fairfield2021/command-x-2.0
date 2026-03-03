@@ -82,8 +82,8 @@ export const VendorBillAttachments = ({
     try {
       await retrySyncMutation.mutateAsync({ attachmentId, billId });
       toast.success("Synced to QuickBooks");
-    } catch (error: any) {
-      toast.error("Sync failed", { description: error.message });
+    } catch (error: unknown) {
+      toast.error("Sync failed", { description: error instanceof Error ? error.message : "Unknown error" });
     }
   };
 
@@ -97,8 +97,8 @@ export const VendorBillAttachments = ({
       } else {
         toast.info("No attachments found in QuickBooks");
       }
-    } catch (error: any) {
-      toast.error("Failed to pull attachments", { description: error.message });
+    } catch (error: unknown) {
+      toast.error("Failed to pull attachments", { description: error instanceof Error ? error.message : "Unknown error" });
     }
   };
 
@@ -141,8 +141,8 @@ export const VendorBillAttachments = ({
       await handleUpload(pendingUpload.file, pendingUpload.filePath);
       setShowSaveDialog(false);
       setPendingUpload(null);
-    } catch (error: any) {
-      toast.error("Failed to save bill", { description: error.message });
+    } catch (error: unknown) {
+      toast.error("Failed to save bill", { description: error instanceof Error ? error.message : "Unknown error" });
     } finally {
       setIsSaving(false);
     }
