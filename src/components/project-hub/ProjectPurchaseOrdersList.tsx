@@ -6,17 +6,20 @@ import { Truck, Plus, ExternalLink, Wrench } from "lucide-react";
 import { format } from "date-fns";
 import { formatCurrency } from "@/lib/utils";
 import { PurchaseOrder } from "@/integrations/supabase/hooks/usePurchaseOrders";
+import { QBOPopupLink } from "@/components/quickbooks/QBOPopupLink";
 
 interface ProjectPurchaseOrdersListProps {
   purchaseOrders: PurchaseOrder[];
   projectId: string;
   onAddNew?: () => void;
+  qbMappings?: Map<string, string>;
 }
 
 export function ProjectPurchaseOrdersList({ 
   purchaseOrders, 
   projectId,
-  onAddNew 
+  onAddNew,
+  qbMappings,
 }: ProjectPurchaseOrdersListProps) {
   const navigate = useNavigate();
   
@@ -91,6 +94,11 @@ export function ProjectPurchaseOrdersList({
                       Billed: {formatCurrency(po.billed_amount || 0)}
                     </span>
                   </div>
+                  {qbMappings?.get(po.id) && (
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <QBOPopupLink docType="purchase_order" txnId={qbMappings.get(po.id)} variant="edit" />
+                    </div>
+                  )}
                   <ExternalLink className="h-4 w-4 text-muted-foreground" />
                 </div>
               </div>

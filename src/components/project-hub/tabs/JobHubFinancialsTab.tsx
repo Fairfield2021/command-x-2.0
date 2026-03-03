@@ -29,6 +29,7 @@ import { ProjectTimeEntriesList } from "@/components/project-hub/ProjectTimeEntr
 import { CreateChangeOrderDialog } from "@/components/project-hub/contract/CreateChangeOrderDialog";
 import { QBOPopupLink } from "@/components/quickbooks/QBOPopupLink";
 import { useQBMappingForList } from "@/integrations/supabase/hooks/useQBMappingForList";
+import { useVendorBills } from "@/integrations/supabase/hooks/useVendorBills";
 import {
   useChangeOrdersByProject,
   useApproveChangeOrder,
@@ -119,6 +120,10 @@ export function JobHubFinancialsTab({
   const estimateQBMap = useQBMappingForList(estimateIds, "estimate");
   const invoiceQBMap = useQBMappingForList(invoiceIds, "invoice");
   const poQBMap = useQBMappingForList(poIds, "purchase_order");
+
+  const { data: vendorBills } = useVendorBills({ project_id: projectId });
+  const billIds = useMemo(() => vendorBills?.map((b) => b.id) ?? [], [vendorBills]);
+  const billQBMap = useQBMappingForList(billIds, "bill");
 
   const qboColumn = (map: Map<string, string>, docType: "estimate" | "invoice" | "purchase_order") => ({
     key: "_qbo",
@@ -291,7 +296,7 @@ export function JobHubFinancialsTab({
         )}
       </div>
 
-      <ProjectVendorBillsList projectId={projectId} />
+      <ProjectVendorBillsList projectId={projectId} qbMappings={billQBMap} />
 
       {/* Change Orders — Enhanced Approval Workflow */}
       <Collapsible open={coSectionOpen} onOpenChange={setCoSectionOpen}>
@@ -488,7 +493,7 @@ export function JobHubFinancialsTab({
         open={tmDialogOpen}
         onOpenChange={setTmDialogOpen}
       />
-      <ProjectPurchaseOrdersList purchaseOrders={projectPurchaseOrders} projectId={projectId} />
+      <ProjectPurchaseOrdersList purchaseOrders={projectPurchaseOrders} projectId={projectId} qbMappings={poQBMap} />
       <ProjectTimeEntriesList projectId={projectId} />
     </div>
   );
