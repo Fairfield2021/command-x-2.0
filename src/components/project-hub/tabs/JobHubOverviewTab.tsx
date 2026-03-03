@@ -3,10 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Progress } from "@/components/ui/progress";
-import { Target, User, Calendar, MapPin, Phone, Mail, Hash, Clock, Camera, StickyNote, ClipboardList } from "lucide-react";
+import { Target, User, Calendar, MapPin, Phone, Mail, Hash, Clock, Camera, StickyNote, ClipboardList, FileUp } from "lucide-react";
 import { format } from "date-fns";
 import { ProjectRoomsSection } from "@/components/project-hub/rooms/ProjectRoomsSection";
-import { EnhancedTimeEntryForm } from "@/components/time-tracking/EnhancedTimeEntryForm";
 import { useContractsByProject } from "@/hooks/useContracts";
 import { useSovLines } from "@/hooks/useSovLines";
 import { formatCurrency } from "@/lib/utils";
@@ -29,8 +28,6 @@ export function JobHubOverviewTab({
   overallCompletion,
   projectJobOrders,
 }: JobHubOverviewTabProps) {
-  const [timeEntryOpen, setTimeEntryOpen] = useState(false);
-
   const { data: contracts } = useContractsByProject(projectId);
   const firstContract = contracts?.[0] ?? null;
   const { data: sovLines } = useSovLines(firstContract?.id ?? null);
@@ -123,8 +120,7 @@ export function JobHubOverviewTab({
       {/* Quick Actions */}
       <Card className="glass border-border">
         <CardContent className="py-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="text-sm font-medium text-muted-foreground mr-1">Quick Actions</span>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <Button variant="outline" size="sm" onClick={() => handleNavigateTab("activity")}>
               <StickyNote className="h-4 w-4 mr-1.5" />
               Add Note
@@ -133,9 +129,13 @@ export function JobHubOverviewTab({
               <Camera className="h-4 w-4 mr-1.5" />
               Upload Photo
             </Button>
-            <Button variant="outline" size="sm" onClick={() => setTimeEntryOpen(true)}>
+            <Button variant="outline" size="sm" onClick={() => handleNavigateTab("financials")}>
               <Clock className="h-4 w-4 mr-1.5" />
               Log Time
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => handleNavigateTab("documents")}>
+              <FileUp className="h-4 w-4 mr-1.5" />
+              New Document
             </Button>
           </div>
         </CardContent>
@@ -247,12 +247,6 @@ export function JobHubOverviewTab({
       {/* Rooms */}
       <ProjectRoomsSection projectId={project.id} />
 
-      {/* Log Time Dialog */}
-      <EnhancedTimeEntryForm
-        open={timeEntryOpen}
-        onOpenChange={setTimeEntryOpen}
-        defaultProjectId={project.id}
-      />
     </div>
   );
 }
