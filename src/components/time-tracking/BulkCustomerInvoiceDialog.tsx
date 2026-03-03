@@ -343,7 +343,7 @@ export function BulkCustomerInvoiceDialog({
     // Build bracket lookup, filtering out non-billable brackets
     const bracketLookup = new Map<string, { id: string; name: string; billRate: number; otMultiplier: number }>();
     assignments?.forEach(a => {
-      const bracket = a.project_rate_brackets as any;
+      const bracket = a.project_rate_brackets as { id: string; name: string; bill_rate: number; overtime_multiplier: number; is_billable: boolean } | null;
       // Skip non-billable brackets - they won't be included in invoices
       if (bracket && a.personnel_id && a.project_id && bracket.is_billable !== false) {
         bracketLookup.set(`${a.project_id}-${a.personnel_id}`, {
@@ -803,12 +803,12 @@ export function BulkCustomerInvoiceDialog({
           total: subtotal,
           entriesLinked: entryIdsToUpdate.length,
         });
-      } catch (error: any) {
+      } catch (error: unknown) {
         invoiceResults.push({
           customerId: customer.customerId,
           customerName: customer.customerName,
           success: false,
-          error: error.message || "Failed to create invoice",
+          error: error instanceof Error ? error.message : "Failed to create invoice",
           total: 0,
           entriesLinked: 0,
         });

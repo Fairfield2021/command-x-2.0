@@ -24,6 +24,7 @@ export interface PersonnelWithAssignment {
   bill_rate: number | null;
   email: string;
   phone: string | null;
+  photo_url: string | null;
   status: string | null;
   vendor_id: string | null;
   linked_vendor_id: string | null;

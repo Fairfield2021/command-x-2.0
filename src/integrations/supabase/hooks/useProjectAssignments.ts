@@ -300,8 +300,8 @@ export function useBulkAssignUserToProjects() {
         toast.success(`User assigned to ${variables.projectIds.length} project(s)`);
       }
     },
-    onError: (error: any) => {
-      toast.error(error?.message ? `Failed to assign user: ${error.message}` : "Failed to assign user to projects");
+    onError: (error: unknown) => {
+      toast.error(error instanceof Error ? `Failed to assign user: ${error.message}` : "Failed to assign user to projects");
     },
   });
 }

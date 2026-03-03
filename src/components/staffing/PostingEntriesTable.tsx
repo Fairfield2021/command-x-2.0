@@ -270,7 +270,7 @@ export function PostingEntriesTable({
             <TableBody>
               {applications.map((app) => {
                 const answers = app.answers as Record<string, unknown> | null;
-                const profilePic = getProfilePicture(answers, formFields, (app.applicants as any)?.photo_url);
+                const profilePic = getProfilePicture(answers, formFields, app.applicants?.photo_url);
 
                 return (
                   <TableRow

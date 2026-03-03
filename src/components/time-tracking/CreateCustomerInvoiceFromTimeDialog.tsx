@@ -164,7 +164,7 @@ export function CreateCustomerInvoiceFromTimeDialog({
       if (!error && data) {
         const rateMap: PersonnelRateBracketMap = {};
         data.forEach(a => {
-          const bracket = a.project_rate_brackets as any;
+          const bracket = a.project_rate_brackets as { id: string; name: string; bill_rate: number; overtime_multiplier: number; is_billable: boolean } | null;
           // Skip non-billable brackets - they won't be included in invoices
           if (bracket && a.personnel_id && bracket.is_billable !== false) {
             rateMap[a.personnel_id] = {

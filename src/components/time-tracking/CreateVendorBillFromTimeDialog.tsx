@@ -113,8 +113,9 @@ export function CreateVendorBillFromTimeDialog({
       // Use hourly_rate for vendor bills
       const payRate = entry.personnel?.hourly_rate || 0;
       // Get vendor IDs
-      const vendorId = (entry.personnel as any)?.vendor_id || null;
-      const linkedVendorId = (entry.personnel as any)?.linked_vendor_id || null;
+      const personnelRecord = entry.personnel as unknown as Record<string, unknown> | null;
+      const vendorId = (personnelRecord?.vendor_id as string) || null;
+      const linkedVendorId = (personnelRecord?.linked_vendor_id as string) || null;
 
       if (!groups.has(personnelId)) {
         groups.set(personnelId, {

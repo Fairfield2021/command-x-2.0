@@ -59,7 +59,7 @@ export function PostingEntryCard({
   onSelectionChange,
 }: PostingEntryCardProps) {
   const answers = application.answers as Record<string, unknown> | null;
-  const profilePic = getProfilePicture(answers, formFields, (application.applicants as any)?.photo_url);
+  const profilePic = getProfilePicture(answers, formFields, application.applicants?.photo_url);
 
   // Get key form field answers (first 2 non-file fields)
   const keyFields = formFields

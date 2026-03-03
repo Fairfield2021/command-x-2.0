@@ -431,7 +431,7 @@ const ProjectDetail = () => {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="status">Status</Label>
-                <Select value={milestoneFormData.status} onValueChange={(value: any) => setMilestoneFormData({ ...milestoneFormData, status: value })}>
+                <Select value={milestoneFormData.status} onValueChange={(value: string) => setMilestoneFormData({ ...milestoneFormData, status: value })}>
                   <SelectTrigger className="bg-secondary border-border"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="pending">Pending</SelectItem>

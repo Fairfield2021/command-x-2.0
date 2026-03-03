@@ -138,29 +138,31 @@ export function PersonnelApplicantMap({ mapboxToken, isAdmin = false }: Personne
 
     if (activeClocksData) {
       const mappedClocks: ActiveClockLocation[] = activeClocksData
-        .filter((entry: any) => {
+        .filter((entry) => {
           // Must have either clock_in location or last_location
-          return (entry.clock_in_lat && entry.clock_in_lng) || 
+          return (entry.clock_in_lat && entry.clock_in_lng) ||
                  (entry.last_location_lat && entry.last_location_lng);
         })
-        .map((entry: any) => {
+        .map((entry) => {
           // Prefer last_location if available, otherwise use clock_in location
           const lat = entry.last_location_lat || entry.clock_in_lat;
           const lng = entry.last_location_lng || entry.clock_in_lng;
-          
+          const personnel = entry.personnel as unknown as { id: string; first_name: string; last_name: string; email: string; phone: string | null; photo_url: string | null };
+          const project = entry.projects as unknown as { id: string; name: string };
+
           return {
             id: entry.id,
             personnel_id: entry.personnel_id,
-            first_name: entry.personnel.first_name,
-            last_name: entry.personnel.last_name,
-            email: entry.personnel.email,
-            phone: entry.personnel.phone,
-            photo_url: entry.personnel.photo_url,
-            project_id: entry.projects.id,
-            project_name: entry.projects.name,
-            clock_in_at: entry.clock_in_at,
-            current_lat: lat,
-            current_lng: lng,
+            first_name: personnel.first_name,
+            last_name: personnel.last_name,
+            email: personnel.email,
+            phone: personnel.phone,
+            photo_url: personnel.photo_url,
+            project_id: project.id,
+            project_name: project.name,
+            clock_in_at: entry.clock_in_at!,
+            current_lat: lat!,
+            current_lng: lng!,
             last_location_check_at: entry.last_location_check_at,
             is_on_lunch: entry.is_on_lunch || false,
             type: 'active' as const,
@@ -182,7 +184,7 @@ export function PersonnelApplicantMap({ mapboxToken, isAdmin = false }: Personne
       .from('personnel')
       .select('id, first_name, last_name, email, phone, photo_url, home_lat, home_lng, status, address, city, state, zip, geocoded_at, geocode_source')
       .not('home_lat', 'is', null)
-      .not('home_lng', 'is', null) as { data: any[] | null };
+      .not('home_lng', 'is', null) as { data: Omit<PersonnelLocation, 'type'>[] | null };
     
     // Fetch applicants with locations
     const { data: applicantsData } = await supabase
@@ -196,15 +198,15 @@ export function PersonnelApplicantMap({ mapboxToken, isAdmin = false }: Personne
     const { count: applicantsTotal } = await supabase.from('applicants').select('id', { count: 'exact', head: true });
     
     if (personnelData) {
-      setPersonnel(personnelData.map((p: any) => ({ 
+      setPersonnel(personnelData.map((p) => ({
         ...p,
-        type: 'personnel' as const 
+        type: 'personnel' as const
       })));
     }
     if (applicantsData) {
-      setApplicants(applicantsData.map((a: any) => ({ 
+      setApplicants((applicantsData as unknown as Omit<ApplicantLocation, 'type'>[]).map((a) => ({
         ...a,
-        type: 'applicant' as const 
+        type: 'applicant' as const
       })));
     }
 

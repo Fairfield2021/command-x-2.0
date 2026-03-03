@@ -115,8 +115,8 @@ export function RequestMissingInfoDialog({
       setAdminMessage("");
       onOpenChange(false);
       onSuccess?.();
-    } catch (error: any) {
-      toast.error(error.message || "Failed to send edit request");
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "Failed to send edit request");
     } finally {
       setIsSending(false);
     }

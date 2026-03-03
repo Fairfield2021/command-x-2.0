@@ -223,7 +223,7 @@ export function MobileApplicationCard({
                 <Calendar className="h-3.5 w-3.5 flex-shrink-0" />
                 <span>
                   {format(
-                    new Date((application as any).submitted_at || application.created_at),
+                    new Date(application.submitted_at || application.created_at),
                     "MMM d, yyyy h:mm a"
                   )}
                 </span>

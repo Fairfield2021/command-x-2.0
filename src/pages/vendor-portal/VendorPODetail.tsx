@@ -152,7 +152,7 @@ export default function VendorPODetail() {
                     </tr>
                   </thead>
                   <tbody>
-                    {po.po_line_items?.map((item: any) => (
+                    {po.po_line_items?.map((item) => (
                       <tr key={item.id} className="border-b">
                         <td className="py-2">{item.description}</td>
                         <td className="text-right py-2">{item.quantity}</td>
@@ -180,7 +180,7 @@ export default function VendorPODetail() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {po.po_addendums.map((addendum: any) => (
+                  {po.po_addendums.map((addendum) => (
                     <div key={addendum.id} className="flex items-center justify-between p-3 border rounded-lg">
                       <div>
                         <p className="font-medium">{addendum.number || 'Addendum'}</p>

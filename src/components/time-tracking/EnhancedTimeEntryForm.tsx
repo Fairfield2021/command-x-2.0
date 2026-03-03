@@ -310,8 +310,8 @@ export function EnhancedTimeEntryForm({
         description: entry.description || "",
         billable: entry.billable,
         is_holiday: entry.is_holiday || false,
-        is_overhead: (entry as any).is_overhead || false,
-        overhead_category: (entry as any).overhead_category || "",
+        is_overhead: (entry as unknown as Record<string, unknown>).is_overhead as boolean || false,
+        overhead_category: (entry as unknown as Record<string, unknown>).overhead_category as string || "",
       });
       setEntryType("daily");
     } else {
@@ -403,11 +403,11 @@ export function EnhancedTimeEntryForm({
   }, [selectedPersonnelIds.length, dailyTotalHours]);
 
   // Handler for form validation failures (before handleDailySubmit runs)
-  const handleDailyInvalid = (errors: any) => {
-    const firstError = Object.values(errors)[0] as any;
-    toast({ 
-      title: firstError?.message ?? "Please fix the form errors before submitting.", 
-      variant: "destructive" 
+  const handleDailyInvalid = (errors: Record<string, { message?: string }>) => {
+    const firstError = Object.values(errors)[0];
+    toast({
+      title: firstError?.message ?? "Please fix the form errors before submitting.",
+      variant: "destructive"
     });
   };
 
@@ -455,7 +455,7 @@ export function EnhancedTimeEntryForm({
           is_holiday,
           is_overhead,
           overhead_category: is_overhead ? (overhead_category || 'other') : null,
-        } as any);
+        } as Record<string, unknown>);
         onOpenChange(false);
         form.reset();
         return;
@@ -496,8 +496,8 @@ export function EnhancedTimeEntryForm({
       form.reset();
       setSelectedPersonnelIds([]);
       setDailyPersonnelHours({});
-    } catch (error: any) {
-      toast({ title: error?.message ?? "Failed to save time entry", variant: "destructive" });
+    } catch (error: unknown) {
+      toast({ title: error instanceof Error ? error.message : "Failed to save time entry", variant: "destructive" });
     }
   };
 

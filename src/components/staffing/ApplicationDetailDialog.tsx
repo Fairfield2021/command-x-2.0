@@ -423,7 +423,7 @@ export function ApplicationDetailDialog({
       setAdminBypassMode(false);
       onOpenChange(false);
     } catch (error: unknown) {
-      toast.error(error.message || "Failed to complete admin bypass");
+      toast.error(error instanceof Error ? error.message : "Failed to complete admin bypass");
     } finally {
       setIsSavingBypass(false);
     }

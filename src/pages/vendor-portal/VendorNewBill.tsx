@@ -55,7 +55,7 @@ export default function VendorNewBill() {
     }
   }, [selectedPO]);
 
-  const updateLineItem = (id: string, field: keyof LineItem, value: any) => {
+  const updateLineItem = (id: string, field: keyof LineItem, value: string | number) => {
     setLineItems((prev) =>
       prev.map((item) => {
         if (item.id !== id) return item;

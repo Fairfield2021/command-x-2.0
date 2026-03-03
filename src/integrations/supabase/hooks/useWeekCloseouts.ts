@@ -100,7 +100,7 @@ export function useCloseWeek() {
       // Update each entry with its personnel's current rate
       if (entriesWithoutRate && entriesWithoutRate.length > 0) {
         for (const entry of entriesWithoutRate) {
-          const personnelRate = (entry.personnel as any)?.hourly_rate ?? 0;
+          const personnelRate = (entry.personnel as Record<string, unknown> | null)?.hourly_rate as number ?? 0;
           await supabase
             .from('time_entries')
             .update({ hourly_rate: personnelRate })

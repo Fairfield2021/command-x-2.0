@@ -41,7 +41,7 @@ export default function VendorPOsList() {
       {
         key: "status",
         header: "Status",
-        render: (po) => <StatusBadge status={po.status as any} />,
+        render: (po) => <StatusBadge status={po.status as string} />,
       },
       {
         key: "revised_total",
@@ -120,7 +120,7 @@ export default function VendorPOsList() {
                         {po.project_name}
                       </p>
                     </div>
-                    <StatusBadge status={po.status as any} />
+                    <StatusBadge status={po.status as string} />
                   </div>
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-muted-foreground">
