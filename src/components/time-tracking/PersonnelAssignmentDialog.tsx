@@ -399,7 +399,7 @@ export function PersonnelAssignmentDialog({
                     <div className="max-h-64 overflow-y-auto border rounded-lg divide-y">
                       {filteredUnassigned.map((person) => {
                         const isSelected = selectedPersonnel.has(person.id);
-                        const payRate = (person as any).pay_rate;
+                        const payRate = person.pay_rate;
                         return (
                           <div
                             key={person.id}

@@ -911,7 +911,7 @@ export function EnhancedTimeEntryForm({
                 <WeeklyPersonnelGrid
                   weeklyProjectId={weeklyProjectId}
                   assignedPersonnel={assignedPersonnel.map(a => ({
-                    personnel: a.personnel ? { ...a.personnel, photo_url: (a.personnel as any).photo_url } : null
+                    personnel: a.personnel ? { ...a.personnel } : null
                   }))}
                   selectedPersonnel={selectedPersonnel}
                   selectAllPersonnel={selectAllPersonnel}
@@ -944,7 +944,7 @@ export function EnhancedTimeEntryForm({
                 <PersonnelHoursTable
                   selectedPersonnel={selectedPersonnel}
                   assignedPersonnel={assignedPersonnel.map(a => ({
-                    personnel: a.personnel ? { ...a.personnel, photo_url: (a.personnel as any).photo_url } : null
+                    personnel: a.personnel ? { ...a.personnel } : null
                   }))}
                   weekDays={weekDays.map(day => ({
                     date: day,
