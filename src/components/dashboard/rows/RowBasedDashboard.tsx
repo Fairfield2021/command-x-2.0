@@ -12,7 +12,7 @@ import { MobileSessionCard } from "@/components/session/MobileSessionCard";
 import { useDashboardConfig } from "@/hooks/useDashboardConfig";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useDashboardDraft } from "@/contexts/DashboardDraftContext";
-import { usePageHeaderActions } from "@/contexts/PageHeaderActionsContext";
+import { usePageHeaderActionsSafe } from "@/contexts/PageHeaderActionsContext";
 import { EditModeToggle } from "../customization/EditModeToggle";
 import { DashboardThemeEditor } from "../customization/DashboardThemeEditor";
 import { UnsavedChangesDialog } from "../customization/UnsavedChangesDialog";
@@ -51,13 +51,7 @@ export function RowBasedDashboard() {
   const canCustomize = isAdmin || isManager;
   const draftContext = useDashboardDraft();
 
-  // Get page header actions context - may not be available during SSR/initial render
-  let pageHeaderActions: ReturnType<typeof usePageHeaderActions> | null = null;
-  try {
-    pageHeaderActions = usePageHeaderActions();
-  } catch {
-    // Context not available, will render inline
-  }
+  const pageHeaderActions = usePageHeaderActionsSafe();
 
   // Track previous edit mode state to detect transitions
   const prevIsEditModeRef = useRef(isEditMode);

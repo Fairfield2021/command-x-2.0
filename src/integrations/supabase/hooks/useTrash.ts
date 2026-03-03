@@ -102,6 +102,7 @@ export const useDeletedItems = (entityType?: TrashEntityType, limit = 50) => {
             });
           });
         } catch (err) {
+          // ignore
         }
       }
 
@@ -163,6 +164,7 @@ export const usePermanentlyDelete = () => {
           } else if (data && !data.success && data.error) {
             qbWarning = data.error;
           } else if (data?.deleted) {
+            // ignore
           }
         } catch (qbError: any) {
           qbWarning = `QuickBooks sync error: ${qbError.message || "Unknown error"}`;
@@ -175,6 +177,7 @@ export const usePermanentlyDelete = () => {
             .delete()
             .eq("invoice_id", id);
         } catch (mappingError) {
+          // ignore
         }
       }
 
@@ -190,6 +193,7 @@ export const usePermanentlyDelete = () => {
           } else if (data && !data.success && data.error) {
             qbWarning = data.error;
           } else if (data?.deactivated) {
+            // ignore
           }
         } catch (qbError: any) {
           qbWarning = `QuickBooks sync error: ${qbError.message || "Unknown error"}`;
@@ -202,6 +206,7 @@ export const usePermanentlyDelete = () => {
             .delete()
             .eq("customer_id", id);
         } catch (mappingError) {
+          // ignore
         }
       }
 

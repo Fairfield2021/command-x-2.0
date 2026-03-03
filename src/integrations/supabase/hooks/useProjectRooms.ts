@@ -86,7 +86,7 @@ export function useRoomScopeSummary(projectId: string | undefined) {
         .eq('project_id', projectId);
       if (roomError) throw roomError;
 
-      let allocations: Record<string, number> = {};
+      const allocations: Record<string, number> = {};
       if (rooms && rooms.length > 0) {
         const roomIds = rooms.map(r => r.id);
         const { data: scopeItems, error: siError } = await supabase

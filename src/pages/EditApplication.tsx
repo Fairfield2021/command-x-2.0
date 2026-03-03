@@ -473,7 +473,7 @@ export default function EditApplication() {
           </div>
         );
 
-      case "multiselect":
+      case "multiselect": {
         const selectedValues = Array.isArray(value) ? value : [];
         return (
           <div key={field.id} className={wrapperClass}>
@@ -502,6 +502,7 @@ export default function EditApplication() {
             {field.helpText && <p className="text-xs text-muted-foreground">{field.helpText}</p>}
           </div>
         );
+      }
 
       case "radio":
         return (

@@ -106,6 +106,7 @@ export const useAddProject = () => {
             }).eq("id", data.id);
           }
         } catch (e) {
+          // ignore
         }
       }
 
@@ -185,6 +186,7 @@ export const useUpdateProject = () => {
             }).eq("id", id);
           }
         } catch (e) {
+          // ignore
         }
       }
 

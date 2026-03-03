@@ -195,31 +195,36 @@ export function PersonnelAssignmentDataGrid({
       let comparison = 0;
 
       switch (key) {
-        case "personnelName":
+        case "personnelName": {
           const nameA = `${a.personnel?.first_name} ${a.personnel?.last_name}`;
           const nameB = `${b.personnel?.first_name} ${b.personnel?.last_name}`;
           comparison = nameA.localeCompare(nameB);
           break;
-        case "rateBracket":
+        }
+        case "rateBracket": {
           const bracketA = a.project_rate_brackets?.name || "";
           const bracketB = b.project_rate_brackets?.name || "";
           comparison = bracketA.localeCompare(bracketB);
           break;
-        case "billRate":
+        }
+        case "billRate": {
           const rateA = a.bill_rate ?? a.project_rate_brackets?.bill_rate ?? 0;
           const rateB = b.bill_rate ?? b.project_rate_brackets?.bill_rate ?? 0;
           comparison = rateA - rateB;
           break;
-        case "payRate":
+        }
+        case "payRate": {
           const payA = a.personnel?.pay_rate ?? a.personnel?.hourly_rate ?? 0;
           const payB = b.personnel?.pay_rate ?? b.personnel?.hourly_rate ?? 0;
           comparison = payA - payB;
           break;
-        case "assignedAt":
+        }
+        case "assignedAt": {
           const dateA = a.assigned_at ? new Date(a.assigned_at).getTime() : 0;
           const dateB = b.assigned_at ? new Date(b.assigned_at).getTime() : 0;
           comparison = dateA - dateB;
           break;
+        }
       }
 
       return direction === "asc" ? comparison : -comparison;

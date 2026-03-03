@@ -229,7 +229,7 @@ export const generateInvoicePDF = async (
     
     // Product/Service name - use product_name or derive from order info
     let productName = (item as any).product_name;
-    let displayDescription = item.description;
+    const displayDescription = item.description;
 
     if (!productName) {
       // Try to identify the source of this line item

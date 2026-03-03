@@ -64,15 +64,11 @@ const parseCustomFields = (customFields: Json | null | undefined): Array<{ label
 
 // Helper function to generate QR code as data URL
 const generateQRCodeDataURL = async (text: string): Promise<string> => {
-  try {
-    return await QRCode.toDataURL(text, {
-      width: 200,
-      margin: 1,
-      errorCorrectionLevel: "M",
-    });
-  } catch (error) {
-    throw error;
-  }
+  return await QRCode.toDataURL(text, {
+    width: 200,
+    margin: 1,
+    errorCorrectionLevel: "M",
+  });
 };
 
 // Helper to convert hex color to RGB

@@ -190,7 +190,7 @@ export function CreateBillFromPODialog({
       .map((j: any) => j.product_id)
       .filter(Boolean);
     
-    let productMappings: Record<string, string | null> = {};
+    const productMappings: Record<string, string | null> = {};
     if (productIds.length > 0) {
       const { data: products } = await supabase
         .from("products")

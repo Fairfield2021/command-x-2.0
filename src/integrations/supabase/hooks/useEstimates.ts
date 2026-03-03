@@ -329,16 +329,22 @@ export const useUpdateEstimate = () => {
             });
             
             if (syncError) {
+              // ignore
             } else {
               if (syncResult?.success) {
+                // ignore
               } else if (syncResult?.error) {
+                // ignore
               }
             }
           } else if (!mapping) {
+            // ignore
           } else {
+            // ignore
           }
         }
       } catch (qbError) {
+        // ignore
       }
 
       return estimateData;
@@ -379,8 +385,9 @@ export const useDeleteEstimate = () => {
           });
         }
       } catch (qbError) {
+        // ignore
       }
-      
+
       // First, unlink any job orders that reference this estimate
       await supabase
         .from("job_orders")

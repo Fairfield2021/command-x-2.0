@@ -281,7 +281,8 @@ export function BulkCustomerInvoiceDialog({
     const customerMap = new Map<string, CustomerGroup>();
 
     selectedWeekEntries.forEach(entry => {
-      const customerId = entry.projects?.customer_id!;
+      const customerId = entry.projects?.customer_id;
+      if (!customerId) return;
       const customerName = entry.projects?.customers?.name || "Unknown Customer";
       const projectId = entry.project_id;
       const projectName = entry.projects?.name || "Unknown Project";

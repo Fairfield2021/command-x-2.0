@@ -96,6 +96,7 @@ export const useDeleteProjectDocument = () => {
         .remove([filePath]);
 
       if (storageError) {
+        // ignore
       }
 
       // Delete record

@@ -204,6 +204,7 @@ export const useAddPOAddendum = () => {
             toast.error("Addendum created but failed to send approval email");
           }
         } catch (err) {
+          // ignore
         }
       }
 
@@ -448,6 +449,7 @@ export const useUpdatePOAddendum = () => {
             toast.error("Addendum updated but failed to send approval email");
           }
         } catch (err) {
+          // ignore
         }
       }
 
@@ -480,6 +482,7 @@ export const useDeletePOAddendum = () => {
           .remove([data.filePath]);
 
         if (deleteFileError) {
+          // ignore
         }
       }
 

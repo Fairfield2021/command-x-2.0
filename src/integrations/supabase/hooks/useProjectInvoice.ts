@@ -104,6 +104,7 @@ export const useAddProjectInvoice = () => {
           .in("id", tm_ticket_ids);
 
         if (tmUpdateError) {
+          // ignore
         }
       }
 
@@ -131,6 +132,7 @@ export const useAddProjectInvoice = () => {
           .eq("id", changeOrderId);
 
         if (coUpdateError) {
+          // ignore
         }
       }
 
@@ -147,6 +149,7 @@ export const useAddProjectInvoice = () => {
           });
         }
       } catch (qbError) {
+        // ignore
       }
 
       return newInvoice;

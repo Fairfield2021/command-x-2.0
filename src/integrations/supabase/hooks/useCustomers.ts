@@ -73,6 +73,7 @@ export const useAddCustomer = () => {
           });
         }
       } catch (qbError) {
+        // ignore
       }
 
       return data;
@@ -132,6 +133,7 @@ export const useUpdateCustomer = () => {
           });
         }
       } catch (qbError) {
+        // ignore
       }
 
       return data;

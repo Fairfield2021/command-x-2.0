@@ -247,7 +247,7 @@ export const useSelectedBillableItemsTotals = (
     const selectedOtherItems = selectedItemsData.filter(item => item.type !== 'job_order');
 
     // Build line items based on billing mode
-    let lineItems: any[] = [];
+    const lineItems: any[] = [];
     let displayOrderCounter = 0;
     
     // Handle Job Orders based on billing mode

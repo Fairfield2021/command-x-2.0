@@ -98,7 +98,7 @@ export default function AcceptInvitation() {
       }
 
       setInvitation(data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Error",
         description: "Failed to load invitation details.",
@@ -157,10 +157,10 @@ export default function AcceptInvitation() {
       });
 
       navigate("/");
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Error accepting invitation",
-        description: error.message || "Failed to accept invitation. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to accept invitation. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -228,10 +228,10 @@ export default function AcceptInvitation() {
       });
 
       navigate("/");
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Login failed",
-        description: error.message || "Failed to log in. Please check your password.",
+        description: error instanceof Error ? error.message : "Failed to log in. Please check your password.",
         variant: "destructive",
       });
     } finally {
@@ -346,10 +346,10 @@ export default function AcceptInvitation() {
 
       // Sign in will happen automatically via the auth state listener
       navigate("/");
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Error creating account",
-        description: error.message || "Failed to create your account. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to create your account. Please try again.",
         variant: "destructive",
       });
     } finally {

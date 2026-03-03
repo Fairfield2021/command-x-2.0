@@ -116,7 +116,7 @@ export function exportPersonnelToXLSX(
   }));
 
   // Sheet 2: Asset Details (if assets column is visible)
-  let assetRows: Record<string, string>[] = [];
+  const assetRows: Record<string, string>[] = [];
   if (visibleColumns.some((c) => c.key === "assets")) {
     data.forEach((person) => {
       if (person.assets && person.assets.length > 0) {

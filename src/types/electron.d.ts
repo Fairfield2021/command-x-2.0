@@ -24,7 +24,7 @@ declare global {
       getAppVersion: () => Promise<string>;
       getPlatform: () => Promise<string>;
       onMainProcessMessage: (callback: (message: string) => void) => void;
-      checkForUpdates: () => Promise<any>;
+      checkForUpdates: () => Promise<ElectronUpdateInfo | null>;
       downloadUpdate: () => Promise<boolean>;
       installUpdate: () => void;
       onUpdateStatus: (callback: (info: ElectronUpdateInfo) => void) => void;

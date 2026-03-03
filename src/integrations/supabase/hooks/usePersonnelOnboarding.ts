@@ -153,10 +153,12 @@ export function useOnboardingToken(token: string | undefined) {
                 },
               },
             }).catch((err) => {
+              // ignore
             });
           }
         }
       } catch (notifError) {
+        // ignore
       }
       const { data: personnelData, error: personnelError } = await supabase
         .from("personnel")
@@ -321,6 +323,7 @@ export function useCompleteOnboarding() {
           },
         });
       } catch (notifError) {
+        // ignore
       }
 
       // Trigger auto-sync to QuickBooks if enabled
@@ -339,12 +342,16 @@ export function useCompleteOnboarding() {
             body: { personnel_id: personnelId },
           }).then((result) => {
             if (result.error) {
+              // ignore
             } else {
+              // ignore
             }
           }).catch((syncError) => {
+            // ignore
           });
         }
       } catch (autoSyncError) {
+        // ignore
       }
 
       return { success: true };

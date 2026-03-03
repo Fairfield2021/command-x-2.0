@@ -24,7 +24,7 @@ export interface PreviousFieldData {
 export interface LookupResult {
   found: boolean;
   applicant?: FoundApplicantData;
-  previousAnswers?: Record<string, any> | null;
+  previousAnswers?: Record<string, unknown> | null;
   previousFields?: PreviousFieldData[];
   previousSmsConsent?: boolean;
   error?: string;
@@ -33,7 +33,7 @@ export interface LookupResult {
 export function useApplicantLookup() {
   const [isLookingUp, setIsLookingUp] = useState(false);
   const [foundApplicant, setFoundApplicant] = useState<FoundApplicantData | null>(null);
-  const [previousAnswers, setPreviousAnswers] = useState<Record<string, any> | null>(null);
+  const [previousAnswers, setPreviousAnswers] = useState<Record<string, unknown> | null>(null);
   const [previousSmsConsent, setPreviousSmsConsent] = useState(false);
   const [hasLookedUp, setHasLookedUp] = useState(false);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);

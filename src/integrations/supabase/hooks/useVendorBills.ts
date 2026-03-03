@@ -426,6 +426,7 @@ export const useDeleteVendorBill = () => {
           } else if (data && !data.success) {
             qbVoidResult = { success: false, error: data.error };
           } else {
+            // ignore
           }
         }
       } catch (qbError) {
@@ -621,11 +622,15 @@ export const useHardDeleteVendorBill = () => {
             body: { billId: id },
           });
           if (error) {
+            // ignore
           } else if (data && !data.success) {
+            // ignore
           } else {
+            // ignore
           }
         }
       } catch (qbError) {
+        // ignore
       }
 
       // 1. Get all payment IDs for this bill to delete their attachments
@@ -643,6 +648,7 @@ export const useHardDeleteVendorBill = () => {
           .in("payment_id", paymentIds);
         
         if (paymentAttachError) {
+          // ignore
         }
       }
 
@@ -653,6 +659,7 @@ export const useHardDeleteVendorBill = () => {
         .eq("bill_id", id);
       
       if (paymentsError) {
+        // ignore
       }
 
       // 4. Delete bill attachments
@@ -662,6 +669,7 @@ export const useHardDeleteVendorBill = () => {
         .eq("bill_id", id);
       
       if (attachError) {
+        // ignore
       }
 
       // 5. Delete line items
@@ -671,6 +679,7 @@ export const useHardDeleteVendorBill = () => {
         .eq("bill_id", id);
       
       if (lineItemsError) {
+        // ignore
       }
 
       // 6. Delete change order links
@@ -680,6 +689,7 @@ export const useHardDeleteVendorBill = () => {
         .eq("vendor_bill_id", id);
       
       if (coLinksError) {
+        // ignore
       }
 
       // 7. Delete QuickBooks mapping
@@ -689,6 +699,7 @@ export const useHardDeleteVendorBill = () => {
         .eq("bill_id", id);
       
       if (mappingError) {
+        // ignore
       }
 
       // 8. Finally delete the bill itself

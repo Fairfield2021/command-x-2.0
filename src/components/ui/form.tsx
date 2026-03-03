@@ -81,7 +81,7 @@ const FormLabel = React.forwardRef<
 });
 FormLabel.displayName = "FormLabel";
 
-const FormControl = React.forwardRef<HTMLElement, React.PropsWithChildren<{}>>(
+const FormControl = React.forwardRef<HTMLElement, React.PropsWithChildren<object>>(
   ({ children }, ref) => {
     const { error, formItemId, formDescriptionId, formMessageId } = useFormField();
 

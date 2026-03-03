@@ -78,7 +78,7 @@ export const generateWorkOrderPDF = async (
   const company = companyInfo || getDefaultCompanyInfo();
   
   let yPos = 20;
-  let logoHeight = 12;
+  const logoHeight = 12;
 
   // ==================== HEADER SECTION ====================
   // Load and add company logo (top-right)

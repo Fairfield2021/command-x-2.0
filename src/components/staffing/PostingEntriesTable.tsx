@@ -146,13 +146,14 @@ function formatFieldValue(value: unknown, field: FormField): React.ReactNode {
       }
       return <span className="text-sm">{String(value)}</span>;
 
-    default:
+    default: {
       const stringValue = String(value);
       return (
         <span className="text-sm whitespace-nowrap">
           {stringValue.length > 25 ? stringValue.slice(0, 25) + "..." : stringValue}
         </span>
       );
+    }
   }
 }
 

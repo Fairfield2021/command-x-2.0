@@ -648,6 +648,7 @@ export const useApproveApplicationWithType = () => {
               },
             });
           } catch (emailErr) {
+            // ignore
           }
         }
       }

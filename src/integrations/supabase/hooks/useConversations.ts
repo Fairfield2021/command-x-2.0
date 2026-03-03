@@ -325,6 +325,7 @@ export function useSendConversationMessage() {
               .eq("id", data.id);
           }
         } catch (smsErr) {
+          // ignore
         }
       }
 

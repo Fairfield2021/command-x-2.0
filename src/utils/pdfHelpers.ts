@@ -97,7 +97,7 @@ export const drawDocumentHeader = async (
 ): Promise<number> => {
   const pageWidth = doc.internal.pageSize.getWidth();
   const headerRightX = pageWidth - PDF_MARGIN;
-  let logoHeight = 12;
+  const logoHeight = 12;
 
   // Load and add company logo (top-right)
   const logoBase64 = await loadCompanyLogo();

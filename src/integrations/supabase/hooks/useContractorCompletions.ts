@@ -110,7 +110,7 @@ export function useContractorRooms() {
       // Get unit costs from job_order_line_items -> po_line_items
       const joLineItemIds = Array.from(new Set((scopeItems || []).map((s: any) => String(s.job_order_line_item_id))));
       
-      let unitCostMap: Record<string, number> = {};
+      const unitCostMap: Record<string, number> = {};
       if (joLineItemIds.length > 0) {
         // Get JO line items to find linked PO line items
         const { data: joLineItems } = await (supabase as any)
@@ -299,6 +299,7 @@ export function useSubmitCompletion() {
           await supabase.from("admin_notifications").insert(notifications);
         }
       } catch (e) {
+        // ignore
       }
 
       return bill;
@@ -462,6 +463,7 @@ export function useUpdateCompletionBillStatus() {
           });
         }
       } catch (e) {
+        // ignore
       }
 
       return data;

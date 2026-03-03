@@ -92,8 +92,8 @@ export function LocationTrackingProvider({ children }: LocationTrackingProviderP
         setPermissionStatus(hasPermission ? "granted" : "denied");
         
         return hasPermission;
-      } catch (err: any) {
-        setLastError(err.message || "Failed to request location permission");
+      } catch (err: unknown) {
+        setLastError(err instanceof Error ? err.message : "Failed to request location permission");
         return false;
       }
     } else {

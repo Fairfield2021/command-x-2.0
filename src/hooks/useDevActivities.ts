@@ -246,7 +246,7 @@ export function useAnalyzeScreenshot() {
       });
 
       if (error) throw error;
-      
+
       if (data.error) {
         throw new Error(data.error);
       }
@@ -255,8 +255,6 @@ export function useAnalyzeScreenshot() {
         activities: data.activities || [],
         message: data.message,
       };
-    } catch (error) {
-      throw error;
     } finally {
       setIsAnalyzing(false);
     }

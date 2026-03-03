@@ -103,7 +103,7 @@ export function useFormTranslation({
           const parsed = JSON.parse(cached);
           // Verify the cached translation matches current fields
           const currentFieldIds = customFields.map(f => f.id).sort().join(',');
-          const cachedFieldIds = parsed.customFields?.map((f: any) => f.id).sort().join(',') || '';
+          const cachedFieldIds = parsed.customFields?.map((f: { id: string }) => f.id).sort().join(',') || '';
           
           if (currentFieldIds === cachedFieldIds) {
             setTranslations(parsed);
@@ -134,7 +134,7 @@ export function useFormTranslation({
           // Cache the translation
           localStorage.setItem(cacheKey, JSON.stringify(data.translations));
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         toast.error('Translation failed. Showing original content.');
         setTranslations(null);
       } finally {

@@ -28,3 +28,8 @@ export function usePageHeaderActions() {
   }
   return context;
 }
+
+/** Safe variant that returns null instead of throwing when outside a provider. */
+export function usePageHeaderActionsSafe() {
+  return useContext(PageHeaderActionsContext);
+}

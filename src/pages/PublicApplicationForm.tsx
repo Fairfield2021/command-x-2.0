@@ -694,7 +694,7 @@ export default function PublicApplicationForm() {
           </div>
         );
 
-      case "multiselect":
+      case "multiselect": {
         const selectedValues = Array.isArray(value) ? value : [];
         const multiselectOptions = translated.options || field.options || [];
         return (
@@ -725,6 +725,7 @@ export default function PublicApplicationForm() {
             {translated.helpText && <p className="text-xs text-muted-foreground">{translated.helpText}</p>}
           </div>
         );
+      }
 
       case "checkbox":
         return (
@@ -744,7 +745,7 @@ export default function PublicApplicationForm() {
           </div>
         );
 
-      case "radio":
+      case "radio": {
         const radioOptions = translated.options || field.options || [];
         return (
           <div key={field.id} className={cn("space-y-2", isFieldLocked && "opacity-70 pointer-events-none")}>
@@ -770,6 +771,7 @@ export default function PublicApplicationForm() {
             {translated.helpText && <p className="text-xs text-muted-foreground">{translated.helpText}</p>}
           </div>
         );
+      }
 
       case "date":
         return (

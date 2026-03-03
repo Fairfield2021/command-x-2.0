@@ -30,7 +30,7 @@ import { cn } from "@/lib/utils";
 import { useIsMobile, useIsTablet } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 import { useDashboardDraft } from "@/contexts/DashboardDraftContext";
-import { usePageHeaderActions } from "@/contexts/PageHeaderActionsContext";
+import { usePageHeaderActionsSafe } from "@/contexts/PageHeaderActionsContext";
 
 interface CustomizableDashboardProps {
   children?: React.ReactNode;
@@ -67,14 +67,7 @@ export function CustomizableDashboard({
   const draftContext = useDashboardDraft();
   const isMobile = useIsMobile();
   const isTablet = useIsTablet();
-  
-  // Get page header actions context - may not be available during SSR/initial render
-  let pageHeaderActions: ReturnType<typeof usePageHeaderActions> | null = null;
-  try {
-    pageHeaderActions = usePageHeaderActions();
-  } catch {
-    // Context not available, will render inline
-  }
+  const pageHeaderActions = usePageHeaderActionsSafe();
   
   // Responsive column count based on screen size:
   // - Mobile: 1 column (stacked)

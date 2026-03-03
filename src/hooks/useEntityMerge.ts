@@ -145,7 +145,7 @@ export function useMergePreview(entityType: EntityType, sourceId: string | undef
     queryFn: async () => {
       if (!sourceId || !targetId) return null;
 
-      let preview = {
+      const preview = {
         invoices: 0,
         invoiceTotal: 0,
         bills: 0,

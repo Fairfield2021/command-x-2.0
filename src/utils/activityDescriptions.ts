@@ -324,7 +324,7 @@ export function generateSessionActivityDescription(activity: SessionActivity): A
   
   switch (activityType) {
     case "page_view":
-    case "navigation":
+    case "navigation": {
       const pageName = activity.route ? getPageName(activity.route) : "Unknown Page";
       return {
         title: `Visited ${pageName}`,
@@ -333,6 +333,7 @@ export function generateSessionActivityDescription(activity: SessionActivity): A
         color: "blue",
         details: activity.route ? [`Route: ${activity.route}`] : [],
       };
+    }
     case "clock_in":
       return {
         title: "Clocked In",
@@ -366,7 +367,7 @@ export function generateSessionActivityDescription(activity: SessionActivity): A
         details: [],
       };
     case "button_click":
-    case "action":
+    case "action": {
       const actionName = activity.action_name || "an action";
       return {
         title: `Performed Action`,
@@ -375,6 +376,7 @@ export function generateSessionActivityDescription(activity: SessionActivity): A
         color: "blue",
         details: activity.action_name ? [`Action: ${activity.action_name}`] : [],
       };
+    }
     default:
       return {
         title: formatResourceType(activityType),

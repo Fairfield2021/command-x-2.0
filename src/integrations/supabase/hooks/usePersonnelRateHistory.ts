@@ -100,6 +100,7 @@ export function useUpdatePersonnelPayRate() {
 
       // Ignore error if no existing record (first rate being set)
       if (closeError && closeError.code !== "PGRST116") {
+        // ignore
       }
 
       // Step 2: Insert new rate history record

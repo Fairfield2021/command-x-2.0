@@ -144,7 +144,7 @@ export default function VendorDocuments() {
     const now = new Date();
     const thirtyDaysFromNow = addDays(now, 30);
 
-    let total = enrichedDocuments.length;
+    const total = enrichedDocuments.length;
     let expired = 0;
     let expiringSoon = 0;
     const byType: Record<string, number> = {};

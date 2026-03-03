@@ -219,11 +219,12 @@ export function ProjectPersonnelSection({ projectId, projectName = "this project
         case 'phone':
           comparison = (a.phone || '').localeCompare(b.phone || '');
           break;
-        case 'location':
+        case 'location': {
           const locA = [a.city, a.state].filter(Boolean).join(', ');
           const locB = [b.city, b.state].filter(Boolean).join(', ');
           comparison = locA.localeCompare(locB);
           break;
+        }
         case 'rateBracket':
           comparison = (a.rateBracket || '').localeCompare(b.rateBracket || '');
           break;
@@ -233,11 +234,12 @@ export function ProjectPersonnelSection({ projectId, projectName = "this project
         case 'billRate':
           comparison = (a.billRate || 0) - (b.billRate || 0);
           break;
-        case 'assignedDate':
+        case 'assignedDate': {
           const dateA = a.assignedAt ? new Date(a.assignedAt).getTime() : 0;
           const dateB = b.assignedAt ? new Date(b.assignedAt).getTime() : 0;
           comparison = dateA - dateB;
           break;
+        }
         default:
           comparison = 0;
       }
