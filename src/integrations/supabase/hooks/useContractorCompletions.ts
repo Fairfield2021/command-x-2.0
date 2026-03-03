@@ -266,23 +266,23 @@ export function useSubmitCompletion() {
         total: item.total,
       }));
 
-      const { error: itemsError } = await (supabase as any)
-        .from("contractor_completion_bill_items")
+      const { error: itemsError } = await supabase
+        .from("contractor_completion_bill_items" as never)
         .insert(billItems);
 
       if (itemsError) throw itemsError;
 
       // Send notification to field superintendents on this project
       try {
-        const { data: assignments } = await (supabase as any)
-          .from("project_assignments")
+        const { data: assignments } = await supabase
+          .from("project_assignments" as never)
           .select("user_id")
           .eq("project_id", params.project_id)
           .eq("project_role", "field_superintendent")
           .eq("status", "active");
 
         if (assignments && assignments.length > 0) {
-          const notifications = assignments.map((a: any) => ({
+          const notifications = (assignments as Record<string, unknown>[]).map((a) => ({
             user_id: a.user_id,
             title: `Completion submitted for Unit ${params.items[0]?.description || ""}`,
             message: `${subcontractor.name} submitted a completion bill for $${totalAmount.toFixed(2)}`,
@@ -324,8 +324,8 @@ export function useCompletionBillsForReview(status?: string) {
     queryFn: async () => {
       if (!user?.id) return [];
 
-      let query = (supabase as any)
-        .from("contractor_completion_bills")
+      let query = supabase
+        .from("contractor_completion_bills" as never)
         .select(`
           *,
           project_rooms(unit_number),
@@ -342,11 +342,11 @@ export function useCompletionBillsForReview(status?: string) {
       const { data, error } = await query;
       if (error) throw error;
 
-      return (data || []).map((bill: any) => ({
+      return (data || []).map((bill: Record<string, unknown>) => ({
         ...bill,
-        room_unit_number: bill.project_rooms?.unit_number || "",
-        project_name: bill.projects?.name || "",
-        contractor_name: bill.vendors?.name || "",
+        room_unit_number: (bill.project_rooms as Record<string, unknown>)?.unit_number || "",
+        project_name: (bill.projects as Record<string, unknown>)?.name || "",
+        contractor_name: (bill.vendors as Record<string, unknown>)?.name || "",
         items: bill.contractor_completion_bill_items || [],
       }));
     },

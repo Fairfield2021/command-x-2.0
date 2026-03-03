@@ -79,7 +79,7 @@ export default function EditApplication() {
   const [error, setError] = useState<string | null>(null);
   const [application, setApplication] = useState<ApplicationData | null>(null);
   const [customFields, setCustomFields] = useState<FormFieldType[]>([]);
-  const [customAnswers, setCustomAnswers] = useState<Record<string, any>>({});
+  const [customAnswers, setCustomAnswers] = useState<Record<string, unknown>>({});
   const [theme, setTheme] = useState<FormTheme>({});
   const [coreFields, setCoreFields] = useState<CoreFieldsConfig>(DEFAULT_CORE_FIELDS);
   const [uploadingFields, setUploadingFields] = useState<Set<string>>(new Set());
@@ -173,11 +173,11 @@ export default function EditApplication() {
         });
 
         // Pre-fill custom answers
-        const answers = (app.answers || {}) as Record<string, any>;
+        const answers = (app.answers || {}) as Record<string, unknown>;
         setCustomAnswers(answers);
 
         // Fetch form template if exists
-        const templateId = (app.job_postings as any)?.form_template_id;
+        const templateId = (app.job_postings as Record<string, unknown> | null)?.form_template_id as string | null | undefined;
         if (templateId) {
           const { data: template } = await supabase
             .from("application_form_templates")
@@ -223,7 +223,7 @@ export default function EditApplication() {
 
   const isAnyFileUploading = uploadingFields.size > 0;
 
-  const updateCustomAnswer = (fieldId: string, value: any) => {
+  const updateCustomAnswer = (fieldId: string, value: unknown) => {
     setCustomAnswers(prev => ({ ...prev, [fieldId]: value }));
   };
 
@@ -257,7 +257,7 @@ export default function EditApplication() {
         .insert([{
           application_id: application.id,
           revision_number: nextRevisionNumber,
-          previous_answers: application.answers as any,
+          previous_answers: application.answers as Record<string, unknown>,
           previous_applicant_data: {
             first_name: application.applicants.first_name,
             last_name: application.applicants.last_name,
@@ -265,7 +265,7 @@ export default function EditApplication() {
             phone: application.applicants.phone,
             home_zip: application.applicants.home_zip,
             photo_url: application.applicants.photo_url,
-          } as any,
+          } as Record<string, unknown>,
           changed_by: "applicant",
         }]);
 

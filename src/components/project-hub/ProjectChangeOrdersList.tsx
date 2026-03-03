@@ -62,7 +62,7 @@ export function ProjectChangeOrdersList({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-medium">{co.number}</span>
-                    <StatusBadge status={co.status as any} />
+                    <StatusBadge status={co.status as React.ComponentProps<typeof StatusBadge>["status"]} />
                     {co.change_type === 'deductive' && (
                       <span className="text-xs bg-destructive/20 text-destructive px-2 py-0.5 rounded">
                         Credit

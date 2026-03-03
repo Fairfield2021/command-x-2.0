@@ -38,7 +38,7 @@ export function BillPreviewDialog({ bill, open, onClose }: BillPreviewDialogProp
         
         <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <StatusBadge status={bill.status as any} />
+            <StatusBadge status={bill.status as React.ComponentProps<typeof StatusBadge>['status']} />
           </div>
 
           <div className="space-y-3">

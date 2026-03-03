@@ -43,7 +43,7 @@ export function POPreviewDialog({ po, open, onClose }: POPreviewDialogProps) {
         
         <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <StatusBadge status={po.status as any} />
+            <StatusBadge status={po.status as React.ComponentProps<typeof StatusBadge>['status']} />
           </div>
 
           <div className="space-y-3">

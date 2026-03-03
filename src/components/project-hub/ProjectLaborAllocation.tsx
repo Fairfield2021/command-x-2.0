@@ -58,9 +58,9 @@ export function ProjectLaborAllocation({ projectId }: ProjectLaborAllocationProp
 
       for (const entry of data || []) {
         if (!entry.personnel_id || !entry.personnel) continue;
-        const p = entry.personnel as any;
-        const rate = (entry as any).hourly_rate ?? p.hourly_rate ?? 0;
-        const isOverhead = (entry as any).is_overhead === true;
+        const p = entry.personnel as { id: string; first_name: string; last_name: string; hourly_rate: number | null; title: string | null };
+        const rate = entry.hourly_rate ?? p.hourly_rate ?? 0;
+        const isOverhead = entry.is_overhead === true;
         
         // Skip overhead entries for project allocation
         if (isOverhead) continue;

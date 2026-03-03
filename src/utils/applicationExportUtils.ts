@@ -15,13 +15,13 @@ interface ExportApplication {
 }
 
 // Helper to get field value from answers
-function getAnswerValue(answers: Record<string, any> | null, fieldId: string): any {
+function getAnswerValue(answers: Record<string, unknown> | null, fieldId: string): unknown {
   if (!answers) return null;
   return answers[fieldId];
 }
 
 // Format field value based on type
-function formatFieldValue(value: any, field: FormField): string {
+function formatFieldValue(value: unknown, field: FormField): string {
   if (value === null || value === undefined || value === "") return "";
   
   switch (field.type) {
