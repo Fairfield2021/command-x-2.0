@@ -42,7 +42,7 @@ export default function SubcontractorPOList() {
       {
         key: "status",
         header: "Status",
-        render: (po) => <StatusBadge status={po.status as any} />,
+        render: (po) => <StatusBadge status={po.status as string} />,
       },
       {
         key: "revised_total",
@@ -109,7 +109,7 @@ export default function SubcontractorPOList() {
                       <span className="font-medium text-foreground">{po.number}</span>
                       <p className="text-sm text-muted-foreground">{po.project_name}</p>
                     </div>
-                    <StatusBadge status={po.status as any} />
+                    <StatusBadge status={po.status as string} />
                   </div>
                   <div className="grid grid-cols-3 gap-2 text-sm">
                     <div>

@@ -48,7 +48,7 @@ export default function PortalProjectDetail() {
       const existing = entriesByWeek.get(weekStart) || { hours: 0, holidayHours: 0 };
       entriesByWeek.set(weekStart, {
         hours: existing.hours + entryHours,
-        holidayHours: existing.holidayHours + ((entry as any).is_holiday ? entryHours : 0)
+        holidayHours: existing.holidayHours + ((entry as Record<string, unknown>).is_holiday ? entryHours : 0)
       });
     });
     
@@ -102,7 +102,7 @@ export default function PortalProjectDetail() {
       sorted.forEach((entry) => {
         const entryRate = entry.hourly_rate ?? fallbackRate;
         const entryTotalHours = (entry.regular_hours || 0) + (entry.overtime_hours || 0);
-        const isHoliday = (entry as any).is_holiday === true;
+        const isHoliday = (entry as Record<string, unknown>).is_holiday === true;
         
         let entryRegular = 0;
         let entryOvertime = 0;

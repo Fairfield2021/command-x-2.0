@@ -125,7 +125,7 @@ export const usePersonnelPaymentsByProject = (projectId: string | undefined) => 
 
       if (allocError) throw allocError;
 
-      return allocations.map((item: any) => ({
+      return allocations.map((item) => ({
         payment: item.personnel_payments,
         allocated_amount: Number(item.amount),
       }));

@@ -7,7 +7,7 @@ import { Loader2, CheckCircle2, Clock, XCircle } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { useContractorCompletionBill } from "@/integrations/supabase/hooks/useContractorCompletions";
 
-const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; icon: any }> = {
+const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; icon: React.ComponentType<{ className?: string }> }> = {
   submitted: { label: "Submitted", variant: "outline", icon: Clock },
   field_verified: { label: "Field Verified", variant: "secondary", icon: CheckCircle2 },
   pm_approved: { label: "PM Approved", variant: "secondary", icon: CheckCircle2 },

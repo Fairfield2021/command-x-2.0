@@ -82,7 +82,7 @@ export default function SubcontractorNewBill() {
     }
   };
 
-  const updateLineItem = (id: string, field: keyof LineItem, value: any) => {
+  const updateLineItem = (id: string, field: keyof LineItem, value: string | number) => {
     setLineItems(
       lineItems.map((item) => {
         if (item.id !== id) return item;

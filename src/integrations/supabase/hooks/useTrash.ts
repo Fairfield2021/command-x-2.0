@@ -71,7 +71,7 @@ export const useDeletedItems = (entityType?: TrashEntityType, limit = 50) => {
       for (const [type, table] of Object.entries(tables)) {
         try {
           const { data, error } = await supabase
-            .from(table as keyof typeof TABLE_MAP extends never ? never : any)
+            .from(table as never)
             .select("*")
             .not("deleted_at", "is", null)
             .order("deleted_at", { ascending: false })
@@ -81,7 +81,7 @@ export const useDeletedItems = (entityType?: TrashEntityType, limit = 50) => {
             continue;
           }
 
-          data?.forEach((item: any) => {
+          data?.forEach((item: Record<string, unknown>) => {
             let identifier = item.number || item.name || item.personnel_number || item.id;
             let name = item.name;
             
@@ -123,7 +123,7 @@ export const useRestoreItem = () => {
       const table = TABLE_MAP[entityType];
 
       const { error } = await supabase
-        .from(table as any)
+        .from(table as never)
         .update({ deleted_at: null, deleted_by: null })
         .eq("id", id);
 
@@ -166,8 +166,8 @@ export const usePermanentlyDelete = () => {
           } else if (data?.deleted) {
             // ignore
           }
-        } catch (qbError: any) {
-          qbWarning = `QuickBooks sync error: ${qbError.message || "Unknown error"}`;
+        } catch (qbError: unknown) {
+          qbWarning = `QuickBooks sync error: ${qbError instanceof Error ? qbError.message : "Unknown error"}`;
         }
 
         // Also clean up the local QuickBooks mapping
@@ -195,8 +195,8 @@ export const usePermanentlyDelete = () => {
           } else if (data?.deactivated) {
             // ignore
           }
-        } catch (qbError: any) {
-          qbWarning = `QuickBooks sync error: ${qbError.message || "Unknown error"}`;
+        } catch (qbError: unknown) {
+          qbWarning = `QuickBooks sync error: ${qbError instanceof Error ? qbError.message : "Unknown error"}`;
         }
 
         // Also clean up the local QuickBooks mapping
@@ -211,7 +211,7 @@ export const usePermanentlyDelete = () => {
       }
 
       // Proceed with local permanent delete regardless of QB result
-      const { error } = await supabase.from(table as any).delete().eq("id", id);
+      const { error } = await supabase.from(table as never).delete().eq("id", id);
 
       if (error) throw error;
       return { entityType, id, qbWarning };

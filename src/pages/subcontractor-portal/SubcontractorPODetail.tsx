@@ -70,7 +70,7 @@ export default function SubcontractorPODetail() {
               <div>
                 <div className="flex items-center gap-3">
                   <h1 className="text-2xl font-bold">{po.number}</h1>
-                  <StatusBadge status={po.status as any} />
+                  <StatusBadge status={po.status as string} />
                 </div>
                 <p className="text-muted-foreground">{po.project_name}</p>
               </div>
@@ -124,7 +124,7 @@ export default function SubcontractorPODetail() {
               <CardContent>
                 {po.po_line_items && po.po_line_items.length > 0 ? (
                   <div className="space-y-3">
-                    {po.po_line_items.map((item: any) => (
+                    {po.po_line_items.map((item: Record<string, unknown> & { id: string; description: string; quantity: number; unit_cost: number; total: number }) => (
                       <div key={item.id} className="flex justify-between items-start border-b pb-2 last:border-0">
                         <div className="flex-1">
                           <p className="font-medium text-sm">{item.description}</p>
@@ -154,7 +154,7 @@ export default function SubcontractorPODetail() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {po.po_addendums.map((addendum: any) => (
+                  {po.po_addendums.map((addendum: Record<string, unknown> & { id: string; number?: string; description?: string; amount?: number; po_addendum_line_items?: Array<Record<string, unknown> & { id: string; description: string; total: number }> }) => (
                     <div key={addendum.id} className="border rounded-lg p-4">
                       <div className="flex justify-between items-start mb-2">
                         <div>
@@ -165,7 +165,7 @@ export default function SubcontractorPODetail() {
                       </div>
                       {addendum.po_addendum_line_items && addendum.po_addendum_line_items.length > 0 && (
                         <div className="mt-2 pt-2 border-t space-y-1">
-                          {addendum.po_addendum_line_items.map((item: any) => (
+                          {addendum.po_addendum_line_items.map((item) => (
                             <div key={item.id} className="flex justify-between text-sm">
                               <span className="text-muted-foreground">{item.description}</span>
                               <span>{formatCurrency(item.total)}</span>

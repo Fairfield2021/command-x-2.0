@@ -166,7 +166,7 @@ export function usePersonnelWithAssets(
         } | null;
 
         // Pay rate priority: assignment pay_rate > personnel pay_rate
-        const payRate = (a as any).pay_rate ?? personnel.pay_rate ?? null;
+        const payRate = (a as unknown as Record<string, unknown>).pay_rate ?? personnel.pay_rate ?? null;
 
         return {
           personnelId: a.personnel_id,
@@ -282,7 +282,7 @@ export function usePersonnelWithAssetsForExport(projectId: string | undefined, i
       // Build a map of personnel_id -> assets
       const personnelAssetsMap = new Map<string, (PersonnelAsset & { startAt?: string; accessCode?: string })[]>();
       
-      (assetAssignments || []).forEach((aa: any) => {
+      (assetAssignments || []).forEach((aa) => {
         if (aa.assigned_to_personnel_id && aa.assets) {
           const personnelId = aa.assigned_to_personnel_id;
           if (!personnelAssetsMap.has(personnelId)) {
@@ -330,7 +330,7 @@ export function usePersonnelWithAssetsForExport(projectId: string | undefined, i
         } | null;
 
         // Pay rate priority: assignment pay_rate > personnel pay_rate
-        const payRate = (a as any).pay_rate ?? personnel.pay_rate ?? null;
+        const payRate = (a as unknown as Record<string, unknown>).pay_rate ?? personnel.pay_rate ?? null;
 
         return {
           personnelId: a.personnel_id,

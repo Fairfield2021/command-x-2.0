@@ -53,8 +53,8 @@ export default function AcceptVendorInvitation() {
         toast.success("Account created successfully! Please check your email to verify.");
         navigate("/vendor/login");
       }
-    } catch (error: any) {
-      toast.error(error.message || "Failed to create account");
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "Failed to create account");
     } finally {
       setLoading(false);
     }

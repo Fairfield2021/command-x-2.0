@@ -88,18 +88,18 @@ export const PersonnelForm = ({ personnel, onSuccess, onCancel, defaultVendorId,
       zip: personnel?.zip || "",
       date_of_birth: personnel?.date_of_birth || "",
       hourly_rate: personnel?.hourly_rate || 0,
-      pay_rate: (personnel as any)?.pay_rate || personnel?.hourly_rate || 0,
-      bill_rate: (personnel as any)?.bill_rate || 0,
-      status: (personnel?.status as any) || "active",
+      pay_rate: personnel?.pay_rate || personnel?.hourly_rate || 0,
+      bill_rate: personnel?.bill_rate || 0,
+      status: (personnel?.status as PersonnelFormData['status']) || "active",
       ssn_last_four: personnel?.ssn_last_four || "",
-      work_authorization_type: (personnel?.work_authorization_type as any) || undefined,
+      work_authorization_type: (personnel?.work_authorization_type as PersonnelFormData['work_authorization_type']) || undefined,
       work_auth_expiry: personnel?.work_auth_expiry || "",
       i9_completed_at: personnel?.i9_completed_at || "",
-      everify_status: (personnel?.everify_status as any) || "pending",
+      everify_status: (personnel?.everify_status as PersonnelFormData['everify_status']) || "pending",
       everify_case_number: personnel?.everify_case_number || "",
       notes: personnel?.notes || "",
-      vendor_id: (personnel as any)?.vendor_id || defaultVendorId || "",
-      portal_required: (personnel as any)?.portal_required ?? true,
+      vendor_id: personnel?.vendor_id || defaultVendorId || "",
+      portal_required: personnel?.portal_required ?? true,
     },
   });
 
@@ -130,7 +130,7 @@ export const PersonnelForm = ({ personnel, onSuccess, onCancel, defaultVendorId,
       });
       onSuccess?.();
     } else {
-      const result = await addMutation.mutateAsync(formData as any);
+      const result = await addMutation.mutateAsync(formData as Parameters<typeof addMutation.mutateAsync>[0]);
       onSuccess?.(result?.id);
     }
   };
@@ -241,7 +241,7 @@ export const PersonnelForm = ({ personnel, onSuccess, onCancel, defaultVendorId,
                 <Select
                   value={watch("work_authorization_type")}
                   onValueChange={(value) =>
-                    setValue("work_authorization_type", value as any)
+                    setValue("work_authorization_type", value as PersonnelFormData['work_authorization_type'])
                   }
                 >
                   <SelectTrigger>
@@ -288,7 +288,7 @@ export const PersonnelForm = ({ personnel, onSuccess, onCancel, defaultVendorId,
                 <Label htmlFor="everify_status">E-Verify Status</Label>
                 <Select
                   value={watch("everify_status")}
-                  onValueChange={(value) => setValue("everify_status", value as any)}
+                  onValueChange={(value) => setValue("everify_status", value as PersonnelFormData['everify_status'])}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -322,7 +322,7 @@ export const PersonnelForm = ({ personnel, onSuccess, onCancel, defaultVendorId,
                 <Label htmlFor="status">Status</Label>
                 <Select
                   value={watch("status")}
-                  onValueChange={(value) => setValue("status", value as any)}
+                  onValueChange={(value) => setValue("status", value as PersonnelFormData['status'])}
                 >
                   <SelectTrigger>
                     <SelectValue />

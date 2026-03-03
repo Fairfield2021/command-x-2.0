@@ -228,7 +228,7 @@ export const CategoryDocumentUpload = ({
   };
 
   if (existingDocument) {
-    const verification = (existingDocument as any).verification as VerificationResult | undefined;
+    const verification = existingDocument.verification;
     
     return (
       <Card className={getVerificationBorderClass(verification)}>

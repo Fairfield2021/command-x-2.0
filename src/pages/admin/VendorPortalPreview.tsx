@@ -103,7 +103,7 @@ export default function VendorPortalPreview() {
         total: bill.total,
         bill_date: bill.bill_date,
         submitted_at: bill.submitted_at,
-        po_number: (bill.purchase_orders as any)?.number || "N/A"
+        po_number: (bill.purchase_orders as Record<string, unknown> | null)?.number as string || "N/A"
       })) as BillData[];
     },
     enabled: !!selectedVendorId,
@@ -171,7 +171,7 @@ export default function VendorPortalPreview() {
       {
         key: "status",
         header: "Status",
-        render: (po) => <StatusBadge status={po.status as any} />,
+        render: (po) => <StatusBadge status={po.status as string} />,
       },
       {
         key: "total",
@@ -202,7 +202,7 @@ export default function VendorPortalPreview() {
       {
         key: "status",
         header: "Status",
-        render: (bill) => <StatusBadge status={bill.status as any} />,
+        render: (bill) => <StatusBadge status={bill.status as string} />,
       },
       {
         key: "total",

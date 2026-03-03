@@ -296,7 +296,7 @@ export function PersonnelTable({
             {person.first_name} {person.last_name}
           </Link>
           <ComplianceBadge personnel={person} compact />
-          {(person as any).portal_required === false && (
+          {person.portal_required === false && (
             <Badge variant="outline" className="gap-1 text-xs">
               <UserX className="h-3 w-3" />
               Temp

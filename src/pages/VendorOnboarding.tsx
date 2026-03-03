@@ -92,7 +92,7 @@ export default function VendorOnboarding() {
     setInitialized(true);
   }
 
-  const updateField = (field: keyof VendorOnboardingFormData, value: any) => {
+  const updateField = (field: keyof VendorOnboardingFormData, value: VendorOnboardingFormData[keyof VendorOnboardingFormData]) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 

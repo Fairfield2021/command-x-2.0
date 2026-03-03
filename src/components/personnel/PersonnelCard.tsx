@@ -33,7 +33,7 @@ export const PersonnelCard = ({
   const { data: vendors } = useVendors();
   
   // Find the vendor for this personnel
-  const vendor = vendors?.find((v) => v.id === (personnel as any).vendor_id);
+  const vendor = vendors?.find((v) => v.id === personnel.vendor_id);
 
   const handleClick = () => {
     if (selectionMode && onSelect) {

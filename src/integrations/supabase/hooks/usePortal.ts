@@ -495,7 +495,7 @@ export function useSendPersonnelNotification() {
           message: notification.message,
           notification_type: notification.notification_type,
           metadata: (notification.metadata || {}) as Record<string, unknown>,
-        }] as any)
+        }] as never)
         .select()
         .single();
       

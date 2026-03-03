@@ -45,7 +45,7 @@ export const useProjectSubledgerTotals = (
       let actualCosts = 0;
 
       for (const line of data || []) {
-        const txn = line.accounting_transactions as any;
+        const txn = line.accounting_transactions as Record<string, unknown> | null;
         if (!txn) continue;
 
         if (txn.transaction_type === "invoice") {

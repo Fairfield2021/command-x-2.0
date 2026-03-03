@@ -4,7 +4,7 @@ import { Loader2 } from "lucide-react";
 
 interface PullToRefreshWrapperProps {
   children: ReactNode;
-  onRefresh: () => void | Promise<any>;
+  onRefresh: () => void | Promise<unknown>;
   isRefreshing?: boolean;
 }
 

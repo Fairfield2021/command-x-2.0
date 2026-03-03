@@ -44,8 +44,8 @@ export const InvitePersonnelDialog = ({
       setFirstName("");
       setLastName("");
       onOpenChange(false);
-    } catch (error: any) {
-      toast.error(error.message || "Failed to send invitation");
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "Failed to send invitation");
     }
   };
 

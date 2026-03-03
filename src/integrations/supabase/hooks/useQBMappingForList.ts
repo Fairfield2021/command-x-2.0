@@ -46,7 +46,7 @@ export function useQBMappingForList(
     enabled: isConnected && entityIds.length > 0,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from(table as any)
+        .from(table as never)
         .select("*")
         .in(localCol, entityIds);
 

@@ -34,7 +34,7 @@ export interface TMTicketData {
   approval_date?: string | null;
   work_date: string;
   created_at: string;
-  [key: string]: any; // allow extra fields from TMTicketWithLineItems
+  [key: string]: unknown; // allow extra fields from TMTicketWithLineItems
 }
 
 interface TMTicketCardProps {
@@ -112,7 +112,7 @@ export function TMTicketCard({ ticket, currentUserId, projectId, contractId, cus
     const val = parseFloat(materialsCostValue) || 0;
     const { error } = await supabase
       .from("tm_tickets")
-      .update({ materials_cost: val } as any)
+      .update({ materials_cost: val } as Record<string, unknown>)
       .eq("id", ticket.id);
     if (error) {
       toast.error("Failed to update materials cost");

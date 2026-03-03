@@ -97,8 +97,8 @@ export const PendingAttachmentsUpload = ({
         onFilesChange([...pendingFiles, ...newPendingFiles]);
         toast.success(`${newPendingFiles.length} file(s) added`);
       }
-    } catch (error: any) {
-      toast.error(error.message || "Failed to upload files");
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "Failed to upload files");
     } finally {
       setUploading(false);
       if (fileInputRef.current) {
@@ -119,7 +119,7 @@ export const PendingAttachmentsUpload = ({
 
       onFilesChange(pendingFiles.filter(f => f.id !== fileId));
       toast.success("File removed");
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error("Failed to remove file");
     }
   };

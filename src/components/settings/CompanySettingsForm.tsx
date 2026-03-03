@@ -20,7 +20,7 @@ export const CompanySettingsForm = () => {
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
 
-  const { register, handleSubmit, formState: { errors } } = useForm<any>({
+  const { register, handleSubmit, formState: { errors } } = useForm<Record<string, unknown>>({
     values: settings || {},
   });
 
@@ -36,7 +36,7 @@ export const CompanySettingsForm = () => {
     }
   };
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: Record<string, unknown>) => {
     try {
       let logoUrl = settings?.logo_url;
 
@@ -291,7 +291,7 @@ export const CompanySettingsForm = () => {
                   type="date"
                   value={settings?.accounting_cutover_date || ""}
                   onChange={(e) => {
-                    updateSettings.mutate({ accounting_cutover_date: e.target.value || null } as any);
+                    updateSettings.mutate({ accounting_cutover_date: e.target.value || null } as Record<string, unknown>);
                   }}
                 />
                 <p className="text-sm text-muted-foreground">

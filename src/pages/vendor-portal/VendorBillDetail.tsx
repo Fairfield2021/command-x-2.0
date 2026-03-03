@@ -64,7 +64,7 @@ export default function VendorBillDetail() {
                 <StatusBadge status={bill.status} />
               </div>
               <p className="text-muted-foreground">
-                PO: {(bill.purchase_orders as any)?.number} - {(bill.purchase_orders as any)?.project_name}
+                PO: {(bill.purchase_orders as Record<string, unknown> | null)?.number as string} - {(bill.purchase_orders as Record<string, unknown> | null)?.project_name as string}
               </p>
             </div>
           </div>
@@ -120,7 +120,7 @@ export default function VendorBillDetail() {
                     </tr>
                   </thead>
                   <tbody>
-                    {bill.vendor_bill_line_items?.map((item: any) => (
+                    {bill.vendor_bill_line_items?.map((item) => (
                       <tr key={item.id} className="border-b">
                         <td className="py-2">{item.description}</td>
                         <td className="text-right py-2">{item.quantity}</td>

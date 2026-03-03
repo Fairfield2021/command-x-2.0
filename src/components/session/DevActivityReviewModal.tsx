@@ -25,7 +25,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useDevActivities, DevActivityInput } from "@/hooks/useDevActivities";
 import { getActivityTypeConfig, ACTIVITY_TYPES } from "./devActivityUtils";
 
-interface ExtractedActivity {
+export interface ExtractedActivity {
   title: string;
   description: string;
   activity_type: string;

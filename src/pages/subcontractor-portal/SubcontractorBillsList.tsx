@@ -47,7 +47,7 @@ export default function SubcontractorBillsList() {
       {
         key: "status",
         header: "Status",
-        render: (bill) => <StatusBadge status={bill.status as any} />,
+        render: (bill) => <StatusBadge status={bill.status as string} />,
       },
       {
         key: "total",
@@ -120,7 +120,7 @@ export default function SubcontractorBillsList() {
                       <span className="font-medium text-foreground">{bill.number}</span>
                       <p className="text-sm text-muted-foreground">PO: {bill.po_number}</p>
                     </div>
-                    <StatusBadge status={bill.status as any} />
+                    <StatusBadge status={bill.status as string} />
                   </div>
                   <div className="grid grid-cols-3 gap-2 text-sm">
                     <div>

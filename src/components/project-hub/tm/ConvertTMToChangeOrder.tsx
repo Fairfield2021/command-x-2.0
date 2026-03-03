@@ -66,7 +66,7 @@ export function ConvertTMToChangeOrder({
       if (coErr) throw coErr;
 
       // 3. Insert line items
-      const lineItems: any[] = [
+      const lineItems: { change_order_id: string; description: string; quantity: number; unit_price: number; total: number; sort_order: number }[] = [
         {
           change_order_id: co.id,
           description: `Labor - ${ticket.description || ticket.ticket_number}`,
@@ -94,7 +94,7 @@ export function ConvertTMToChangeOrder({
       // 4. Update tm_ticket status
       const { error: tmErr } = await supabase
         .from("tm_tickets")
-        .update({ status: "converted_to_co", change_order_id: co.id } as any)
+        .update({ status: "converted_to_co", change_order_id: co.id } as Record<string, unknown>)
         .eq("id", ticket.id);
       if (tmErr) throw tmErr;
 
@@ -107,8 +107,8 @@ export function ConvertTMToChangeOrder({
       toast.success(`${ticket.ticket_number} converted to ${co.number}`);
       onOpenChange(false);
       onConvert();
-    } catch (err: any) {
-      toast.error(err.message || "Failed to convert T&M ticket");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to convert T&M ticket");
     } finally {
       setIsConverting(false);
     }

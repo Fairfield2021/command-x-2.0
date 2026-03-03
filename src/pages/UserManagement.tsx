@@ -90,10 +90,10 @@ export default function UserManagement() {
   const [invitations, setInvitations] = useState<PendingInvitation[]>([]);
   const [loadingInvitations, setLoadingInvitations] = useState(false);
   const [processingInviteId, setProcessingInviteId] = useState<string | null>(null);
-  const [activityLogs, setActivityLogs] = useState<any[]>([]);
+  const [activityLogs, setActivityLogs] = useState<Record<string, unknown>[]>([]);
   const [loadingActivityLogs, setLoadingActivityLogs] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [notificationPreferences, setNotificationPreferences] = useState<any>(null);
+  const [notificationPreferences, setNotificationPreferences] = useState<Record<string, unknown> | null>(null);
   const [activityPage, setActivityPage] = useState(1);
   const [activityTotal, setActivityTotal] = useState(0);
   const activityPerPage = 50;
@@ -177,7 +177,7 @@ export default function UserManagement() {
           table: 'invitation_activity_log'
         },
         (payload) => {
-          const newLog = payload.new as any;
+          const newLog = payload.new as Record<string, unknown>;
           
           // Only show notifications for important events from other users
           if (newLog.performed_by !== currentUserId) {
@@ -344,10 +344,10 @@ export default function UserManagement() {
 
       // Refresh user list
       await fetchUsers();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Error updating role",
-        description: error.message || "Failed to update user role. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to update user role. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -373,10 +373,10 @@ export default function UserManagement() {
       // Refresh lists
       await fetchUsers();
       await fetchPersonnelOptions();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Error removing user",
-        description: error.message || "Failed to remove user. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to remove user. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -493,10 +493,10 @@ export default function UserManagement() {
         await fetchInvitations();
         await fetchActivityLogs();
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: createManually ? "Error creating user" : "Error sending invitation",
-        description: error.message || "Failed to complete. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to complete. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -596,7 +596,7 @@ export default function UserManagement() {
 
       if (error) throw error;
       setActivityLogs(data || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Error",
         description: "Failed to load activity logs",
@@ -659,10 +659,10 @@ export default function UserManagement() {
       });
       
       await fetchActivityLogs();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Error resending invitation",
-        description: error.message || "Failed to resend invitation.",
+        description: error instanceof Error ? error.message : "Failed to resend invitation.",
         variant: "destructive",
       });
     } finally {
@@ -690,10 +690,10 @@ export default function UserManagement() {
 
       await fetchInvitations();
       await fetchActivityLogs();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Error cancelling invitation",
-        description: error.message || "Failed to cancel invitation.",
+        description: error instanceof Error ? error.message : "Failed to cancel invitation.",
         variant: "destructive",
       });
     } finally {
@@ -1381,10 +1381,10 @@ export default function UserManagement() {
                           title: "Export successful",
                           description: "Activity logs exported as CSV",
                         });
-                      } catch (error: any) {
+                      } catch (error: unknown) {
                         toast({
                           title: "Export failed",
-                          description: error.message,
+                          description: error instanceof Error ? error.message : "Export failed",
                           variant: "destructive",
                         });
                       }
@@ -1405,10 +1405,10 @@ export default function UserManagement() {
                           title: "Export successful",
                           description: "Activity logs exported as JSON",
                         });
-                      } catch (error: any) {
+                      } catch (error: unknown) {
                         toast({
                           title: "Export failed",
-                          description: error.message,
+                          description: error instanceof Error ? error.message : "Export failed",
                           variant: "destructive",
                         });
                       }

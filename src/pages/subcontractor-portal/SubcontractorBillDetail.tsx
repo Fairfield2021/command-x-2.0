@@ -43,7 +43,7 @@ export default function SubcontractorBillDetail() {
     );
   }
 
-  const poInfo = bill.purchase_orders as any;
+  const poInfo = bill.purchase_orders as Record<string, unknown> | null;
 
   return (
     <>
@@ -62,7 +62,7 @@ export default function SubcontractorBillDetail() {
             <div>
               <div className="flex items-center gap-3">
                 <h1 className="text-2xl font-bold">{bill.number}</h1>
-                <StatusBadge status={bill.status as any} />
+                <StatusBadge status={bill.status as string} />
               </div>
               <p className="text-muted-foreground">
                 PO: {poInfo?.number} • {poInfo?.project_name}
@@ -120,7 +120,7 @@ export default function SubcontractorBillDetail() {
                 {bill.vendor_bill_line_items &&
                 bill.vendor_bill_line_items.length > 0 ? (
                   <div className="space-y-3">
-                    {bill.vendor_bill_line_items.map((item: any) => (
+                    {bill.vendor_bill_line_items.map((item) => (
                       <div
                         key={item.id}
                         className="flex justify-between items-start border-b pb-2 last:border-0"
@@ -162,7 +162,7 @@ export default function SubcontractorBillDetail() {
                 {bill.vendor_bill_payments &&
                 bill.vendor_bill_payments.length > 0 ? (
                   <div className="space-y-3">
-                    {bill.vendor_bill_payments.map((payment: any) => (
+                    {bill.vendor_bill_payments.map((payment) => (
                       <div
                         key={payment.id}
                         className="flex justify-between items-start border-b pb-2 last:border-0"

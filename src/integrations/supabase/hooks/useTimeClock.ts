@@ -265,7 +265,7 @@ export function useClockIn() {
           overtime_hours: 0,
           is_on_lunch: false,
           lunch_duration_minutes: 0,
-        } as any])
+        } as never])
         .select()
         .single();
 

@@ -55,7 +55,7 @@ export function Generate1099Dialog({
   const [taxYear, setTaxYear] = useState(currentYear - 1);
   const [isLoading, setIsLoading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [companyInfo, setCompanyInfo] = useState<any>(null);
+  const [companyInfo, setCompanyInfo] = useState<Generate1099Options['company'] | null>(null);
   const [paymentSummary, setPaymentSummary] = useState<PaymentSummary | null>(null);
 
   const availableYears = Array.from({ length: 5 }, (_, i) => currentYear - i);

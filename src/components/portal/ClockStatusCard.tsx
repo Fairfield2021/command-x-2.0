@@ -66,7 +66,7 @@ export function ClockStatusCard({
             project_id: activeEntry.project_id,
             is_on_lunch: activeEntry.is_on_lunch ?? false,
             clock_blocked_until:
-              (activeEntry as any).clock_blocked_until ?? null,
+              (activeEntry as unknown as Record<string, unknown>).clock_blocked_until ?? null,
           }
         : null,
       projectGeofence
@@ -89,7 +89,7 @@ export function ClockStatusCard({
     !!activeEntry?.lunch_end_at;
 
   // Check if clock-in is blocked (auto-clocked-out user)
-  const clockBlockedUntil = (activeEntry as any)?.clock_blocked_until;
+  const clockBlockedUntil = (activeEntry as unknown as Record<string, unknown>)?.clock_blocked_until;
   const isBlocked =
     clockBlockedUntil && new Date(clockBlockedUntil) > new Date();
 

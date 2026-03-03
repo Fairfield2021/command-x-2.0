@@ -247,7 +247,7 @@ export function useBulkAssignPersonnelToProject() {
     }) => {
       const { data: { user } } = await supabase.auth.getUser();
       
-      const assignedPersonnelData: any[] = [];
+      const assignedPersonnelData: Record<string, unknown>[] = [];
       
       // For each personnel, check if they already have an active assignment
       // If not, create a new one (preserving old ended assignments for history)

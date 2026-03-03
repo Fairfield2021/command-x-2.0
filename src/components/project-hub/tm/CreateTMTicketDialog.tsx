@@ -42,7 +42,7 @@ export function CreateTMTicketDialog({ projectId, contractId, open, onOpenChange
           hourly_rate: parseFloat(form.hourlyRate),
           cap_hours: parseInt(form.capHours) || 10,
           materials_cost: parseFloat(form.materialsCost) || 0,
-          status: "open" as any,
+          status: "open",
           ticket_number: "",
           work_date: new Date().toISOString().split("T")[0],
           customer_id: "",
@@ -60,8 +60,8 @@ export function CreateTMTicketDialog({ projectId, contractId, open, onOpenChange
       await queryClient.invalidateQueries({ queryKey: ["tm-tickets"] });
       resetForm();
       onOpenChange(false);
-    } catch (err: any) {
-      toast({ title: "Error creating ticket", description: err.message, variant: "destructive" });
+    } catch (err: unknown) {
+      toast({ title: "Error creating ticket", description: err instanceof Error ? err.message : "Unknown error", variant: "destructive" });
     } finally {
       setSubmitting(false);
     }

@@ -153,9 +153,9 @@ export function usePOBackCharges(purchaseOrderId: string | undefined) {
     queryFn: async () => {
       if (!purchaseOrderId) return [];
       
-      // Using any type since po_back_charges is a newly created table
-      const { data, error } = await (supabase as any)
-        .from("po_back_charges")
+      // Using type assertion since po_back_charges is a newly created table
+      const { data, error } = await supabase
+        .from("po_back_charges" as never)
         .select("*")
         .eq("purchase_order_id", purchaseOrderId)
         .order("applied_date", { ascending: false });
@@ -176,9 +176,9 @@ export function useSubcontractorBackCharges() {
     queryFn: async () => {
       if (!subcontractor?.id) return [];
       
-      // Using any type since po_back_charges is a newly created table
-      const { data, error } = await (supabase as any)
-        .from("po_back_charges")
+      // Using type assertion since po_back_charges is a newly created table
+      const { data, error } = await supabase
+        .from("po_back_charges" as never)
         .select(`
           *,
           purchase_orders(number, project_name)
@@ -225,7 +225,7 @@ export function useSubcontractorBills() {
       
       return (data || []).map(bill => ({
         ...bill,
-        po_number: (bill.purchase_orders as any)?.number || '',
+        po_number: (bill.purchase_orders as Record<string, unknown> | null)?.number as string || '',
       })) as SubcontractorBill[];
     },
     enabled: !!subcontractor?.id,
@@ -300,7 +300,7 @@ export function useCreateSubcontractorBill() {
           total: subtotal,
           status: "open",
           number: "", // Auto-generated
-        } as any)
+        } as never)
         .select()
         .single();
       

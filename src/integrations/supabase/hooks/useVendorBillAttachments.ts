@@ -100,8 +100,8 @@ export const syncAttachmentToQuickBooks = async (
         error: response.data?.error || response.data?.message || "Sync failed" 
       };
     }
-  } catch (err: any) {
-    return { success: false, error: err.message || "Sync failed" };
+  } catch (err: unknown) {
+    return { success: false, error: err instanceof Error ? err.message :"Sync failed" };
   }
 };
 
@@ -230,8 +230,8 @@ const deleteAttachmentFromQuickBooks = async (
     } else {
       return { success: false, error: response.data?.error || "Delete failed" };
     }
-  } catch (err: any) {
-    return { success: false, error: err.message || "Delete failed" };
+  } catch (err: unknown) {
+    return { success: false, error: err instanceof Error ? err.message :"Delete failed" };
   }
 };
 

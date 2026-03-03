@@ -34,9 +34,9 @@ export function useProjectTimeEntryCosts(projectId: string | undefined, overtime
       
       for (const entry of entries || []) {
         // Use snapshotted rate from entry, fallback to personnel's current rate
-        const rate = entry.hourly_rate || (entry.personnel as any)?.hourly_rate || 0;
+        const rate = entry.hourly_rate || (entry.personnel as Record<string, unknown> | null)?.hourly_rate as number || 0;
         const entryHours = entry.hours || 0;
-        const isHoliday = (entry as any).is_holiday === true;
+        const isHoliday = (entry as unknown as Record<string, unknown>).is_holiday === true;
         
         totalHours += entryHours;
         
@@ -164,21 +164,22 @@ export function useWeeklyPersonnelSummary(projectId: string | undefined, weekSta
       for (const entry of entries || []) {
         if (!entry.personnel_id || !entry.personnel) continue;
         
-        const personnel = entry.personnel as any;
+        const personnel = entry.personnel as Record<string, unknown>;
+        const entryRecord = entry as unknown as Record<string, unknown>;
         const existing = personnelMap.get(entry.personnel_id);
-        const isHoliday = (entry as any).is_holiday === true;
+        const isHoliday = entryRecord.is_holiday === true;
         const entryHours = entry.hours || 0;
-        
+
         // Use entry's hourly_rate if available (snapshotted), otherwise use personnel's current rate
-        const entryRate = (entry as any).hourly_rate ?? personnel.hourly_rate ?? 0;
-        
+        const entryRate = (entryRecord.hourly_rate as number) ?? (personnel.hourly_rate as number) ?? 0;
+
         if (existing) {
           existing.total_hours += entryHours;
           if (isHoliday) {
             existing.holiday_hours += entryHours;
           }
           // If this entry has a snapshotted rate, prefer it
-          if ((entry as any).hourly_rate !== null && existing.rateSource !== 'entry') {
+          if (entryRecord.hourly_rate !== null && existing.rateSource !== 'entry') {
             existing.hourly_rate = entryRate;
             existing.rateSource = 'entry';
           }
@@ -195,7 +196,7 @@ export function useWeeklyPersonnelSummary(projectId: string | undefined, weekSta
             overtime_amount: 0,
             holiday_amount: 0,
             total_amount: 0,
-            rateSource: (entry as any).hourly_rate !== null ? 'entry' : 'personnel',
+            rateSource: entryRecord.hourly_rate !== null ? 'entry' : 'personnel',
           });
         }
       }

@@ -132,7 +132,7 @@ export default function Settings() {
     }
   };
 
-  const isElectron = typeof window !== "undefined" && (window as any).electronAPI?.isElectron;
+  const isElectron = typeof window !== "undefined" && (window as unknown as Record<string, unknown>).electronAPI && ((window as unknown as Record<string, Record<string, unknown>>).electronAPI?.isElectron);
 
   return (
     <>

@@ -146,8 +146,8 @@ export function LinkLineItemsToSOV({
 
       toast.success(`${updates.length} SOV link(s) saved`);
       onSave?.();
-    } catch (err: any) {
-      toast.error(`Failed to save SOV links: ${err.message}`);
+    } catch (err: unknown) {
+      toast.error(`Failed to save SOV links: ${err instanceof Error ? err.message : "Unknown error"}`);
     } finally {
       setIsSaving(false);
     }

@@ -22,8 +22,8 @@ interface EntityMergeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   entityType: EntityType;
-  sourceEntity: Record<string, any>;
-  targetEntity: Record<string, any>;
+  sourceEntity: Record<string, unknown>;
+  targetEntity: Record<string, unknown>;
   onMergeComplete?: () => void;
 }
 
@@ -141,20 +141,20 @@ export function EntityMergeDialog({
     }
   };
 
-  const getDisplayValue = (entity: Record<string, any>, field: string): string => {
+  const getDisplayValue = (entity: Record<string, unknown>, field: string): string => {
     const value = entity[field];
     if (value === null || value === undefined) return "(empty)";
     if (typeof value === "boolean") return value ? "Yes" : "No";
-    if (field === "ssn_last_four" && value) return `****${value}`;
-    if (field === "tax_id" && value) return value.replace(/^(.{4})/, "****");
+    if (field === "ssn_last_four" && value) return `****${String(value)}`;
+    if (field === "tax_id" && value) return String(value).replace(/^(.{4})/, "****");
     return String(value);
   };
 
-  const getEntityDisplayName = (entity: Record<string, any>): string => {
+  const getEntityDisplayName = (entity: Record<string, unknown>): string => {
     if (entityType === "personnel") {
       return `${entity.first_name || ""} ${entity.last_name || ""}`.trim() || "Unnamed";
     }
-    return entity.name || "Unnamed";
+    return (entity.name as string) || "Unnamed";
   };
 
   const canProceed = !hasSensitiveFieldChanges() || sensitiveConfirmed;

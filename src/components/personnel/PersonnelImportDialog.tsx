@@ -103,7 +103,7 @@ export const PersonnelImportDialog = ({ open, onOpenChange }: PersonnelImportDia
         const cleanBatch = batch.map(({ rowNumber, errors, ...rest }) => rest);
 
         try {
-          await bulkAdd.mutateAsync(cleanBatch as any);
+          await bulkAdd.mutateAsync(cleanBatch as Parameters<typeof bulkAdd.mutateAsync>[0]);
           successCount += batch.length;
         } catch (error) {
           failedCount += batch.length;

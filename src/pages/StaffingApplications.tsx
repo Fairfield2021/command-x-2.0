@@ -352,7 +352,7 @@ export default function StaffingApplications() {
     toast.success("Application link copied to clipboard");
   };
 
-  const handleEditPosting = (posting: any) => {
+  const handleEditPosting = (posting: Record<string, unknown> & { id: string; form_template_id?: string | null }) => {
     setEditingPosting({
       id: posting.id,
       formTemplateId: posting.form_template_id || "",
@@ -360,7 +360,7 @@ export default function StaffingApplications() {
     setShowEditPostingDialog(true);
   };
 
-  const handleEditTaskOrder = (posting: any) => {
+  const handleEditTaskOrder = (posting: Record<string, unknown> & { project_task_orders?: TaskOrder | null }) => {
     const taskOrder = posting.project_task_orders;
     if (!taskOrder) return;
     setEditingTaskOrder(taskOrder);

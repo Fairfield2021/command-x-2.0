@@ -173,7 +173,7 @@ export default function Reimbursements() {
                           onClick={() => navigate(`/personnel/${reimbursement.personnel_id}`)}
                           className="hover:underline text-primary text-left"
                         >
-                          {(reimbursement as any).personnel?.first_name} {(reimbursement as any).personnel?.last_name}
+                          {(reimbursement as Record<string, unknown> & { personnel?: { first_name?: string; last_name?: string } }).personnel?.first_name} {(reimbursement as Record<string, unknown> & { personnel?: { first_name?: string; last_name?: string } }).personnel?.last_name}
                         </button>
                       </TableCell>
                       <TableCell className="max-w-[200px] truncate">

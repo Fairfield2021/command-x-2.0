@@ -369,8 +369,8 @@ export const useAddTimeEntry = () => {
       queryClient.invalidateQueries({ queryKey: ["time-entries"] });
       toast.success("Time entry saved successfully");
     },
-    onError: (error: any) => {
-      if (error?.code === '23505') {
+    onError: (error: unknown) => {
+      if (error instanceof Object && 'code' in error && error.code === '23505') {
         toast.error("A time entry already exists for this date and project");
       } else {
         toast.error("Failed to save time entry");
@@ -582,8 +582,8 @@ export const useBulkAddTimeEntries = () => {
       queryClient.invalidateQueries({ queryKey: ["all-time-entries"] });
       toast.success(`${data.length} time entries saved successfully`);
     },
-    onError: (error: any) => {
-      toast.error(error.message || "Failed to save time entries");
+    onError: (error: unknown) => {
+      toast.error(error instanceof Error ? error.message : "Failed to save time entries");
     },
   });
 };
@@ -644,8 +644,8 @@ export const useBulkAddPersonnelTimeEntries = () => {
       queryClient.invalidateQueries({ queryKey: ["all-time-entries"] });
       toast.success(`Time entries saved for ${data.length} personnel`);
     },
-    onError: (error: any) => {
-      toast.error(error.message || "Failed to save time entries");
+    onError: (error: unknown) => {
+      toast.error(error instanceof Error ? error.message : "Failed to save time entries");
     },
   });
 };

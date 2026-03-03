@@ -34,7 +34,7 @@ import {
 import { DateRange } from "react-day-picker";
 import { useDevActivities, DevActivity } from "@/hooks/useDevActivities";
 import { DevActivityUpload } from "./DevActivityUpload";
-import { DevActivityReviewModal } from "./DevActivityReviewModal";
+import { DevActivityReviewModal, ExtractedActivity } from "./DevActivityReviewModal";
 import { DevActivityManualForm } from "./DevActivityManualForm";
 import { DevActivityStats } from "./DevActivityStats";
 import { BulkEditModal } from "./BulkEditModal";
@@ -53,7 +53,7 @@ export function DevActivityDashboard({ dateRange, targetUserId }: DevActivityDas
   const [showManualForm, setShowManualForm] = useState(false);
   const [editActivity, setEditActivity] = useState<DevActivity | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [extractedActivities, setExtractedActivities] = useState<any[]>([]);
+  const [extractedActivities, setExtractedActivities] = useState<ExtractedActivity[]>([]);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
@@ -93,7 +93,7 @@ export function DevActivityDashboard({ dateRange, targetUserId }: DevActivityDas
     return acc;
   }, {} as Record<string, DevActivity[]>);
 
-  const handleAnalysisComplete = (activities: any[]) => {
+  const handleAnalysisComplete = (activities: ExtractedActivity[]) => {
     setExtractedActivities(activities);
     setShowUpload(false);
     setShowReviewModal(true);

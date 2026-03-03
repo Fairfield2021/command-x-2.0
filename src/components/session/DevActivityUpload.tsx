@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useAnalyzeScreenshot } from "@/hooks/useDevActivities";
+import type { ExtractedActivity } from "./DevActivityReviewModal";
 
 interface DevActivityUploadProps {
-  onAnalysisComplete: (activities: any[]) => void;
+  onAnalysisComplete: (activities: ExtractedActivity[]) => void;
   onManualEntry: () => void;
 }
 

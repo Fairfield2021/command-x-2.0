@@ -111,8 +111,8 @@ export function useAssignToProject() {
       queryClient.invalidateQueries({ queryKey: ["all-project-assignments"] });
       toast.success("User assigned to project successfully");
     },
-    onError: (error: any) => {
-      if (error.code === '23505') {
+    onError: (error: unknown) => {
+      if (error instanceof Object && 'code' in error && error.code === '23505') {
         toast.error("User is already assigned to this project");
       } else {
         toast.error("Failed to assign user to project");

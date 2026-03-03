@@ -419,7 +419,7 @@ export const useSubmitApplication = () => {
             home_zip: applicantData.home_zip || null,
             photo_url: applicantData.photo_url || null,
             status: 'new' as const,
-          } as any)
+          } as never)
           .select("id")
           .single();
 
@@ -464,7 +464,7 @@ export const useSubmitApplication = () => {
           sms_consent_at: smsConsent ? new Date().toISOString() : null,
           sms_consent_method: smsConsent ? 'web_form' : null,
           sms_consent_text_version: smsConsent ? (smsConsentTextVersion || 'v1.0') : null,
-        } as any)
+        } as never)
         .select()
         .single();
 
@@ -616,7 +616,7 @@ export const useApproveApplicationWithType = () => {
           // Update existing personnel with applicant_id if not set
           await supabase
             .from("personnel")
-            .update({ applicant_id: applicant.id } as any)
+            .update({ applicant_id: applicant.id } as never)
             .eq("id", existingPersonnel.id);
           createdPersonnel = existingPersonnel;
         } else {
@@ -630,7 +630,7 @@ export const useApproveApplicationWithType = () => {
               phone: applicant.phone,
               applicant_id: applicant.id,
               status: 'active' as const,
-            } as any)
+            } as never)
             .select()
             .single();
 
@@ -683,7 +683,7 @@ export const useApproveApplicationWithType = () => {
           if (createdPersonnel && createdVendor) {
             await supabase
               .from("personnel")
-              .update({ vendor_id: createdVendor.id } as any)
+              .update({ vendor_id: createdVendor.id } as never)
               .eq("id", createdPersonnel.id);
           }
         } else {
@@ -744,7 +744,7 @@ export const useApproveApplicationWithType = () => {
             // Link personnel to this vendor
             await supabase
               .from("personnel")
-              .update({ vendor_id: personnelVendor.id } as any)
+              .update({ vendor_id: personnelVendor.id } as never)
               .eq("id", createdPersonnel.id);
             
             createdVendor = personnelVendor;
@@ -753,7 +753,7 @@ export const useApproveApplicationWithType = () => {
           // Link to existing vendor
           await supabase
             .from("personnel")
-            .update({ vendor_id: existingVendorByEmail.id } as any)
+            .update({ vendor_id: existingVendorByEmail.id } as never)
             .eq("id", createdPersonnel.id);
           
           createdVendor = existingVendorByEmail;
@@ -849,7 +849,7 @@ export const useApproveApplication = () => {
         // Update existing personnel with applicant_id if not set
         await supabase
           .from("personnel")
-          .update({ applicant_id: applicant.id } as any)
+          .update({ applicant_id: applicant.id } as never)
           .eq("id", existingPersonnel.id);
 
         return existingPersonnel;
@@ -881,7 +881,7 @@ export const useApproveApplication = () => {
           phone: applicant.phone,
           applicant_id: applicant.id,
           status: 'active' as const,
-        } as any)
+        } as never)
         .select()
         .single();
 

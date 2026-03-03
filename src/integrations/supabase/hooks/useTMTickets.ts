@@ -298,7 +298,7 @@ export const useUpdateTMTicket = () => {
 
   return useMutation({
     mutationFn: async ({ id, updates, lineItems, sendForSignature }: UpdateTMTicketParams) => {
-      let updateData: any = { ...updates };
+      let updateData: Record<string, unknown> = { ...updates };
 
       // Recalculate totals if line items provided
       if (lineItems) {
@@ -451,7 +451,7 @@ export const useApproveTMTicket = () => {
       const { data, error } = await supabase
         .from("tm_tickets")
         .update({
-          status: 'open' as any,
+          status: 'open' as string,
           approved_by,
           approval_date: new Date().toISOString(),
           cap_hours: newCapHours,

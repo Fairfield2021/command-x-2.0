@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, Table
 
 type SortKey = "number" | "project_name" | "reason" | "change_type" | "co_value" | "status" | "created_at";
 
-type COWithProject = ChangeOrder & { project: { id: string; name: string } };
+type COWithProject = ChangeOrder & { project: { id: string; name: string }; co_value?: number };
 
 export function ChangeOrderSummaryReport() {
   const { data: changeOrders, isLoading } = useChangeOrders();
@@ -43,7 +43,7 @@ export function ChangeOrderSummaryReport() {
     return [...filtered].sort((a, b) => {
       let av: string | number, bv: string | number;
       if (sortKey === "project_name") { av = a.project?.name ?? ""; bv = b.project?.name ?? ""; }
-      else { av = (a as any)[sortKey] ?? ""; bv = (b as any)[sortKey] ?? ""; }
+      else { av = (a as unknown as Record<string, string | number>)[sortKey] ?? ""; bv = (b as unknown as Record<string, string | number>)[sortKey] ?? ""; }
       if (typeof av === "string" && typeof bv === "string") return sortDir === "asc" ? av.localeCompare(bv) : bv.localeCompare(av);
       return sortDir === "asc" ? (av as number) - (bv as number) : (bv as number) - (av as number);
     });
