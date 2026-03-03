@@ -6,6 +6,7 @@ import { SovStatusReport } from "@/components/reports/SovStatusReport";
 import { JobCostReport } from "@/components/reports/JobCostReport";
 import { CommitmentReport } from "@/components/reports/CommitmentReport";
 import { ChangeOrderSummaryReport } from "@/components/reports/ChangeOrderSummaryReport";
+import { APAgingReport } from "@/components/reports/APAgingReport";
 
 type ReportKey = "sov" | "job-cost" | "commitments" | "ap-aging" | "change-orders";
 
@@ -61,11 +62,7 @@ export default function ReportsPage() {
       {activeReport === "job-cost" && <JobCostReport />}
       {activeReport === "commitments" && <CommitmentReport />}
       {activeReport === "change-orders" && <ChangeOrderSummaryReport />}
-      {activeReport === "ap-aging" && (
-        <Card className="p-8 text-center">
-          <p className="text-muted-foreground">Coming soon</p>
-        </Card>
-      )}
+      {activeReport === "ap-aging" && <APAgingReport />}
     </div>
   );
 }
