@@ -21,13 +21,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { QBOPopupLink } from "@/components/quickbooks/QBOPopupLink";
 
 interface ProjectVendorBillsListProps {
   projectId: string;
   onAddNew?: () => void;
+  qbMappings?: Map<string, string>;
 }
 
-export function ProjectVendorBillsList({ projectId, onAddNew }: ProjectVendorBillsListProps) {
+export function ProjectVendorBillsList({ projectId, onAddNew, qbMappings }: ProjectVendorBillsListProps) {
   const navigate = useNavigate();
   const { data: vendorBills, isLoading } = useVendorBills({ project_id: projectId });
 
@@ -124,6 +126,12 @@ export function ProjectVendorBillsList({ projectId, onAddNew }: ProjectVendorBil
                   <div className="text-right text-sm text-muted-foreground min-w-[80px]">
                     <div>Due: {bill.due_date ? formatLocalDate(bill.due_date, 'MMM d') : 'N/A'}</div>
                   </div>
+
+                  {qbMappings?.get(bill.id) && (
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <QBOPopupLink docType="bill" txnId={qbMappings.get(bill.id)} variant="edit" />
+                    </div>
+                  )}
 
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
