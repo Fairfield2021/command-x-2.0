@@ -62,9 +62,60 @@ export function Generate1099Dialog({
 
   // Fetch company info and payment data when dialog opens
   useEffect(() => {
-    if (open) {
-      fetchData();
-    }
+    if (!open) return;
+
+    let mounted = true;
+    const loadData = async () => {
+      setIsLoading(true);
+      try {
+        // Fetch company settings
+        const { data: company } = await supabase
+          .from("company_settings")
+          .select("*")
+          .limit(1)
+          .single();
+
+        if (!mounted) return;
+        setCompanyInfo(company);
+
+        // Calculate payments for the tax year
+        const startDate = `${taxYear}-01-01`;
+        const endDate = `${taxYear}-12-31`;
+
+        // Fetch time entries for this personnel
+        const { data: timeEntries } = await supabase
+          .from("time_entries")
+          .select("hours, regular_hours, overtime_hours")
+          .eq("personnel_id", personnelId)
+          .gte("entry_date", startDate)
+          .lte("entry_date", endDate);
+
+        // Fetch personnel payments
+        const { data: personnelPayments } = await supabase
+          .from("personnel_payments")
+          .select("gross_amount")
+          .eq("personnel_id", personnelId)
+          .gte("payment_date", startDate)
+          .lte("payment_date", endDate);
+
+        const timeEntriesHours = timeEntries?.reduce((sum, entry) => sum + (entry.hours || 0), 0) || 0;
+        const paymentsTotal = personnelPayments?.reduce((sum, payment) => sum + (payment.gross_amount || 0), 0) || 0;
+
+        if (mounted) {
+          setPaymentSummary({
+            totalPayments: paymentsTotal,
+            timeEntriesTotal: timeEntriesHours,
+            reimbursementsTotal: 0,
+          });
+        }
+      } catch (error) {
+        // Data fetch failed silently - UI will show empty state
+      } finally {
+        if (mounted) setIsLoading(false);
+      }
+    };
+    loadData();
+    return () => { mounted = false; };
   }, [open, taxYear, personnelId]);
 
   const fetchData = async () => {

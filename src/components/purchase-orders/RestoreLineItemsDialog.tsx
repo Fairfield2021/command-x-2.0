@@ -55,38 +55,43 @@ export function RestoreLineItemsDialog({
   const restoreLineItems = useRestorePOLineItems();
 
   useEffect(() => {
-    if (open && jobOrderId) {
-      fetchJobOrderLineItems();
-    }
+    if (!open || !jobOrderId) return;
+
+    let mounted = true;
+
+    const fetchJobOrderLineItems = async () => {
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from("job_order_line_items")
+          .select("*")
+          .eq("job_order_id", jobOrderId);
+
+        if (error) throw error;
+
+        if (mounted) {
+          setItems(
+            (data || []).map((item) => ({
+              id: item.id,
+              description: item.description,
+              quantity: item.quantity,
+              unit_price: item.unit_price,
+              markup: item.markup,
+              total: item.total,
+              selected: true,
+            }))
+          );
+        }
+      } catch (error) {
+        if (mounted) toast.error("Failed to load line items from job order");
+      } finally {
+        if (mounted) setIsLoading(false);
+      }
+    };
+
+    fetchJobOrderLineItems();
+    return () => { mounted = false; };
   }, [open, jobOrderId]);
-
-  const fetchJobOrderLineItems = async () => {
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from("job_order_line_items")
-        .select("*")
-        .eq("job_order_id", jobOrderId);
-
-      if (error) throw error;
-
-      setItems(
-        (data || []).map((item) => ({
-          id: item.id,
-          description: item.description,
-          quantity: item.quantity,
-          unit_price: item.unit_price,
-          markup: item.markup,
-          total: item.total,
-          selected: true,
-        }))
-      );
-    } catch (error) {
-      toast.error("Failed to load line items from job order");
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const toggleItem = (id: string) => {
     setItems((prev) =>

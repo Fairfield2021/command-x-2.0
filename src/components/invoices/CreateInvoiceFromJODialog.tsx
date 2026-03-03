@@ -80,19 +80,21 @@ export function CreateInvoiceFromJODialog({
   useEffect(() => {
     if (!open) return;
 
+    let mounted = true;
     const fetchInvoiceNumber = async () => {
       setIsLoadingNumber(true);
       try {
         const result = await getNextInvoiceNumber();
-        setInvoiceNumber(result.number);
+        if (mounted) setInvoiceNumber(result.number);
       } catch (error) {
-        toast.error('Failed to generate invoice number');
+        if (mounted) toast.error('Failed to generate invoice number');
       } finally {
-        setIsLoadingNumber(false);
+        if (mounted) setIsLoadingNumber(false);
       }
     };
 
     fetchInvoiceNumber();
+    return () => { mounted = false; };
   }, [open]);
 
   const updateQuantity = (id: string, value: number) => {

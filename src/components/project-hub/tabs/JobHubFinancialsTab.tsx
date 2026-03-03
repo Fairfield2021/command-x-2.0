@@ -128,9 +128,11 @@ export function JobHubFinancialsTab({
     tmTicketsData?.some(t => t.status === 'cap_reached') ?? false, [tmTicketsData]);
 
   useEffect(() => {
+    let mounted = true;
     supabase.auth.getUser().then(({ data }) => {
-      if (data.user) setCurrentUserId(data.user.id);
+      if (mounted && data.user) setCurrentUserId(data.user.id);
     });
+    return () => { mounted = false; };
   }, []);
 
   // CO summary calculations

@@ -56,7 +56,102 @@ export function NotificationPreferences({ userId, onSave }: NotificationPreferen
   });
 
   useEffect(() => {
-    fetchPreferences();
+    let mounted = true;
+    const loadPreferences = async () => {
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from("notification_preferences")
+          .select("*")
+          .eq("user_id", userId)
+          .maybeSingle();
+
+        if (error) throw error;
+
+        if (!mounted) return;
+
+        if (data) {
+          setPreferences({
+            event_sent: data.event_sent ?? false,
+            event_resent: data.event_resent ?? false,
+            event_accepted: data.event_accepted ?? true,
+            event_cancelled: data.event_cancelled ?? true,
+            event_expired: data.event_expired ?? true,
+            event_reminder_sent: data.event_reminder_sent ?? true,
+            po_submitted_for_approval: data.po_submitted_for_approval ?? true,
+            po_approved: data.po_approved ?? true,
+            po_rejected: data.po_rejected ?? true,
+            po_sent: data.po_sent ?? true,
+            po_status_changed: data.po_status_changed ?? true,
+            co_submitted_for_approval: (data as any).co_submitted_for_approval ?? true,
+            personnel_registration_pending: (data as any).personnel_registration_pending ?? true,
+            notification_toast: data.notification_toast ?? true,
+            notification_sound: data.notification_sound ?? false,
+            notification_browser: data.notification_browser ?? false,
+          });
+        } else {
+          // No preferences exist, create default ones
+          const defaultPreferences = {
+            user_id: userId,
+            event_sent: false,
+            event_resent: false,
+            event_accepted: true,
+            event_cancelled: true,
+            event_expired: true,
+            event_reminder_sent: true,
+            po_submitted_for_approval: true,
+            po_approved: true,
+            po_rejected: true,
+            po_sent: true,
+            po_status_changed: true,
+            co_submitted_for_approval: true,
+            personnel_registration_pending: true,
+            notification_toast: true,
+            notification_sound: false,
+            notification_browser: false,
+          };
+
+          const { error: insertError } = await supabase
+            .from("notification_preferences")
+            .insert(defaultPreferences);
+
+          if (insertError) throw insertError;
+
+          if (mounted) {
+            setPreferences({
+              event_sent: false,
+              event_resent: false,
+              event_accepted: true,
+              event_cancelled: true,
+              event_expired: true,
+              event_reminder_sent: true,
+              po_submitted_for_approval: true,
+              po_approved: true,
+              po_rejected: true,
+              po_sent: true,
+              po_status_changed: true,
+              co_submitted_for_approval: true,
+              personnel_registration_pending: true,
+              notification_toast: true,
+              notification_sound: false,
+              notification_browser: false,
+            });
+          }
+        }
+      } catch (error) {
+        if (mounted) {
+          toast({
+            title: "Error",
+            description: "Failed to load notification preferences",
+            variant: "destructive",
+          });
+        }
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+    loadPreferences();
+    return () => { mounted = false; };
   }, [userId]);
 
   const fetchPreferences = async () => {

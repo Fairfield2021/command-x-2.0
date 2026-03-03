@@ -86,14 +86,16 @@ export default function BadgeTemplateEditor() {
   });
 
   useEffect(() => {
+    let mounted = true;
     const init = async () => {
       await fetchProjects();
       if (id && id !== "new") {
         await fetchTemplate();
       }
-      setInitialLoading(false);
+      if (mounted) setInitialLoading(false);
     };
     init();
+    return () => { mounted = false; };
   }, [id]);
 
   const fetchProjects = async () => {

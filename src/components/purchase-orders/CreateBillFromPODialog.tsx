@@ -80,9 +80,11 @@ export function CreateBillFromPODialog({
 
   // Fetch addendum line items when addendums change
   useEffect(() => {
+    let mounted = true;
+
     const fetchAddendumLineItems = async () => {
       if (!addendums || addendums.length === 0) {
-        setAddendumLineItems([]);
+        if (mounted) setAddendumLineItems([]);
         return;
       }
 
@@ -106,10 +108,11 @@ export function CreateBillFromPODialog({
         };
       });
 
-      setAddendumLineItems(itemsWithNumbers);
+      if (mounted) setAddendumLineItems(itemsWithNumbers);
     };
 
     fetchAddendumLineItems();
+    return () => { mounted = false; };
   }, [addendums]);
 
   // Combine PO line items and addendum line items

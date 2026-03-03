@@ -132,14 +132,18 @@ export function CreateCustomerInvoiceFromTimeDialog({
 
   // Fetch personnel rate bracket assignments for this project
   useEffect(() => {
+    if (!open) return;
+
+    let mounted = true;
+
     const fetchRateBrackets = async () => {
       if (!projectId || selectedEntries.length === 0) return;
 
       setIsLoading(true);
       const personnelIds = [...new Set(selectedEntries.map(e => e.personnel_id).filter(Boolean))];
-      
+
       if (personnelIds.length === 0) {
-        setIsLoading(false);
+        if (mounted) setIsLoading(false);
         return;
       }
 
@@ -178,14 +182,13 @@ export function CreateCustomerInvoiceFromTimeDialog({
             rateMap[a.personnel_id] = null;
           }
         });
-        setPersonnelRateBrackets(rateMap);
+        if (mounted) setPersonnelRateBrackets(rateMap);
       }
-      setIsLoading(false);
+      if (mounted) setIsLoading(false);
     };
 
-    if (open) {
-      fetchRateBrackets();
-    }
+    fetchRateBrackets();
+    return () => { mounted = false; };
   }, [open, projectId, selectedEntries]);
 
   // Find personnel without rate brackets

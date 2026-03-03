@@ -115,6 +115,8 @@ export function UnassignPersonnelDialog({
       return;
     }
 
+    let mounted = true;
+
     async function fetchActiveAssets() {
       setIsLoadingAssets(true);
       try {
@@ -148,22 +150,25 @@ export function UnassignPersonnelDialog({
           };
         });
 
-        setActiveAssets(assets);
-        
-        // Initialize dispositions as empty (forces user to select)
-        const initialDispositions: Record<string, AssetDispositionChoice> = {};
-        assets.forEach(asset => {
-          initialDispositions[asset.assignmentId] = { disposition: "" as AssetDisposition };
-        });
-        setAssetDispositions(initialDispositions);
+        if (mounted) {
+          setActiveAssets(assets);
+
+          // Initialize dispositions as empty (forces user to select)
+          const initialDispositions: Record<string, AssetDispositionChoice> = {};
+          assets.forEach(asset => {
+            initialDispositions[asset.assignmentId] = { disposition: "" as AssetDisposition };
+          });
+          setAssetDispositions(initialDispositions);
+        }
       } catch (error) {
-        toast.error("Failed to load assets");
+        if (mounted) toast.error("Failed to load assets");
       } finally {
-        setIsLoadingAssets(false);
+        if (mounted) setIsLoadingAssets(false);
       }
     }
 
     fetchActiveAssets();
+    return () => { mounted = false; };
   }, [open, personnelId, projectId]);
 
   const handleDispositionChange = (assignmentId: string, disposition: AssetDisposition) => {

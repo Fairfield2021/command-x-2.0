@@ -144,24 +144,28 @@ export function WH347ExportDialog({
 
   // Initialize personnel classifications when dialog opens
   useEffect(() => {
-    if (open && uniquePersonnel.length > 0 && personnelClassifications.length === 0) {
-      // Fetch existing classifications from assignments
-      const fetchClassifications = async () => {
-        if (!projectId) return;
+    if (!(open && uniquePersonnel.length > 0 && personnelClassifications.length === 0)) return;
 
-        const { data: assignments } = await supabase
-          .from("personnel_project_assignments")
-          .select("personnel_id, work_classification")
-          .eq("project_id", projectId)
-          .in(
-            "personnel_id",
-            uniquePersonnel.map((p) => p.id)
-          );
+    let mounted = true;
 
-        const classificationMap = new Map(
-          (assignments || []).map((a) => [a.personnel_id, a.work_classification])
+    // Fetch existing classifications from assignments
+    const fetchClassifications = async () => {
+      if (!projectId) return;
+
+      const { data: assignments } = await supabase
+        .from("personnel_project_assignments")
+        .select("personnel_id, work_classification")
+        .eq("project_id", projectId)
+        .in(
+          "personnel_id",
+          uniquePersonnel.map((p) => p.id)
         );
 
+      const classificationMap = new Map(
+        (assignments || []).map((a) => [a.personnel_id, a.work_classification])
+      );
+
+      if (mounted) {
         setPersonnelClassifications(
           uniquePersonnel.map((p) => ({
             personnelId: p.id,
@@ -171,10 +175,11 @@ export function WH347ExportDialog({
             selected: true,
           }))
         );
-      };
+      }
+    };
 
-      fetchClassifications();
-    }
+    fetchClassifications();
+    return () => { mounted = false; };
   }, [open, uniquePersonnel, projectId, personnelClassifications.length]);
 
   // Reset state when dialog closes

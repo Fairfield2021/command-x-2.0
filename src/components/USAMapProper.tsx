@@ -63,10 +63,12 @@ const USAMapProper = ({
 
   // Load GeoJSON data
   useEffect(() => {
+    let mounted = true;
     fetch('/assets/us-states.json')
       .then(res => res.json())
-      .then(data => setGeoData(data))
+      .then(data => { if (mounted) setGeoData(data); })
       .catch(() => {});
+    return () => { mounted = false; };
   }, []);
 
   useEffect(() => {

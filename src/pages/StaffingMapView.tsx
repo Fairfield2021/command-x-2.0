@@ -20,11 +20,13 @@ export default function StaffingMapView() {
   const isAdmin = isAdminRole || isManager;
 
   useEffect(() => {
+    let mounted = true;
     const fetchToken = async () => {
       try {
         // Try to get the token from edge function that reads the secret
         const { data, error } = await supabase.functions.invoke('get-mapbox-token');
-        
+
+        if (!mounted) return;
         if (error) {
           setError("Could not fetch Mapbox token from server");
         } else if (data?.token) {
@@ -33,13 +35,15 @@ export default function StaffingMapView() {
           setError("Mapbox token not configured");
         }
       } catch (err) {
+        if (!mounted) return;
         setError("Failed to load map configuration");
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     };
 
     fetchToken();
+    return () => { mounted = false; };
   }, []);
 
   const handleManualToken = () => {

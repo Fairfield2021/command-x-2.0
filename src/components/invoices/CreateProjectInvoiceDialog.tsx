@@ -94,18 +94,23 @@ export const CreateProjectInvoiceDialog = ({
 
   // Generate invoice number and reset state on open
   useEffect(() => {
+    let mounted = true;
     if (open) {
       const fetchInvoiceNumber = async () => {
         setIsLoadingNumber(true);
         try {
           const { number, source } = await getNextInvoiceNumber();
-          setInvoiceNumber(number);
-          setNumberSource(source);
+          if (mounted) {
+            setInvoiceNumber(number);
+            setNumberSource(source);
+          }
         } catch (error) {
-          setInvoiceNumber(`INV-${Date.now().toString().slice(-6)}`);
-          setNumberSource('local');
+          if (mounted) {
+            setInvoiceNumber(`INV-${Date.now().toString().slice(-6)}`);
+            setNumberSource('local');
+          }
         } finally {
-          setIsLoadingNumber(false);
+          if (mounted) setIsLoadingNumber(false);
         }
       };
       fetchInvoiceNumber();
@@ -122,6 +127,7 @@ export const CreateProjectInvoiceDialog = ({
         setPendingAttachments([]);
       }
     }
+    return () => { mounted = false; };
   }, [open]);
 
   const allItems = useMemo(() => {
