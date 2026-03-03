@@ -1,45 +1,25 @@
 
 
-# Owner Dashboard Financial Overview
+# Quick Actions Enhancement — Already Implemented
 
-## What to build
+The Overview tab **already has** the Quick Actions section (lines 123-142) with 3 buttons: Add Note, Upload Photo, and Log Time. They use `handleNavigateTab` to switch tabs via URL hash — the exact pattern requested.
 
-Add a `FinancialOverview` component rendered inside `RowBasedDashboard.tsx` between the KPIBar and QuickActionsRow. It queries `portfolio_summary` and `useAllJobCostSummaries()`, and renders only when there are active contracts.
+The only changes needed are:
 
-## Component: `src/components/dashboard/rows/FinancialOverview.tsx`
+## Modify `src/components/project-hub/tabs/JobHubOverviewTab.tsx`
 
-### Data
-- `portfolio_summary` view via `useQuery` + supabase client (`.single()`)
-- `useAllJobCostSummaries()` for the project profitability table
+1. **Add 4th button**: "New Document" with `FileUp` icon, navigating to `#documents`
+2. **Change layout to 2x2 grid on mobile**: Replace `flex flex-wrap` with a grid layout (`grid grid-cols-2 md:grid-cols-4`) so buttons show as a 2x2 grid on mobile and a single row on desktop
+3. **Update "Log Time" to navigate to financials tab** instead of opening the time entry dialog (per the user's request: "Opens the Financials tab (#financials)"). Keep the dialog as a secondary option or remove it.
 
-### Guard
-If portfolio data is null or `active_projects === 0`, render nothing.
+Actually, re-reading the request: they want Log Time to go to `#financials`, but the current implementation opens a time entry form dialog which is arguably better UX. The request says "Opens the Financials tab (#financials) scrolled to the time entries section." I'll change it to navigate to `#financials` as requested.
 
-### Section header
-"Financial Overview" label with a "View Reports →" link to `/reports`
+## Changes (single file)
 
-### 6 KPI cards (grid: 3 cols desktop, 2 mobile)
-Using existing `StatCard` component:
-1. Active Projects — `active_projects`, Briefcase icon
-2. Total Contract Value — `total_contract_value`, FileText icon
-3. Commitment Exposure — `total_open_commitments`, Clock icon, amber text, subtitle
-4. Accounts Payable — `total_ap`, FileWarning icon, purple text, subtitle
-5. Total Invoiced — `total_invoiced`, Send icon, teal text
-6. Portfolio Profit — `total_gross_profit`, TrendingUp icon, green/red + margin badge
-
-### Project Profitability table
-- Filter `useAllJobCostSummaries` for `contract_status === 'active'`
-- Sort by `margin_percent` ascending (worst first)
-- Limit to 10 rows
-- Columns: Project, Contract Value, Expenses, Invoiced, Profit (green/red), Margin (color-coded), Completion (Progress bar)
-- Row click → `/projects/:id#financials`
-- "View All →" link to `/reports`
-
-## Modify: `src/components/dashboard/rows/RowBasedDashboard.tsx`
-- Import `FinancialOverview`
-- Render `<FinancialOverview />` between KPIBar and QuickActionsRow (around line 235-237)
-
-## Files
-- **Create**: `src/components/dashboard/rows/FinancialOverview.tsx`
-- **Modify**: `src/components/dashboard/rows/RowBasedDashboard.tsx` (one import + one JSX line)
+- Add `FileUp` to lucide imports
+- Change Quick Actions container from `flex flex-wrap` to `grid grid-cols-2 md:grid-cols-4 gap-3`
+- Remove the "Quick Actions" label span (save space)
+- Add 4th button: New Document → `handleNavigateTab("documents")`
+- Change Log Time from opening dialog to `handleNavigateTab("financials")`
+- Remove unused `timeEntryOpen` state and `EnhancedTimeEntryForm` if Log Time no longer opens it
 
