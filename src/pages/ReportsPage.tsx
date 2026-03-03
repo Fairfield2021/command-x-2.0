@@ -4,6 +4,8 @@ import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/ca
 import { cn } from "@/lib/utils";
 import { SovStatusReport } from "@/components/reports/SovStatusReport";
 import { JobCostReport } from "@/components/reports/JobCostReport";
+import { CommitmentReport } from "@/components/reports/CommitmentReport";
+import { ChangeOrderSummaryReport } from "@/components/reports/ChangeOrderSummaryReport";
 
 type ReportKey = "sov" | "job-cost" | "commitments" | "ap-aging" | "change-orders";
 
@@ -57,7 +59,9 @@ export default function ReportsPage() {
 
       {activeReport === "sov" && <SovStatusReport />}
       {activeReport === "job-cost" && <JobCostReport />}
-      {activeReport && activeReport !== "sov" && activeReport !== "job-cost" && (
+      {activeReport === "commitments" && <CommitmentReport />}
+      {activeReport === "change-orders" && <ChangeOrderSummaryReport />}
+      {activeReport === "ap-aging" && (
         <Card className="p-8 text-center">
           <p className="text-muted-foreground">Coming soon</p>
         </Card>
