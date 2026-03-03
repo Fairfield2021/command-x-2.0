@@ -114,13 +114,13 @@ export const BadgeTemplateEditor = ({
             email: false,
             everify_status: false,
           });
-        } catch (error: any) {
-          toast.error(error.message || "Failed to save template fields");
+        } catch (error: unknown) {
+          toast.error(error instanceof Error ? error.message : "Failed to save template fields");
         } finally {
           setIsSaving(false);
         }
       },
-      onError: (error: any) => {
+      onError: (error: Error) => {
         toast.error(error.message || "Failed to save template");
         setIsSaving(false);
       },

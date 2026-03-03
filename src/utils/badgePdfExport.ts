@@ -57,8 +57,8 @@ const parseCustomFields = (customFields: Json | null | undefined): Array<{ label
     field !== null && 
     'label' in field && 
     'value' in field &&
-    typeof (field as any).label === 'string' &&
-    typeof (field as any).value === 'string'
+    typeof (field as Record<string, unknown>).label === 'string' &&
+    typeof (field as Record<string, unknown>).value === 'string'
   );
 };
 

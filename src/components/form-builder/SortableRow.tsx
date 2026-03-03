@@ -1,3 +1,4 @@
+import React from "react";
 import { FormField, FormRow } from "@/integrations/supabase/hooks/useApplicationFormTemplates";
 import { SortableGridField } from "./SortableGridField";
 import { useDroppable } from "@dnd-kit/core";
@@ -15,7 +16,7 @@ interface SortableRowProps {
   onUpdateOption: (fieldId: string, optionIndex: number, value: string) => void;
   onAddOption: (fieldId: string) => void;
   onRemoveOption: (fieldId: string, optionIndex: number) => void;
-  fieldTypes: readonly { value: string; label: string; icon: any }[];
+  fieldTypes: readonly { value: string; label: string; icon: React.ComponentType<{ className?: string }> }[];
 }
 
 export function SortableRow({

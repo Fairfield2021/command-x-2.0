@@ -95,9 +95,9 @@ const ProjectDetail = () => {
       let supervisionCost = 0;
       let fieldCost = 0;
       for (const entry of data || []) {
-        if ((entry as any).is_overhead) continue;
-        const p = entry.personnel as any;
-        const rate = (entry as any).hourly_rate ?? p?.hourly_rate ?? 0;
+        if ((entry as Record<string, unknown>).is_overhead) continue;
+        const p = entry.personnel as Record<string, unknown> | null;
+        const rate = (entry as Record<string, unknown>).hourly_rate as number ?? p?.hourly_rate as number ?? 0;
         const cost = (entry.hours || 0) * rate;
         const title = (p?.title || "").toLowerCase();
         const isSupervision = title.includes("superintendent") || title.includes("supervisor") || title.includes("foreman");
@@ -167,13 +167,13 @@ const ProjectDetail = () => {
     const changeOrdersTotal = (changeOrders || [])
       .filter((co) => co.status === "approved")
       .reduce((sum, co) => {
-        const changeType = (co as any).change_type || 'additive';
+        const changeType = (co as Record<string, unknown>).change_type as string || 'additive';
         return changeType === 'deductive' ? sum - co.total : sum + co.total;
       }, 0);
     const tmTicketsTotal = (tmTickets || [])
       .filter((t) => ["approved", "signed", "invoiced"].includes(t.status))
       .reduce((sum, t) => {
-        const changeType = (t as any).change_type || 'additive';
+        const changeType = (t as Record<string, unknown>).change_type as string || 'additive';
         return changeType === 'deductive' ? sum - t.total : sum + t.total;
       }, 0);
     const totalContractValue = originalContractValue + changeOrdersTotal + tmTicketsTotal;

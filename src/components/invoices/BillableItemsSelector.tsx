@@ -192,11 +192,23 @@ export const BillableItemsSelector = ({
   );
 };
 
-const EMPTY_RESULT = { 
-  subtotal: 0, 
-  taxAmount: 0, 
-  total: 0, 
-  lineItems: [] as any[],
+interface InvoiceLineItem {
+  product_id: string | null;
+  product_name: string;
+  description: string;
+  quantity: number;
+  unit_price: number;
+  markup: number;
+  total: number;
+  is_taxable: boolean;
+  display_order: number;
+}
+
+const EMPTY_RESULT = {
+  subtotal: 0,
+  taxAmount: 0,
+  total: 0,
+  lineItems: [] as InvoiceLineItem[],
   jobOrderIds: [] as string[],
   changeOrderIds: [] as string[],
   tmTicketIds: [] as string[],
@@ -247,7 +259,7 @@ export const useSelectedBillableItemsTotals = (
     const selectedOtherItems = selectedItemsData.filter(item => item.type !== 'job_order');
 
     // Build line items based on billing mode
-    const lineItems: any[] = [];
+    const lineItems: InvoiceLineItem[] = [];
     let displayOrderCounter = 0;
     
     // Handle Job Orders based on billing mode

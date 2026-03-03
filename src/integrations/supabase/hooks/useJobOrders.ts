@@ -139,7 +139,7 @@ export const useJobOrder = (id: string) => {
       if (coError) throw coError;
 
       // Flatten project data into the job order object
-      const project = jobOrder.projects as any;
+      const project = jobOrder.projects as Record<string, unknown> | null;
       
       return {
         ...jobOrder,

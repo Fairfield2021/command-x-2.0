@@ -1,5 +1,5 @@
 import * as XLSX from "xlsx";
-import type { PersonnelWithAssets } from "@/integrations/supabase/hooks/usePersonnelWithAssets";
+import type { PersonnelWithAssets, PersonnelAsset } from "@/integrations/supabase/hooks/usePersonnelWithAssets";
 import { format } from "date-fns";
 
 interface ExportOptions {
@@ -7,12 +7,19 @@ interface ExportOptions {
   isAdmin: boolean;
 }
 
+// Extended asset type that includes fields added at runtime
+interface PersonnelAssetExtended extends PersonnelAsset {
+  startAt?: string;
+  accessCode?: string;
+}
+
 // Extended type that includes unassignment fields
-interface PersonnelWithAssetsExtended extends PersonnelWithAssets {
+interface PersonnelWithAssetsExtended extends Omit<PersonnelWithAssets, 'assets'> {
   status?: string;
   unassignedAt?: string | null;
   unassignedReason?: string | null;
   unassignedNotes?: string | null;
+  assets: PersonnelAssetExtended[];
 }
 
 const REASON_LABELS: Record<string, string> = {
@@ -105,7 +112,7 @@ export function exportPersonnelWithAssetsToXLSX(
         "End At": "—",
       });
     } else {
-      p.assets.forEach((asset: any) => {
+      p.assets.forEach((asset) => {
         const row: Record<string, string> = {
           "Personnel Name": p.name,
           "Personnel Email": p.email,

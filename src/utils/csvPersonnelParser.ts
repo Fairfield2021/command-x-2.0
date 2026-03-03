@@ -71,7 +71,7 @@ export const validatePersonnelRows = (
 
   dataRows.forEach((row, index) => {
     const rowNumber = index + 2; // +2 for header row and 0-index
-    const rowData: any = {};
+    const rowData: Record<string, string> = {};
     const errors: string[] = [];
 
     // Map CSV columns to object
@@ -135,11 +135,11 @@ export const validatePersonnelRows = (
         zip: validated.zip,
         date_of_birth: validated.date_of_birth,
         hourly_rate: validated.hourly_rate ? parseFloat(validated.hourly_rate) : undefined,
-        status: validated.status as any,
+        status: validated.status as PersonnelInsert["status"],
         ssn_last_four: validated.ssn_last_four,
-        work_authorization_type: validated.work_authorization_type as any,
+        work_authorization_type: validated.work_authorization_type as PersonnelInsert["work_authorization_type"],
         work_auth_expiry: validated.work_auth_expiry,
-        everify_status: validated.everify_status as any,
+        everify_status: validated.everify_status as PersonnelInsert["everify_status"],
         everify_case_number: validated.everify_case_number,
         notes: validated.notes,
         errors,

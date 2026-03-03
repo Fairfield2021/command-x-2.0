@@ -108,7 +108,7 @@ export function useConversations() {
 
           // Get unread count for current user
           const participantRecord = conv.conversation_participants?.find(
-            (p: any) => p.participant_type === "user" && p.participant_id === user.id
+            (p: Record<string, unknown>) => p.participant_type === "user" && p.participant_id === user.id
           );
 
           return {

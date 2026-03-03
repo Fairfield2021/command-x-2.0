@@ -121,8 +121,15 @@ export const ImportWorkOrderDialog = ({
       }
 
       // Map extracted items to our format
-      const items: ExtractedItem[] = (data.items || []).map(
-        (item: any, index: number) => ({
+      interface ExtractedRawItem {
+        description?: string;
+        product_code?: string;
+        quantity?: number;
+        unit_price?: number;
+        unit?: string;
+      }
+      const items: ExtractedItem[] = ((data.items || []) as ExtractedRawItem[]).map(
+        (item, index: number) => ({
           id: `extracted-${index}`,
           originalDescription: item.description || "",
           productCode: item.product_code || "",

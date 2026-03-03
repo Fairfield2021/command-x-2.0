@@ -157,10 +157,10 @@ const PersonnelRegister = () => {
 
     await addPersonnel.mutateAsync({
       ...formData,
-      work_authorization_type: workAuthType as any,
+      work_authorization_type: workAuthType as string,
       ssn_full: citizenshipStatus === "non_us_citizen" && immigrationStatus === "other" ? undefined : ssn,
-      citizenship_status: citizenshipStatus as any,
-      immigration_status: citizenshipStatus === "non_us_citizen" ? immigrationStatus as any : undefined,
+      citizenship_status: citizenshipStatus as string,
+      immigration_status: citizenshipStatus === "non_us_citizen" ? immigrationStatus as string : undefined,
       personnel_number: "",
       status: "active",
       everify_status: "pending",

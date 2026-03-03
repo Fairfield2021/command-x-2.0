@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import {
   DndContext,
   DragEndEvent,
@@ -30,7 +30,7 @@ interface RowBasedFieldGridProps {
   onUpdateOption: (fieldId: string, optionIndex: number, value: string) => void;
   onAddOption: (fieldId: string) => void;
   onRemoveOption: (fieldId: string, optionIndex: number) => void;
-  fieldTypes: readonly { value: string; label: string; icon: any }[];
+  fieldTypes: readonly { value: string; label: string; icon: React.ComponentType<{ className?: string }> }[];
 }
 
 export function RowBasedFieldGrid({

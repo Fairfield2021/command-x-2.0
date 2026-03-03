@@ -19,7 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useAddInvoice } from "@/integrations/supabase/hooks/useInvoices";
+import { useAddInvoice, type InvoiceLineItem } from "@/integrations/supabase/hooks/useInvoices";
 import { JobOrderWithLineItems } from "@/integrations/supabase/hooks/useJobOrders";
 import { format } from "date-fns";
 import { AlertTriangle, Receipt } from "lucide-react";
@@ -176,7 +176,7 @@ export function CreateInvoiceFromJODialog({
           unit_price: item.unitPrice,
           markup: item.markup,
           total: calculateLineTotal(item),
-        })) as any[];
+        })) as InvoiceLineItem[];
 
       const result = await addInvoice.mutateAsync({
         number: freshInvoiceNumber,

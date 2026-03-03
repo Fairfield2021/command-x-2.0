@@ -38,7 +38,7 @@ export async function finalizeAttachments(
       }
 
       // Create database record based on entity type
-      let dbError: any = null;
+      let dbError: { message: string } | null = null;
 
       if (entityType === "invoice") {
         const { error } = await supabase
@@ -101,8 +101,8 @@ export async function finalizeAttachments(
     }
 
     return { success: true };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    return { success: false, error: error instanceof Error ? error.message : "An unknown error occurred" };
   }
 }
 

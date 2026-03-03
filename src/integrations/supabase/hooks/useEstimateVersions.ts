@@ -165,7 +165,7 @@ export function useRestoreEstimateVersion() {
             notes: currentEstimate.notes,
             valid_until: currentEstimate.valid_until,
             default_pricing_type: currentEstimate.default_pricing_type,
-            line_items: currentEstimate.line_items.map((item: any) => ({
+            line_items: currentEstimate.line_items.map((item: Record<string, unknown>) => ({
               product_id: item.product_id,
               description: item.description,
               quantity: item.quantity,

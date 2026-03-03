@@ -107,7 +107,7 @@ const ExpenseCategories = () => {
     setIsAddDialogOpen(true);
   };
 
-  const handleEdit = (category: any) => {
+  const handleEdit = (category: ExpenseCategoryWithMapping) => {
     setSelectedCategory(category);
     setFormData({
       name: category.name,

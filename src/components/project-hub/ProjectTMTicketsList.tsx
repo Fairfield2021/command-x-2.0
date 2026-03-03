@@ -22,7 +22,7 @@ export function ProjectTMTicketsList({
   const approvedTotal = tickets
     .filter(t => t.status === 'approved' || t.status === 'signed' || t.status === 'invoiced')
     .reduce((sum, t) => {
-      const changeType = (t as any).change_type || 'additive';
+      const changeType = t.change_type || 'additive';
       return changeType === 'deductive' ? sum - t.total : sum + t.total;
     }, 0);
 
@@ -61,13 +61,13 @@ export function ProjectTMTicketsList({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="font-medium">{ticket.ticket_number}</span>
-                    <StatusBadge status={ticket.status as any} />
+                    <StatusBadge status={ticket.status as React.ComponentProps<typeof StatusBadge>["status"]} />
                     {ticket.created_in_field && (
                       <span className="text-xs bg-orange-500/20 text-orange-500 px-2 py-0.5 rounded">
                         Field
                       </span>
                     )}
-                    {(ticket as any).change_type === 'deductive' && (
+                    {ticket.change_type === 'deductive' && (
                       <span className="text-xs bg-destructive/20 text-destructive px-2 py-0.5 rounded">
                         Credit
                       </span>
@@ -81,8 +81,8 @@ export function ProjectTMTicketsList({
                   </p>
                 </div>
                 <div className="flex items-center gap-4">
-                  <span className={`font-bold ${(ticket as any).change_type === 'deductive' ? 'text-destructive' : 'text-primary'}`}>
-                    {(ticket as any).change_type === 'deductive' ? '-' : ''}{formatCurrency(ticket.total)}
+                  <span className={`font-bold ${ticket.change_type === 'deductive' ? 'text-destructive' : 'text-primary'}`}>
+                    {ticket.change_type === 'deductive' ? '-' : ''}{formatCurrency(ticket.total)}
                   </span>
                   <ExternalLink className="h-4 w-4 text-muted-foreground" />
                 </div>

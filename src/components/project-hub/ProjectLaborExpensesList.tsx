@@ -38,11 +38,11 @@ export function ProjectLaborExpensesList({ projectId }: ProjectLaborExpensesList
   const { data: paymentsData, isLoading } = usePersonnelPaymentsByProject(projectId);
 
   const payments = useMemo(() => {
-    return ((paymentsData || []) as any[]).map((p, idx) => ({
+    return ((paymentsData || []) as PaymentWithAllocation[]).map((p, idx) => ({
       id: p.payment?.id || `payment-${idx}`,
       payment: p.payment,
       allocated_amount: p.allocated_amount,
-    })) as PaymentWithAllocation[];
+    }));
   }, [paymentsData]);
 
   const totalLaborExpenses = useMemo(() => {

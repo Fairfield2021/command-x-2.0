@@ -59,9 +59,9 @@ export const useExpensesByProject = (projectId: string | undefined) => {
       let vendorLaborTotal = 0;
       let vendorOtherTotal = 0;
 
-      vendorItems.forEach((item: any) => {
+      vendorItems.forEach((item) => {
         const catId = item.category_id || "uncategorized";
-        const catName = item.expense_categories?.name || "Uncategorized";
+        const catName = (item.expense_categories as Record<string, unknown> | null)?.name as string || "Uncategorized";
         if (!byCategory[catId]) {
           byCategory[catId] = { name: catName, vendor: 0, personnel: 0 };
         }
@@ -75,17 +75,19 @@ export const useExpensesByProject = (projectId: string | undefined) => {
         }
       });
 
-      personnelItems.forEach((item: any) => {
-        const catId = item.personnel_payments?.category_id || "uncategorized";
-        const catName = item.personnel_payments?.expense_categories?.name || "Uncategorized";
+      personnelItems.forEach((item) => {
+        const pp = item.personnel_payments as Record<string, unknown> | null;
+        const ec = pp?.expense_categories as Record<string, unknown> | null;
+        const catId = (pp?.category_id as string) || "uncategorized";
+        const catName = (ec?.name as string) || "Uncategorized";
         if (!byCategory[catId]) {
           byCategory[catId] = { name: catName, vendor: 0, personnel: 0 };
         }
         byCategory[catId].personnel += Number(item.amount);
       });
 
-      const vendorTotal = vendorItems.reduce((sum, item: any) => sum + Number(item.total), 0);
-      const personnelTotal = personnelItems.reduce((sum, item: any) => sum + Number(item.amount), 0);
+      const vendorTotal = vendorItems.reduce((sum, item) => sum + Number(item.total), 0);
+      const personnelTotal = personnelItems.reduce((sum, item) => sum + Number(item.amount), 0);
 
       return {
         vendor_total: vendorTotal,
@@ -143,18 +145,18 @@ export const useExpensesByCategory = (startDate?: string, endDate?: string) => {
       // Group by category
       const byCategory: Record<string, { name: string; vendor: number; personnel: number }> = {};
 
-      vendorItems.forEach((item: any) => {
+      vendorItems.forEach((item) => {
         const catId = item.category_id || "uncategorized";
-        const catName = item.expense_categories?.name || "Uncategorized";
+        const catName = (item.expense_categories as Record<string, unknown> | null)?.name as string || "Uncategorized";
         if (!byCategory[catId]) {
           byCategory[catId] = { name: catName, vendor: 0, personnel: 0 };
         }
         byCategory[catId].vendor += Number(item.total);
       });
 
-      personnelItems.forEach((item: any) => {
+      personnelItems.forEach((item) => {
         const catId = item.category_id || "uncategorized";
-        const catName = item.expense_categories?.name || "Uncategorized";
+        const catName = (item.expense_categories as Record<string, unknown> | null)?.name as string || "Uncategorized";
         if (!byCategory[catId]) {
           byCategory[catId] = { name: catName, vendor: 0, personnel: 0 };
         }
@@ -202,10 +204,10 @@ export const useExpenseSummary = (startDate?: string, endDate?: string) => {
       const { data: payments, error: paymentsError } = await personnelQuery;
       if (paymentsError) throw paymentsError;
 
-      const totalVendor = bills.reduce((sum, bill: any) => sum + Number(bill.total), 0);
-      const totalPersonnel = payments.reduce((sum, p: any) => sum + Number(p.gross_amount), 0);
-      const openBills = bills.filter((b: any) => b.status === "open" || b.status === "partially_paid").length;
-      const paidBills = bills.filter((b: any) => b.status === "paid").length;
+      const totalVendor = bills.reduce((sum, bill) => sum + Number(bill.total), 0);
+      const totalPersonnel = payments.reduce((sum, p) => sum + Number(p.gross_amount), 0);
+      const openBills = bills.filter((b) => b.status === "open" || b.status === "partially_paid").length;
+      const paidBills = bills.filter((b) => b.status === "paid").length;
 
       return {
         total_vendor_bills: totalVendor,
@@ -214,8 +216,8 @@ export const useExpenseSummary = (startDate?: string, endDate?: string) => {
         open_bills_count: openBills,
         paid_bills_count: paidBills,
         pending_payments: bills
-          .filter((b: any) => b.status === "open" || b.status === "partially_paid")
-          .reduce((sum, b: any) => sum + Number(b.total), 0),
+          .filter((b) => b.status === "open" || b.status === "partially_paid")
+          .reduce((sum, b) => sum + Number(b.total), 0),
       } as ExpenseSummary;
     },
   });

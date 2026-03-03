@@ -144,7 +144,7 @@ const Products = () => {
   const { data: qbConflicts } = useQuickBooksConflicts();
   const importProducts = useImportProductsFromQB();
   const exportProducts = useExportProductsToQB();
-  const [selectedConflict, setSelectedConflict] = useState<any>(null);
+  const [selectedConflict, setSelectedConflict] = useState<Record<string, unknown> | null>(null);
 
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -240,8 +240,8 @@ const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
     if (!sortKey) return filteredProducts;
 
     return [...filteredProducts].sort((a, b) => {
-      const aVal = String((a as any)[sortKey] || "").toLowerCase();
-      const bVal = String((b as any)[sortKey] || "").toLowerCase();
+      const aVal = String((a as Record<string, unknown>)[sortKey] || "").toLowerCase();
+      const bVal = String((b as Record<string, unknown>)[sortKey] || "").toLowerCase();
 
       if (sortDirection === "asc") {
         return aVal.localeCompare(bVal);
@@ -341,7 +341,7 @@ const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
       unit: product.unit,
       category: product.category,
       is_taxable: product.is_taxable ?? true,
-      qb_product_mapping_id: (product as any).qb_product_mapping_id || "",
+      qb_product_mapping_id: (product as Record<string, unknown>).qb_product_mapping_id as string || "",
     });
     setShowCustomMargin(!marginPresets.includes(marginStr));
     setIsDialogOpen(true);

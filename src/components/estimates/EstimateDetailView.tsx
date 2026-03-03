@@ -135,8 +135,8 @@ export function EstimateDetailView({ estimateId }: EstimateDetailViewProps) {
       toast.success("Estimate sent to customer successfully!");
       // Refetch estimate to get updated data
       window.location.reload();
-    } catch (error: any) {
-      toast.error(error.message || "Failed to send estimate");
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "Failed to send estimate");
     } finally {
       setIsSending(false);
     }
@@ -260,7 +260,7 @@ export function EstimateDetailView({ estimateId }: EstimateDetailViewProps) {
                     lineItems: estimate.line_items.map((item) => ({
                       id: item.id,
                       description: item.description,
-                      productName: getProductName(item as any) || undefined,
+                      productName: getProductName(item) || undefined,
                       quantity: item.quantity,
                       unitPrice: item.unit_price,
                       markup: item.markup,
@@ -393,7 +393,7 @@ export function EstimateDetailView({ estimateId }: EstimateDetailViewProps) {
                         lineItems: estimate.line_items.map((item) => ({
                           id: item.id,
                           description: item.description,
-                          productName: getProductName(item as any) || undefined,
+                          productName: getProductName(item) || undefined,
                           quantity: item.quantity,
                           unitPrice: item.unit_price,
                           markup: item.markup,
@@ -595,7 +595,7 @@ export function EstimateDetailView({ estimateId }: EstimateDetailViewProps) {
                 // Mobile: Card-based layout
                 <div className="space-y-3">
                 {estimate.line_items.map((item) => {
-                    const productName = getProductName(item as any);
+                    const productName = getProductName(item);
                     return (
                       <Card key={item.id} className="p-4">
                         <div className="flex justify-between items-start mb-2">
@@ -648,7 +648,7 @@ export function EstimateDetailView({ estimateId }: EstimateDetailViewProps) {
                   </TableHeader>
                   <TableBody>
                     {estimate.line_items.map((item) => {
-                      const productName = getProductName(item as any);
+                      const productName = getProductName(item);
                       return (
                         <TableRow key={item.id}>
                           <TableCell>

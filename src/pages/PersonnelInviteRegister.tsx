@@ -110,7 +110,7 @@ const PersonnelInviteRegister = () => {
     setIsSubmitting(true);
     try {
       // Create personnel record
-      const personnelData: any = {
+      const personnelData: Record<string, unknown> = {
         first_name: formData.first_name,
         last_name: formData.last_name,
         email: formData.email,
@@ -138,8 +138,8 @@ const PersonnelInviteRegister = () => {
 
       toast.success("Registration completed successfully!");
       setStep(6); // Success step
-    } catch (error: any) {
-      toast.error(error.message || "Failed to complete registration");
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "Failed to complete registration");
     } finally {
       setIsSubmitting(false);
     }

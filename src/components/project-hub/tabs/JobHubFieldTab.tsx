@@ -76,7 +76,7 @@ export function JobHubFieldTab({ projectId }: JobHubFieldTabProps) {
                             day: "numeric",
                           })}
                         </h4>
-                        <StatusBadge status={getDisplayStatus(log.status) as any} />
+                        <StatusBadge status={getDisplayStatus(log.status) as React.ComponentProps<typeof StatusBadge>["status"]} />
                       </div>
 
                       <div className="grid gap-2 sm:grid-cols-3 text-sm">

@@ -35,17 +35,48 @@ import {
   useApproveChangeOrder,
   useRejectChangeOrder,
   useUpdateChangeOrderStatus,
+  type ChangeOrder,
 } from "@/integrations/supabase/hooks/useChangeOrders";
 import { supabase } from "@/integrations/supabase/client";
 
+interface FinancialEstimate {
+  id: string;
+  number: string;
+  customer_name: string;
+  status: string;
+  total: number;
+  created_at: string;
+}
+
+interface FinancialJobOrder {
+  id: string;
+  number: string;
+  status: string;
+  total: number;
+  start_date: string;
+}
+
+interface FinancialInvoice {
+  id: string;
+  number: string;
+  status: string;
+  total: number;
+  due_date: string;
+}
+
+interface FinancialPurchaseOrder {
+  id: string;
+  [key: string]: unknown;
+}
+
 interface JobHubFinancialsTabProps {
   projectId: string;
-  projectEstimates: any[];
-  projectJobOrders: any[];
-  projectInvoices: any[];
-  changeOrders: any[];
-  tmTickets: any[];
-  projectPurchaseOrders: any[];
+  projectEstimates: FinancialEstimate[];
+  projectJobOrders: FinancialJobOrder[];
+  projectInvoices: FinancialInvoice[];
+  changeOrders: ChangeOrder[];
+  tmTickets: unknown[];
+  projectPurchaseOrders: FinancialPurchaseOrder[];
   onAddTMTicket: () => void;
   onAddJobOrder: () => void;
   onAddInvoice: () => void;
@@ -72,7 +103,7 @@ export function JobHubFinancialsTab({
   const rejectChangeOrder = useRejectChangeOrder();
   const updateStatus = useUpdateChangeOrderStatus();
   const [coDialogOpen, setCoDialogOpen] = useState(false);
-  const [approveConfirmCO, setApproveConfirmCO] = useState<any>(null);
+  const [approveConfirmCO, setApproveConfirmCO] = useState<ChangeOrder | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const [coSectionOpen, setCoSectionOpen] = useState(true);
   const [tmSectionOpen, setTmSectionOpen] = useState(true);
@@ -88,13 +119,13 @@ export function JobHubFinancialsTab({
   }, [tmTicketsData]);
 
   const tmTotalHours = useMemo(() =>
-    tmTicketsData?.reduce((sum, t) => sum + (Number((t as any).hours_logged) || 0), 0) ?? 0, [tmTicketsData]);
+    tmTicketsData?.reduce((sum, t) => sum + (Number((t as unknown as Record<string, unknown>).hours_logged) || 0), 0) ?? 0, [tmTicketsData]);
   const tmTotalAmount = useMemo(() =>
     tmTicketsData?.reduce((sum, t) => sum + (Number(t.total) || 0), 0) ?? 0, [tmTicketsData]);
   const tmOpenCount = useMemo(() =>
     tmTicketsData?.filter(t => (t.status as string) === 'open' || (t.status as string) === 'draft').length ?? 0, [tmTicketsData]);
   const hasCapReached = useMemo(() =>
-    tmTicketsData?.some(t => (t as any).status === 'cap_reached') ?? false, [tmTicketsData]);
+    tmTicketsData?.some(t => t.status === 'cap_reached') ?? false, [tmTicketsData]);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -104,18 +135,18 @@ export function JobHubFinancialsTab({
 
   // CO summary calculations
   const totalAddendums = useMemo(() =>
-    changeOrders?.filter((co: any) => co.change_type === "additive")
-      .reduce((sum: number, co: any) => sum + (Number(co.co_value) || 0), 0) || 0,
+    changeOrders?.filter((co) => co.change_type === "additive")
+      .reduce((sum, co) => sum + (Number((co as unknown as Record<string, unknown>).co_value) || 0), 0) || 0,
     [changeOrders]);
   const totalDeductions = useMemo(() =>
-    changeOrders?.filter((co: any) => co.change_type === "deductive")
-      .reduce((sum: number, co: any) => sum + (Number(co.co_value) || 0), 0) || 0,
+    changeOrders?.filter((co) => co.change_type === "deductive")
+      .reduce((sum, co) => sum + (Number((co as unknown as Record<string, unknown>).co_value) || 0), 0) || 0,
     [changeOrders]);
   const netChange = totalAddendums - totalDeductions;
 
-  const estimateIds = useMemo(() => projectEstimates.map((e: any) => e.id), [projectEstimates]);
-  const invoiceIds = useMemo(() => projectInvoices.map((i: any) => i.id), [projectInvoices]);
-  const poIds = useMemo(() => projectPurchaseOrders.map((p: any) => p.id), [projectPurchaseOrders]);
+  const estimateIds = useMemo(() => projectEstimates.map((e) => e.id), [projectEstimates]);
+  const invoiceIds = useMemo(() => projectInvoices.map((i) => i.id), [projectInvoices]);
+  const poIds = useMemo(() => projectPurchaseOrders.map((p) => p.id), [projectPurchaseOrders]);
 
   const estimateQBMap = useQBMappingForList(estimateIds, "estimate");
   const invoiceQBMap = useQBMappingForList(invoiceIds, "invoice");
@@ -128,7 +159,7 @@ export function JobHubFinancialsTab({
   const qboColumn = (map: Map<string, string>, docType: "estimate" | "invoice" | "purchase_order") => ({
     key: "_qbo",
     header: "",
-    render: (item: any) => {
+    render: (item: { id: string }) => {
       const txnId = map.get(item.id);
       if (!txnId) return null;
       return (
@@ -142,24 +173,24 @@ export function JobHubFinancialsTab({
   const estimateColumns = [
     { key: "number", header: "Estimate #" },
     { key: "customer_name", header: "Customer" },
-    { key: "status", header: "Status", render: (item: any) => <StatusBadge status={item.status} /> },
-    { key: "total", header: "Total", render: (item: any) => <span className="font-medium">${item.total.toFixed(2)}</span> },
-    { key: "created_at", header: "Created", render: (item: any) => format(new Date(item.created_at), "MMM dd, yyyy") },
+    { key: "status", header: "Status", render: (item: FinancialEstimate) => <StatusBadge status={item.status as React.ComponentProps<typeof StatusBadge>["status"]} /> },
+    { key: "total", header: "Total", render: (item: FinancialEstimate) => <span className="font-medium">${item.total.toFixed(2)}</span> },
+    { key: "created_at", header: "Created", render: (item: FinancialEstimate) => format(new Date(item.created_at), "MMM dd, yyyy") },
     ...(estimateQBMap.size > 0 ? [qboColumn(estimateQBMap, "estimate")] : []),
   ];
 
   const jobOrderColumns = [
     { key: "number", header: "Job Order #" },
-    { key: "status", header: "Status", render: (item: any) => <StatusBadge status={item.status} /> },
-    { key: "total", header: "Total", render: (item: any) => <span className="font-medium">${item.total.toFixed(2)}</span> },
-    { key: "start_date", header: "Start Date", render: (item: any) => format(new Date(item.start_date), "MMM dd, yyyy") },
+    { key: "status", header: "Status", render: (item: FinancialJobOrder) => <StatusBadge status={item.status as React.ComponentProps<typeof StatusBadge>["status"]} /> },
+    { key: "total", header: "Total", render: (item: FinancialJobOrder) => <span className="font-medium">${item.total.toFixed(2)}</span> },
+    { key: "start_date", header: "Start Date", render: (item: FinancialJobOrder) => format(new Date(item.start_date), "MMM dd, yyyy") },
   ];
 
   const invoiceColumns = [
     { key: "number", header: "Invoice #" },
-    { key: "status", header: "Status", render: (item: any) => <StatusBadge status={item.status} /> },
-    { key: "total", header: "Amount", render: (item: any) => <span className="font-medium">${item.total.toFixed(2)}</span> },
-    { key: "due_date", header: "Due Date", render: (item: any) => format(new Date(item.due_date), "MMM dd, yyyy") },
+    { key: "status", header: "Status", render: (item: FinancialInvoice) => <StatusBadge status={item.status as React.ComponentProps<typeof StatusBadge>["status"]} /> },
+    { key: "total", header: "Amount", render: (item: FinancialInvoice) => <span className="font-medium">${item.total.toFixed(2)}</span> },
+    { key: "due_date", header: "Due Date", render: (item: FinancialInvoice) => format(new Date(item.due_date), "MMM dd, yyyy") },
     ...(invoiceQBMap.size > 0 ? [qboColumn(invoiceQBMap, "invoice")] : []),
   ];
 
@@ -331,10 +362,10 @@ export function JobHubFinancialsTab({
               </Card>
             ) : (
               <div className="grid gap-3">
-                {changeOrders.map((co: any) => {
-                  const coValue = Number(co.co_value) || Number(co.total) || 0;
+                {changeOrders.map((co) => {
+                  const coValue = Number((co as unknown as Record<string, unknown>).co_value) || Number(co.total) || 0;
                   const isAdditive = co.change_type === "additive";
-                  const lineCount = co.line_items?.length ?? 0;
+                  const lineCount = ((co as unknown as Record<string, unknown>).line_items as unknown[] | undefined)?.length ?? 0;
 
                   return (
                     <Card key={co.id} className="border-border hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate(`/change-orders/${co.id}`)}>

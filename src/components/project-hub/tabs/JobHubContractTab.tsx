@@ -109,7 +109,7 @@ export function JobHubContractTab({
         contractId={contract.id}
         lines={sovLines}
         isLoading={sovLoading}
-        changeOrders={changeOrders.map((co: any) => ({
+        changeOrders={changeOrders.map((co) => ({
           id: co.id,
           number: co.number,
           change_type: co.change_type,

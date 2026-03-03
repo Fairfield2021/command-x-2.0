@@ -367,7 +367,7 @@ export function useUpdateCompletionBillStatus() {
     }) => {
       if (!user?.id) throw new Error("Not authenticated");
 
-      const updates: any = {};
+      const updates: Record<string, unknown> = {};
       let newStatus: string;
 
       switch (params.action) {
@@ -400,8 +400,8 @@ export function useUpdateCompletionBillStatus() {
 
       updates.status = newStatus;
 
-      const { data, error } = await (supabase as any)
-        .from("contractor_completion_bills")
+      const { data, error } = await supabase
+        .from("contractor_completion_bills" as never)
         .update(updates)
         .eq("id", params.bill_id)
         .select(`*, projects(name), project_rooms(unit_number), vendors:contractor_id(name, user_id)`)
@@ -413,8 +413,8 @@ export function useUpdateCompletionBillStatus() {
       try {
         if (params.action === "verify") {
           // Notify PMs
-          const { data: assignments } = await (supabase as any)
-            .from("project_assignments")
+          const { data: assignments } = await supabase
+            .from("project_assignments" as never)
             .select("user_id")
             .eq("project_id", data.project_id)
             .eq("project_role", "project_manager")
@@ -422,7 +422,7 @@ export function useUpdateCompletionBillStatus() {
 
           if (assignments?.length) {
             await supabase.from("admin_notifications").insert(
-              assignments.map((a: any) => ({
+              (assignments as Record<string, unknown>[]).map((a) => ({
                 user_id: a.user_id,
                 title: `Completion verified for Unit ${data.project_rooms?.unit_number || ""}`,
                 message: `Ready for PM approval - $${data.total_amount.toFixed(2)}`,
@@ -435,13 +435,13 @@ export function useUpdateCompletionBillStatus() {
         } else if (params.action === "approve") {
           // Notify accounting users
           const { data: accountingUsers } = await supabase
-            .from("user_roles" as any)
+            .from("user_roles" as never)
             .select("user_id")
             .eq("role", "accounting");
 
           if (accountingUsers?.length) {
             await supabase.from("admin_notifications").insert(
-              (accountingUsers as any[]).map((u: any) => ({
+              (accountingUsers as Record<string, unknown>[]).map((u) => ({
                 user_id: u.user_id,
                 title: `Completion approved - ready for payment`,
                 message: `${data.vendors?.name || "Contractor"} - Unit ${data.project_rooms?.unit_number || ""} - $${data.total_amount.toFixed(2)}`,

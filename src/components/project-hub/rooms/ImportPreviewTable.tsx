@@ -39,13 +39,13 @@ const SCOPE_FIELDS: { key: keyof ImportRoomRow; label: string }[] = [
 export function ImportPreviewTable({ rows, onChange }: ImportPreviewTableProps) {
   const updateRow = (idx: number, field: keyof ImportRoomRow, value: string) => {
     const updated = [...rows];
-    const row = { ...updated[idx] };
+    const row: Record<string, string | number | null> = { ...updated[idx] };
     if (['carpet', 'floor_tile', 'shower_floor', 'shower_wall', 'trim_top', 'trim_side', 'bath_threshold', 'entry_threshold', 'shower_curbs', 'ceiling_height'].includes(field)) {
-      (row as any)[field] = value === '' ? 0 : parseFloat(value) || 0;
+      row[field] = value === '' ? 0 : parseFloat(value) || 0;
     } else {
-      (row as any)[field] = value;
+      row[field] = value;
     }
-    updated[idx] = row;
+    updated[idx] = row as unknown as ImportRoomRow;
     onChange(updated);
   };
 
@@ -108,7 +108,7 @@ export function ImportPreviewTable({ rows, onChange }: ImportPreviewTableProps) 
                       className="h-7 text-xs text-right w-16"
                       type="number"
                       step="0.01"
-                      value={(row as any)[f.key] || ''}
+                      value={row[f.key] || ''}
                       onChange={e => updateRow(idx, f.key, e.target.value)}
                     />
                   </TableCell>

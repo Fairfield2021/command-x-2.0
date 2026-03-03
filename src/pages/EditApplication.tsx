@@ -319,11 +319,11 @@ export default function EditApplication() {
       const { error: appError } = await supabase
         .from("applications")
         .update({
-          answers: processedAnswers as any,
+          answers: processedAnswers as Record<string, unknown>,
           status: "updated" as const,
           edit_token: null, // Clear token after use (one-time)
           edit_token_expires_at: null,
-          missing_fields: [] as any,
+          missing_fields: [] as string[],
           admin_message: null,
         })
         .eq("id", application.id);
@@ -334,8 +334,8 @@ export default function EditApplication() {
 
       toast.success("Your application has been updated!");
       setSubmitted(true);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to update application");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to update application");
     } finally {
       setIsSubmitting(false);
     }

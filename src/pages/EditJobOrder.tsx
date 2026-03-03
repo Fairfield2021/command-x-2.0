@@ -10,7 +10,7 @@ const EditJobOrder = () => {
   const { data: jobOrder, isLoading } = useJobOrder(id || "");
   const updateJobOrder = useUpdateJobOrder();
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: { jobOrder: Record<string, unknown>; lineItems: Record<string, unknown>[] }) => {
     if (!id) return;
 
     await updateJobOrder.mutateAsync({

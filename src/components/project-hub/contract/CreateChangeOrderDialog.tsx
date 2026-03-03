@@ -121,7 +121,7 @@ export function CreateChangeOrderDialog({
           tax_rate: 0,
           subtotal,
           total: subtotal,
-          status: "draft" as any,
+          status: "draft",
         })
         .select("id")
         .single();

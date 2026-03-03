@@ -225,7 +225,7 @@ const PersonnelOnboarding = () => {
     if (!doc) return false;
     
     // Check if document has verification result
-    const verification = (doc as any).verification;
+    const verification = (doc as Record<string, unknown>).verification as { verified?: boolean } | undefined;
     if (!verification) {
       // No verification performed (e.g., PDF files) - allow but note it
       return true;

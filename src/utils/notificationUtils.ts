@@ -19,7 +19,7 @@ interface NotificationOptions {
 // Notification sound - using a simple beep tone
 const playNotificationSound = () => {
   try {
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
 
@@ -76,7 +76,7 @@ export const shouldNotifyForEvent = (
 export const triggerNotification = (
   options: NotificationOptions,
   preferences: NotificationPreferences | null,
-  toastFunction: (options: any) => void
+  toastFunction: (options: NotificationOptions) => void
 ) => {
   if (!preferences) {
     // Default behavior - show toast only

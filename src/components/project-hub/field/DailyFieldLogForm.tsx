@@ -37,7 +37,7 @@ export function DailyFieldLogForm({ open, onOpenChange, projectId, editingLog }:
     onOpenChange(false);
   };
 
-  const set = (key: string, value: any) => setFormData((prev) => ({ ...prev, [key]: value }));
+  const set = (key: string, value: string | number) => setFormData((prev) => ({ ...prev, [key]: value }));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

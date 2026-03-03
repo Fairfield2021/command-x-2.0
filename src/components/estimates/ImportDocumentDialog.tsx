@@ -128,8 +128,15 @@ export const ImportDocumentDialog = ({
         }
 
         // Map extracted items to our format
-        const items: ExtractedItem[] = (data.items || []).map(
-          (item: any) => ({
+        interface ExtractedRawItem {
+          description?: string;
+          product_code?: string;
+          quantity?: number;
+          unit_price?: number;
+          unit?: string;
+        }
+        const items: ExtractedItem[] = ((data.items || []) as ExtractedRawItem[]).map(
+          (item) => ({
             id: `extracted-${itemIndex++}`,
             originalDescription: item.description || "",
             productCode: item.product_code || "",

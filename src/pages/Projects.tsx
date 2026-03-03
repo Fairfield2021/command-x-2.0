@@ -237,8 +237,8 @@ const Projects = () => {
       poc_phone: project.poc_phone || "",
       poc_email: project.poc_email || "",
       use_customer_address: false,
-      time_clock_enabled: (project as any).time_clock_enabled || false,
-      require_clock_location: (project as any).require_clock_location ?? true,
+      time_clock_enabled: (project as Record<string, unknown>).time_clock_enabled as boolean || false,
+      require_clock_location: (project as Record<string, unknown>).require_clock_location as boolean ?? true,
       mandatory_payroll: project.mandatory_payroll || false,
     });
     setIsDialogOpen(true);

@@ -381,7 +381,7 @@ const PersonnelDetail = () => {
                       </Badge>
                     </Link>
                   )}
-                  {(personnel as any).portal_required === false && (
+                  {(personnel as Record<string, unknown>).portal_required === false && (
                     <Badge variant="secondary" className="gap-1">
                       <UserX className="h-3 w-3" />
                       Temporary Worker
@@ -447,7 +447,7 @@ const PersonnelDetail = () => {
                     onClick={() => {
                       updatePersonnel.mutate({
                         id: personnel.id,
-                        updates: { portal_required: (personnel as any).portal_required === false ? true : false },
+                        updates: { portal_required: (personnel as Record<string, unknown>).portal_required === false ? true : false },
                       });
                     }}
                     disabled={updatePersonnel.isPending}
@@ -455,14 +455,14 @@ const PersonnelDetail = () => {
                   >
                     {updatePersonnel.isPending ? (
                       <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : (personnel as any).portal_required === false ? (
+                    ) : (personnel as Record<string, unknown>).portal_required === false ? (
                       <UserCheck className="h-3 w-3" />
                     ) : (
                       <UserX className="h-3 w-3" />
                     )}
-                    {(personnel as any).portal_required === false ? "Require Portal" : "Mark as Temporary"}
+                    {(personnel as Record<string, unknown>).portal_required === false ? "Require Portal" : "Mark as Temporary"}
                   </Button>
-                  {(personnel as any).portal_required !== false && (
+                  {(personnel as Record<string, unknown>).portal_required !== false && (
                     <InviteToPortalDialog
                       personnelId={personnel.id}
                       personnelName={`${personnel.first_name} ${personnel.last_name}`}

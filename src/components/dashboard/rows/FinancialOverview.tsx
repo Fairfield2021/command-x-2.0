@@ -58,9 +58,9 @@ export function FinancialOverview() {
   }, [jobSummaries]);
 
   // Guard: hide if no data or no active projects
-  if (!portfolio || (portfolio as any).active_projects === 0) return null;
+  if (!portfolio || portfolio.active_projects === 0) return null;
 
-  const p = portfolio as any;
+  const p = portfolio;
   const profitPositive = (p.total_gross_profit ?? 0) >= 0;
 
   return (

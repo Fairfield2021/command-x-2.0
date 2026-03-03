@@ -31,7 +31,7 @@ export function useJobPostingCountsByProject(projectIds: string[]) {
       });
 
       // Count actual job postings
-      data?.forEach((pto: any) => {
+      data?.forEach((pto) => {
         if (pto.project_id && pto.job_postings) {
           const postingCount = Array.isArray(pto.job_postings) 
             ? pto.job_postings.length 

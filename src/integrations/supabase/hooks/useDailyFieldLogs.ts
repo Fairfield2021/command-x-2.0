@@ -76,7 +76,7 @@ export function useCreateFieldLog() {
 export function useUpdateFieldLog() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, project_id, ...updates }: { id: string; project_id: string; [key: string]: any }) => {
+    mutationFn: async ({ id, project_id, ...updates }: { id: string; project_id: string; [key: string]: unknown }) => {
       const { error } = await supabase
         .from("daily_field_logs")
         .update(updates)

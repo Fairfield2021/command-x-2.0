@@ -93,7 +93,7 @@ export default function PublicApplicationForm() {
   const [submitted, setSubmitted] = useState(false);
   const [customFields, setCustomFields] = useState<FormFieldType[]>([]);
   const [customLayout, setCustomLayout] = useState<FormRow[]>([]);
-  const [customAnswers, setCustomAnswers] = useState<Record<string, any>>({});
+  const [customAnswers, setCustomAnswers] = useState<Record<string, unknown>>({});
   const [theme, setTheme] = useState<FormTheme>({});
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [formTemplateId, setFormTemplateId] = useState<string | undefined>();
@@ -164,7 +164,7 @@ export default function PublicApplicationForm() {
             setCustomLayout(generatedLayout);
             
             // Initialize default values for custom fields
-            const defaults: Record<string, any> = {};
+            const defaults: Record<string, unknown> = {};
             fields.forEach(field => {
               if (field.type === "checkbox") {
                 defaults[field.id] = false;
@@ -208,7 +208,7 @@ export default function PublicApplicationForm() {
   });
 
   // Helper to check if answer is compatible with field options
-  const isAnswerCompatible = (answer: any, field: FormFieldType): boolean => {
+  const isAnswerCompatible = (answer: unknown, field: FormFieldType): boolean => {
     if (field.type === "radio" || field.type === "dropdown") {
       // Check if the answer is one of the available options
       return field.options?.includes(answer) || false;
@@ -245,7 +245,7 @@ export default function PublicApplicationForm() {
     
     if (prevAnswers && Object.keys(prevAnswers).length > 0) {
       const answeredIds = new Set<string>();
-      const mergedAnswers: Record<string, any> = {};
+      const mergedAnswers: Record<string, unknown> = {};
       
       // First pass: exact ID matches
       Object.entries(prevAnswers).forEach(([fieldId, value]) => {
@@ -348,7 +348,7 @@ export default function PublicApplicationForm() {
     clearApplicant();
     form.reset();
     // Reset custom answers to defaults
-    const defaults: Record<string, any> = {};
+    const defaults: Record<string, unknown> = {};
     customFields.forEach(field => {
       if (field.type === "checkbox") {
         defaults[field.id] = false;
@@ -492,24 +492,27 @@ export default function PublicApplicationForm() {
       });
       toast.success("Thank you for applying! We appreciate your interest and will review your application soon.");
       setSubmitted(true);
-    } catch (err: any) {
-      if (err?.message === "DUPLICATE_APPLICATION") {
+    } catch (err: unknown) {
+      const errObj = err as Record<string, unknown> | null;
+      const errMessage = errObj?.message as string | undefined;
+      const errCode = errObj?.code as string | undefined;
+      if (errMessage === "DUPLICATE_APPLICATION") {
         toast.error("You have already applied for this specific position. You can still apply for other open positions.");
-      } else if (err?.message?.includes("row-level security")) {
+      } else if (errMessage?.includes("row-level security")) {
         toast.error("Permission error. Please contact support if this persists.");
-      } else if (err?.code === "PGRST301") {
+      } else if (errCode === "PGRST301") {
         toast.error("Database connection error. Please try again.");
-      } else if (err?.code === "23505") {
+      } else if (errCode === "23505") {
         // This could be a unique constraint on applications (applicant_id + job_posting_id)
         // or on applicants (email) - but we handle applicant reuse now, so this is likely applications
         toast.error("You have already applied for this specific position.");
       } else {
-        toast.error(err?.message || "Failed to submit application. Please try again.");
+        toast.error(errMessage || "Failed to submit application. Please try again.");
       }
     }
   };
 
-  const updateCustomAnswer = (fieldId: string, value: any) => {
+  const updateCustomAnswer = (fieldId: string, value: unknown) => {
     setCustomAnswers(prev => ({ ...prev, [fieldId]: value }));
   };
 

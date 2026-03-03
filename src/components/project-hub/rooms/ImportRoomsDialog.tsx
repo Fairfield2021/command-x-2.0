@@ -98,21 +98,21 @@ function detectSpecialNotes(showerSize: string): { cleanSize: string; notes: str
 
 function parseSpreadsheet(workbook: XLSX.WorkBook): ImportRoomRow[] {
   const sheet = workbook.Sheets[workbook.SheetNames[0]];
-  const rawData = XLSX.utils.sheet_to_json<any>(sheet, { header: 1, defval: '' });
+  const rawData = XLSX.utils.sheet_to_json<(string | number)[]>(sheet, { header: 1, defval: '' });
 
   if (rawData.length < 2) return [];
 
   // Find header row (scan first 5 rows for one with 'unit' or 'no')
   let headerRowIdx = 0;
   for (let i = 0; i < Math.min(5, rawData.length); i++) {
-    const row = rawData[i].map((c: any) => String(c).toLowerCase());
-    if (row.some((c: string) => c.includes('unit') || c.includes('carpet') || c.includes('floor'))) {
+    const row = rawData[i].map((c) => String(c).toLowerCase());
+    if (row.some((c) => c.includes('unit') || c.includes('carpet') || c.includes('floor'))) {
       headerRowIdx = i;
       break;
     }
   }
 
-  const headers = rawData[headerRowIdx].map((h: any) => String(h));
+  const headers = rawData[headerRowIdx].map((h) => String(h));
   const colMap: Record<number, keyof ImportRoomRow> = {};
   headers.forEach((h: string, i: number) => {
     const mapped = mapHeader(h);
@@ -127,8 +127,7 @@ function parseSpreadsheet(workbook: XLSX.WorkBook): ImportRoomRow[] {
     String(lastRow[0] || '').toLowerCase().includes('total') ||
     String(lastRow[1] || '').toLowerCase().includes('total') ||
     // If unit_number col is empty or non-numeric in last row, likely totals
-    (colMap[Object.keys(colMap).find(k => colMap[Number(k)] === 'unit_number') as any] !== undefined &&
-     String(lastRow[Object.keys(colMap).find(k => colMap[Number(k)] === 'unit_number') as any] || '').trim() === '')
+    ((() => { const unitColKey = Object.keys(colMap).find(k => colMap[Number(k)] === 'unit_number'); return unitColKey !== undefined && String(lastRow[Number(unitColKey)] || '').trim() === ''; })())
   );
   
   const rowsToProcess = isLastRowTotals ? dataRows.slice(0, -1) : dataRows;
@@ -152,7 +151,7 @@ function parseSpreadsheet(workbook: XLSX.WorkBook): ImportRoomRow[] {
       } else if (field === 'ceiling_height') {
         room.ceiling_height = val ? parseInt(String(val)) || null : null;
       } else {
-        (room as any)[field] = val ? parseFloat(String(val)) || 0 : 0;
+        (room as Record<string, string | number | null>)[field] = val ? parseFloat(String(val)) || 0 : 0;
       }
     }
 
@@ -210,7 +209,7 @@ export function ImportRoomsDialog({ open, onOpenChange, projectId, summaryItems 
         return;
       }
 
-      const rows: ImportRoomRow[] = data.rooms.map((r: any) => {
+      const rows: ImportRoomRow[] = data.rooms.map((r: Partial<ImportRoomRow>) => {
         const { cleanSize, notes } = detectSpecialNotes(r.shower_size || '');
         return {
           unit_number: String(r.unit_number || ''),

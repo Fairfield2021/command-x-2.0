@@ -9,9 +9,22 @@ const getActivityTypeLabel = (typeValue: string): string => {
 };
 
 /**
+ * Activity log record for export
+ */
+interface ActivityLogRecord {
+  created_at: string;
+  action: string;
+  target_email: string;
+  target_role: string;
+  performed_by_email: string | null;
+  metadata?: unknown;
+  invitation_id?: string;
+}
+
+/**
  * Export activity logs to CSV format
  */
-export const exportToCSV = (data: any[], filename: string) => {
+export const exportToCSV = (data: ActivityLogRecord[], filename: string) => {
   if (data.length === 0) {
     throw new Error('No data to export');
   }
@@ -46,7 +59,7 @@ export const exportToCSV = (data: any[], filename: string) => {
 /**
  * Export activity logs to JSON format
  */
-export const exportToJSON = (data: any[], filename: string) => {
+export const exportToJSON = (data: ActivityLogRecord[], filename: string) => {
   if (data.length === 0) {
     throw new Error('No data to export');
   }

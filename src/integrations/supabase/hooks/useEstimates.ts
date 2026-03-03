@@ -505,10 +505,10 @@ export const useConvertEstimateToJobOrder = () => {
       if (jobOrderError) throw jobOrderError;
 
       // Create job order line items (preserve is_taxable, product_id, and product_name from estimate)
-      const jobOrderLineItems = lineItems.map((item: any) => ({
+      const jobOrderLineItems = lineItems.map((item: Record<string, unknown>) => ({
         job_order_id: jobOrder.id,
         product_id: item.product_id || null,
-        product_name: item.product_name || item.products?.name || null,
+        product_name: item.product_name || (item.products as Record<string, unknown>)?.name || null,
         description: item.description,
         quantity: item.quantity,
         unit_price: item.unit_price,
@@ -605,17 +605,18 @@ export const useConvertEstimateToInvoice = () => {
       if (invoiceError) throw invoiceError;
 
       // Create invoice line items with separated product name and description
-      const invoiceLineItems = lineItems.map((item: any) => {
-        const productName = item.product_name || item.products?.name || null;
+      const invoiceLineItems = lineItems.map((item: Record<string, unknown>) => {
+        const products = item.products as Record<string, unknown> | null;
+        const productName = item.product_name || products?.name || null;
         
         // Clean description: if it starts with the product name (old data), strip it
-        let cleanDescription = item.description || "";
-        if (productName && cleanDescription.startsWith(productName)) {
+        let cleanDescription = (item.description as string) || "";
+        if (productName && cleanDescription.startsWith(productName as string)) {
           // Remove product name prefix and common separators
-          cleanDescription = cleanDescription.slice(productName.length).replace(/^[\s\-:]+/, "").trim();
+          cleanDescription = cleanDescription.slice((productName as string).length).replace(/^[\s\-:]+/, "").trim();
           // If nothing left, use product description or empty
           if (!cleanDescription) {
-            cleanDescription = item.products?.description || "";
+            cleanDescription = (products?.description as string) || "";
           }
         }
         

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { ChevronDown, ChevronUp, Trash2, GripVertical, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,8 +30,8 @@ interface FieldSettingsPanelProps {
   onUpdateOption: (optionIndex: number, value: string) => void;
   onAddOption: () => void;
   onRemoveOption: (optionIndex: number) => void;
-  fieldTypes: readonly { value: string; label: string; icon: any }[];
-  dragHandleProps?: Record<string, any>;
+  fieldTypes: readonly { value: string; label: string; icon: React.ComponentType<{ className?: string }> }[];
+  dragHandleProps?: Record<string, unknown>;
 }
 
 export function FieldSettingsPanel({

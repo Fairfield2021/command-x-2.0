@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Trash2, GripVertical, Settings2, ChevronDown, ChevronUp } from "lucide-react";
@@ -39,7 +39,7 @@ interface SortableGridFieldProps {
   onUpdateOption: (optionIndex: number, value: string) => void;
   onAddOption: () => void;
   onRemoveOption: (optionIndex: number) => void;
-  fieldTypes: readonly { value: string; label: string; icon: any }[];
+  fieldTypes: readonly { value: string; label: string; icon: React.ComponentType<{ className?: string }> }[];
   isDragOverlay?: boolean;
 }
 

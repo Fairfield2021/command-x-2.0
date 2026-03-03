@@ -120,8 +120,8 @@ const PurchaseOrderDetail = () => {
       if (error) throw error;
 
       toast.success(`Purchase order ${approved ? 'approved' : 'rejected'} successfully!`);
-    } catch (error: any) {
-      toast.error(error.message || `Failed to ${approved ? 'approve' : 'reject'} purchase order`);
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : `Failed to ${approved ? 'approve' : 'reject'} purchase order`);
     } finally {
       setIsApproving(false);
     }
@@ -139,8 +139,8 @@ const PurchaseOrderDetail = () => {
       if (error) throw error;
 
       toast.success("Purchase order sent to vendor successfully!");
-    } catch (error: any) {
-      toast.error(error.message || "Failed to send purchase order");
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "Failed to send purchase order");
     } finally {
       setIsSending(false);
     }

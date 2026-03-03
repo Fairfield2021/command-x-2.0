@@ -40,9 +40,9 @@ export function FieldCrewDashboard() {
       {personnelId && clockProjects && (
         <ClockStatusCard
           personnelId={personnelId}
-          projects={(clockProjects || []).map((p: any) => ({
+          projects={(clockProjects || []).map((p) => ({
             id: p.id,
-            name: p.project_name || p.name || "",
+            name: (p as Record<string, unknown>).project_name as string || p.name || "",
             time_clock_enabled: true,
             require_clock_location: false,
           }))}
@@ -113,13 +113,13 @@ export function FieldCrewDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            {clockProjects.map((proj: any) => (
+            {clockProjects.map((proj) => (
               <Link
                 key={proj.id}
                 to={`/projects/${proj.id}`}
                 className="flex items-center justify-between p-3 rounded-lg border border-border bg-secondary/50 hover:bg-secondary transition-colors"
               >
-                <span className="text-sm font-medium text-foreground truncate">{proj.project_name || proj.name}</span>
+                <span className="text-sm font-medium text-foreground truncate">{(proj as Record<string, unknown>).project_name as string || proj.name}</span>
                 <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
               </Link>
             ))}

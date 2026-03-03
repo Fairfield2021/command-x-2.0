@@ -228,7 +228,7 @@ export const generateInvoicePDF = async (
     doc.text((index + 1).toString(), colNum, rowY);
     
     // Product/Service name - use product_name or derive from order info
-    let productName = (item as any).product_name;
+    let productName = (item as unknown as { product_name?: string }).product_name;
     const displayDescription = item.description;
 
     if (!productName) {

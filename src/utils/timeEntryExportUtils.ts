@@ -249,7 +249,7 @@ export function exportTimeEntriesToJSON(
   // Build entry data based on visible columns
   const mappedEntries = entries.map((entry) => {
     const rate = getHourlyRate(entry);
-    const result: Record<string, any> = { id: entry.id };
+    const result: Record<string, unknown> = { id: entry.id };
     
     if (visibleColumns.includes("date")) result.date = entry.entry_date;
     if (visibleColumns.includes("personnel")) {
@@ -276,7 +276,7 @@ export function exportTimeEntriesToJSON(
     return result;
   });
 
-  const exportData: Record<string, any> = {
+  const exportData: Record<string, unknown> = {
     exportDate: new Date().toISOString(),
     includedColumns: visibleColumns,
   };

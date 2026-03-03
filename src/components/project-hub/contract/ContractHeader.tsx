@@ -94,7 +94,7 @@ export function ContractHeader({ contract, customerName, changeOrders = [] }: Co
           </span>
         </div>
         <span className="text-sm text-foreground font-semibold">{contract.title}</span>
-        <StatusBadge status={contract.status as any} />
+        <StatusBadge status={contract.status as React.ComponentProps<typeof StatusBadge>["status"]} />
         {customerName && (
           <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
             <User className="h-3.5 w-3.5" />

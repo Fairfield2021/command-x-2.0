@@ -72,8 +72,8 @@ const OverheadAnalysis = () => {
   const projectHours = useMemo(() => {
     const map = new Map<string, { name: string; hours: number }>();
     for (const e of entries) {
-      if ((e as any).is_overhead) continue;
-      const pName = (e.projects as any)?.name || "Unknown";
+      if ((e as Record<string, unknown>).is_overhead) continue;
+      const pName = (e.projects as Record<string, unknown> | null)?.name as string || "Unknown";
       const existing = map.get(e.project_id);
       if (existing) {
         existing.hours += e.hours || 0;
@@ -92,9 +92,9 @@ const OverheadAnalysis = () => {
 
     for (const e of entries) {
       const hours = e.hours || 0;
-      if ((e as any).is_overhead) {
+      if ((e as Record<string, unknown>).is_overhead) {
         totalOverhead += hours;
-        const cat = (e as any).overhead_category || "other";
+        const cat = (e as Record<string, unknown>).overhead_category || "other";
         categoryMap.set(cat, (categoryMap.get(cat) || 0) + hours);
       } else {
         totalProject += hours;
@@ -114,11 +114,11 @@ const OverheadAnalysis = () => {
     const map = new Map<string, { name: string; projectHours: number; overheadHours: number }>();
     for (const e of entries) {
       if (!e.personnel_id) continue;
-      const p = e.personnel as any;
+      const p = e.personnel as Record<string, unknown> | null;
       const name = p ? `${p.first_name} ${p.last_name}` : "Unknown";
       const existing = map.get(e.personnel_id);
       const hours = e.hours || 0;
-      const isOH = (e as any).is_overhead === true;
+      const isOH = (e as Record<string, unknown>).is_overhead === true;
 
       if (existing) {
         if (isOH) existing.overheadHours += hours;

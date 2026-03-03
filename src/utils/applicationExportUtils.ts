@@ -27,7 +27,7 @@ function formatFieldValue(value: unknown, field: FormField): string {
   switch (field.type) {
     case "date":
       try {
-        return format(new Date(value), "dd-MMM-yyyy");
+        return format(new Date(String(value)), "dd-MMM-yyyy");
       } catch {
         return String(value);
       }
@@ -37,20 +37,21 @@ function formatFieldValue(value: unknown, field: FormField): string {
       if (Array.isArray(value)) return value.join(", ");
       return String(value);
     case "address":
-      if (typeof value === "object") {
+      if (typeof value === "object" && value !== null) {
+        const addrObj = value as Record<string, unknown>;
         const parts = [
-          value.street,
-          value.city,
-          value.state,
-          value.zip,
-          value.country,
+          addrObj.street,
+          addrObj.city,
+          addrObj.state,
+          addrObj.zip,
+          addrObj.country,
         ].filter(Boolean);
         return parts.join(", ");
       }
       return String(value);
     case "file":
       // Return URL or empty if it's an empty object
-      if (typeof value === "object" && Object.keys(value).length === 0) return "";
+      if (typeof value === "object" && value !== null && Object.keys(value).length === 0) return "";
       if (typeof value === "string" && value.startsWith("http")) return value;
       return "";
     case "signature":
@@ -185,7 +186,7 @@ export function exportApplicationsToCSV(
   
   // Build rows
   const rows = applications.map((app) => {
-    const answers = (app.answers || {}) as Record<string, any>;
+    const answers = (app.answers || {}) as Record<string, unknown>;
     
     // Core fields
     const coreValues = [
@@ -340,8 +341,8 @@ export async function exportApplicationsToExcel(
   // Add data rows
   for (let i = 0; i < applications.length; i++) {
     const app = applications[i];
-    const answers = (app.answers || {}) as Record<string, any>;
-    const rowData: Record<string, any> = {};
+    const answers = (app.answers || {}) as Record<string, unknown>;
+    const rowData: Record<string, string> = {};
     
     // Core fields
     rowData.name = `${app.applicants?.first_name || ""} ${app.applicants?.last_name || ""}`.trim();
@@ -526,7 +527,7 @@ export function exportApplicationsToPDF(
       doc.rect(14, y - 5, 265, 8, "F");
     }
 
-    const answers = (app.answers || {}) as Record<string, any>;
+    const answers = (app.answers || {}) as Record<string, unknown>;
     
     // Build row values
     const values = [

@@ -137,13 +137,16 @@ export function UnassignPersonnelDialog({
 
         if (error) throw error;
 
-        const assets: ActiveAsset[] = (data || []).map((aa: any) => ({
-          assignmentId: aa.id,
-          assetId: aa.asset_id,
-          type: aa.assets?.type || "unknown",
-          label: aa.assets?.label || "Unknown Asset",
-          address: aa.assets?.address,
-        }));
+        const assets: ActiveAsset[] = (data || []).map((aa) => {
+          const assetData = aa.assets as { type: string; label: string; address: string | null } | null;
+          return {
+            assignmentId: aa.id,
+            assetId: aa.asset_id,
+            type: assetData?.type || "unknown",
+            label: assetData?.label || "Unknown Asset",
+            address: assetData?.address ?? null,
+          };
+        });
 
         setActiveAssets(assets);
         
