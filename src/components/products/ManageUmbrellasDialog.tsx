@@ -29,10 +29,10 @@ export function ManageUmbrellasDialog({ open, onOpenChange, onAddItem, onEditIte
   const [selectedUmbrella, setSelectedUmbrella] = useState<string | null>(null);
 
   const getProductCount = (umbrellaId: string) =>
-    products.filter((p) => (p as any).qb_product_mapping_id === umbrellaId).length;
+    products.filter((p) => p.qb_product_mapping_id === umbrellaId).length;
 
   const getProductsForUmbrella = (umbrellaId: string) =>
-    products.filter((p) => (p as any).qb_product_mapping_id === umbrellaId);
+    products.filter((p) => p.qb_product_mapping_id === umbrellaId);
 
   const selectedUmbrellaData = umbrellas.find((u) => u.id === selectedUmbrella);
 

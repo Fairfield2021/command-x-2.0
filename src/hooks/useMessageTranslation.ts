@@ -78,8 +78,8 @@ export function useMessageTranslation() {
       });
 
       return result;
-    } catch (err: any) {
-      const errorMessage = err.message || 'Translation failed';
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Translation failed';
       setError(errorMessage);
       return null;
     } finally {

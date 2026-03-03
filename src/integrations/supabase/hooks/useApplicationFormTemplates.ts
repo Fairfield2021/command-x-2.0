@@ -207,12 +207,12 @@ export const useCreateApplicationFormTemplate = () => {
         .insert({
           name: template.name,
           description: template.description || null,
-          fields: template.fields as any,
-          layout: (template.layout || []) as any,
-          theme: (template.theme || {}) as any,
+          fields: template.fields as unknown as Record<string, unknown>[],
+          layout: (template.layout || []) as unknown as Record<string, unknown>[],
+          theme: (template.theme || {}) as unknown as Record<string, unknown>,
           category: template.category || null,
           success_message: template.success_message || "Thank you for your submission!",
-          settings: (template.settings || {}) as any,
+          settings: (template.settings || {}) as unknown as Record<string, unknown>,
           is_active: true,
           is_draft: true,
           version: 1,
@@ -256,7 +256,7 @@ export const useUpdateApplicationFormTemplate = () => {
         .eq("id", id)
         .single();
 
-      const updateData: any = {};
+      const updateData: Record<string, unknown> = {};
       if (updates.name !== undefined) updateData.name = updates.name;
       if (updates.description !== undefined) updateData.description = updates.description;
       if (updates.fields !== undefined) updateData.fields = updates.fields;

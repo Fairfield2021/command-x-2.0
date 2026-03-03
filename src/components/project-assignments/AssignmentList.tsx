@@ -13,8 +13,23 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+interface Assignment {
+  id: string;
+  assigned_at: string;
+  last_time_entry_at: string | null;
+  status: string;
+  profiles?: {
+    first_name: string;
+    last_name: string;
+    email: string;
+  };
+  projects?: {
+    name: string;
+  };
+}
+
 interface AssignmentListProps {
-  assignments: any[];
+  assignments: Assignment[];
   isLoading: boolean;
   showActions?: boolean;
   showReactivate?: boolean;

@@ -51,7 +51,7 @@ const ApproveEstimate = () => {
         setFeedback("");
       }
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(error.message || "An error occurred");
     },
   });
@@ -152,7 +152,7 @@ const ApproveEstimate = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {estimate.estimate_line_items?.map((item: any) => (
+                  {estimate.estimate_line_items?.map((item: Record<string, unknown>) => (
                     <tr key={item.id} className="border-b border-border/50">
                       <td className="py-3 px-2 text-sm">{item.description}</td>
                       <td className="py-3 px-2 text-sm text-center">{item.quantity}</td>

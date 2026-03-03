@@ -55,8 +55,8 @@ export function useNativeGeolocation(
   const [error, setError] = useState<string | null>(null);
 
   // Store the BackgroundGeolocation module reference
-  const bgGeoRef = useRef<any>(null);
-  const geofenceListenerRef = useRef<any>(null);
+  const bgGeoRef = useRef<typeof import("@transistorsoft/capacitor-background-geolocation").BackgroundGeolocation | null>(null);
+  const geofenceListenerRef = useRef<{ remove(): void } | null>(null);
 
   // Load the native plugin dynamically (only on native platforms)
   const loadNativePlugin = useCallback(async () => {
@@ -116,7 +116,7 @@ export function useNativeGeolocation(
         });
 
         // Set up location listener
-        BackgroundGeolocation.onLocation((location: any) => {
+        BackgroundGeolocation.onLocation((location) => {
           setLastLocation({
             lat: location.coords.latitude,
             lng: location.coords.longitude,
@@ -131,7 +131,7 @@ export function useNativeGeolocation(
         // Set up geofence listener
         if (onGeofenceExit) {
           geofenceListenerRef.current = BackgroundGeolocation.onGeofence(
-            (event: any) => {
+            (event) => {
               if (event.action === "EXIT") {
                 onGeofenceExit(event.identifier);
               }
@@ -143,8 +143,8 @@ export function useNativeGeolocation(
         await BackgroundGeolocation.start();
         setIsTracking(true);
         return true;
-      } catch (err: any) {
-        setError(err.message || "Failed to start location tracking");
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Failed to start location tracking");
         return false;
       }
     } else {
@@ -197,8 +197,8 @@ export function useNativeGeolocation(
 
         setLastLocation(locationData);
         return locationData;
-      } catch (err: any) {
-        setError(err.message || "Failed to get location");
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Failed to get location");
         return initialLocationData;
       }
     } else {
@@ -254,8 +254,8 @@ export function useNativeGeolocation(
           notifyOnExit: config.notifyOnExit ?? true,
           notifyOnDwell: config.notifyOnDwell ?? false,
         });
-      } catch (err: any) {
-        setError(err.message || "Failed to add geofence");
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Failed to add geofence");
       }
     },
     [isNative, loadNativePlugin]
@@ -268,7 +268,7 @@ export function useNativeGeolocation(
 
       try {
         await bgGeoRef.current.removeGeofence(identifier);
-      } catch (err: any) {
+      } catch (err: unknown) {
         // Remove geofence failed silently
       }
     },
@@ -281,7 +281,7 @@ export function useNativeGeolocation(
 
     try {
       await bgGeoRef.current.removeGeofences();
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Remove all geofences failed silently
     }
   }, [isNative]);

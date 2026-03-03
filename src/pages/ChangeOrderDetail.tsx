@@ -134,12 +134,12 @@ export default function ChangeOrderDetail() {
         id,
         customer_wo_file_path: filePath,
         customer_wo_uploaded_at: new Date().toISOString(),
-      } as any);
+      } as Record<string, unknown>);
 
       toast.success("Work order document uploaded");
       queryClient.invalidateQueries({ queryKey: ["change_orders"] });
-    } catch (err: any) {
-      toast.error("Upload failed: " + err.message);
+    } catch (err: unknown) {
+      toast.error("Upload failed: " + (err instanceof Error ? err.message : "Unknown error"));
     } finally {
       setWoUploading(false);
     }
@@ -160,23 +160,23 @@ export default function ChangeOrderDetail() {
           work_authorized: true,
           status: "approved",
           customer_wo_number: woNumber.trim() || changeOrder.customer_wo_number,
-        } as any)
+        } as Record<string, unknown>)
         .eq("id", id);
 
       if (error) throw error;
-      
+
       // Log the action
       await supabase.from("change_order_approval_log").insert({
         change_order_id: id,
         action: "wo_received",
         actor_name: "System",
         notes: `Work authorized. WO #${woNumber.trim() || changeOrder.customer_wo_number}`,
-      } as any);
+      } as Record<string, unknown>);
 
       queryClient.invalidateQueries({ queryKey: ["change_orders"] });
       toast.success("Work authorized!");
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Unknown error");
     }
   };
 
@@ -338,9 +338,9 @@ export default function ChangeOrderDetail() {
         <ChangeOrderApprovalTimeline
           changeOrderId={changeOrder.id}
           status={changeOrder.status}
-          sentForApprovalAt={(changeOrder as any).sent_for_approval_at}
-          fieldSupervisorSignedAt={(changeOrder as any).field_supervisor_signed_at}
-          customerPmSignedAt={(changeOrder as any).customer_pm_signed_at}
+          sentForApprovalAt={(changeOrder as Record<string, unknown>).sent_for_approval_at as string | undefined}
+          fieldSupervisorSignedAt={(changeOrder as Record<string, unknown>).field_supervisor_signed_at as string | undefined}
+          customerPmSignedAt={(changeOrder as Record<string, unknown>).customer_pm_signed_at as string | undefined}
           workAuthorized={changeOrder.work_authorized}
           customerWoNumber={changeOrder.customer_wo_number}
         />
@@ -370,7 +370,7 @@ export default function ChangeOrderDetail() {
                 <div className="space-y-2">
                   <Label>Work Order Document</Label>
                   <Input type="file" onChange={handleWOUpload} disabled={woUploading} accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" />
-                  {(changeOrder as any).customer_wo_file_path && (
+                  {(changeOrder as Record<string, unknown>).customer_wo_file_path && (
                     <p className="text-xs text-green-600">✓ Document uploaded</p>
                   )}
                 </div>

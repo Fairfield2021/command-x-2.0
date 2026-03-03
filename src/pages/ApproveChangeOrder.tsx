@@ -170,8 +170,8 @@ export default function ApproveChangeOrder() {
     );
   }
 
-  const poNumber = (addendum as any).purchase_orders?.number || 'N/A';
-  const vendorName = (addendum as any).purchase_orders?.vendors?.name || 'N/A';
+  const poNumber = (addendum as Record<string, unknown> & { purchase_orders?: { number?: string; vendors?: { name?: string } } }).purchase_orders?.number || 'N/A';
+  const vendorName = (addendum as Record<string, unknown> & { purchase_orders?: { number?: string; vendors?: { name?: string } } }).purchase_orders?.vendors?.name || 'N/A';
 
   const isSignatureValid = signatureType === 'type' 
     ? typedSignature.trim().length > 0 

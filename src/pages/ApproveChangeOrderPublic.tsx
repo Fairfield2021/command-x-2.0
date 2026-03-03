@@ -38,7 +38,7 @@ function useChangeOrderByToken(token: string | undefined) {
       }
 
       if (error) throw error;
-      return data as any;
+      return data as Record<string, unknown>;
     },
     enabled: !!token,
   });
@@ -82,7 +82,7 @@ export default function ApproveChangeOrderPublic() {
         toast.success("Change order signed successfully!");
       }
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast.error(error.message);
     },
   });
@@ -277,7 +277,7 @@ export default function ApproveChangeOrderPublic() {
   }
 
   const lineItems = co.line_items || [];
-  const project = co.project as any;
+  const project = co.project as Record<string, unknown> | null;
   const isSignatureValid = signatureType === "type" ? typedSignature.trim().length > 0 : true;
 
   return (
@@ -369,7 +369,7 @@ export default function ApproveChangeOrderPublic() {
                     </tr>
                   </thead>
                   <tbody>
-                    {lineItems.map((item: any) => (
+                    {lineItems.map((item: Record<string, unknown>) => (
                       <tr key={item.id} className="border-t">
                         <td className="px-4 py-2">{item.description}</td>
                         <td className="px-4 py-2 text-right">{item.quantity}</td>

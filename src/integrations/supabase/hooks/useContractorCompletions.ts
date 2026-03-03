@@ -69,8 +69,8 @@ export function useContractorRooms() {
       if (!subcontractor?.id) return [];
 
       // Get rooms assigned to this vendor
-      const { data: rooms, error: roomsError } = await (supabase as any)
-        .from("project_rooms")
+      const { data: rooms, error: roomsError } = await supabase
+        .from("project_rooms" as never)
         .select(`
           id,
           unit_number,
@@ -86,11 +86,11 @@ export function useContractorRooms() {
       if (roomsError) throw roomsError;
       if (!rooms || rooms.length === 0) return [];
 
-      const roomIds: string[] = rooms.map((r: any) => String(r.id));
+      const roomIds: string[] = (rooms as Record<string, unknown>[]).map((r) => String(r.id));
 
       // Get scope items for these rooms
-      const { data: scopeItems, error: scopeError } = await (supabase as any)
-        .from("room_scope_items")
+      const { data: scopeItems, error: scopeError } = await supabase
+        .from("room_scope_items" as never)
         .select(`
           id,
           room_id,
@@ -108,39 +108,39 @@ export function useContractorRooms() {
       if (scopeError) throw scopeError;
 
       // Get unit costs from job_order_line_items -> po_line_items
-      const joLineItemIds = Array.from(new Set((scopeItems || []).map((s: any) => String(s.job_order_line_item_id))));
-      
+      const joLineItemIds = Array.from(new Set(((scopeItems || []) as Record<string, unknown>[]).map((s) => String(s.job_order_line_item_id))));
+
       const unitCostMap: Record<string, number> = {};
       if (joLineItemIds.length > 0) {
         // Get JO line items to find linked PO line items
-        const { data: joLineItems } = await (supabase as any)
-          .from("job_order_line_items")
+        const { data: joLineItems } = await supabase
+          .from("job_order_line_items" as never)
           .select("id, unit_price")
           .in("id", joLineItemIds);
 
         // For now use JO line item unit_price as the vendor cost
         // In the future, this could look up the PO line item directly
         if (joLineItems) {
-          joLineItems.forEach((jo: any) => {
-            unitCostMap[jo.id] = jo.unit_price || 0;
+          (joLineItems as Record<string, unknown>[]).forEach((jo) => {
+            unitCostMap[jo.id as string] = (jo.unit_price as number) || 0;
           });
         }
       }
 
       // Combine into ContractorRoom objects
-      return rooms.map((room: any) => ({
+      return (rooms as Record<string, unknown>[]).map((room) => ({
         id: room.id,
         unit_number: room.unit_number,
         floor_number: room.floor_number,
         status: room.status,
         project_id: room.project_id,
-        project_name: room.projects?.name || "Unknown Project",
+        project_name: (room.projects as Record<string, unknown>)?.name || "Unknown Project",
         notes: room.notes,
-        scope_items: (scopeItems || [])
-          .filter((s: any) => s.room_id === room.id)
-          .map((s: any) => ({
+        scope_items: ((scopeItems || []) as Record<string, unknown>[])
+          .filter((s) => s.room_id === room.id)
+          .map((s) => ({
             ...s,
-            unit_cost: unitCostMap[s.job_order_line_item_id] || 0,
+            unit_cost: unitCostMap[s.job_order_line_item_id as string] || 0,
           })),
       })) as ContractorRoom[];
     },
@@ -157,8 +157,8 @@ export function useContractorCompletionBills() {
     queryFn: async () => {
       if (!subcontractor?.id) return [];
 
-      const { data, error } = await (supabase as any)
-        .from("contractor_completion_bills")
+      const { data, error } = await supabase
+        .from("contractor_completion_bills" as never)
         .select(`
           *,
           project_rooms(unit_number),
@@ -169,10 +169,10 @@ export function useContractorCompletionBills() {
 
       if (error) throw error;
 
-      return (data || []).map((bill: any) => ({
+      return (data || []).map((bill: Record<string, unknown>) => ({
         ...bill,
-        room_unit_number: bill.project_rooms?.unit_number || "",
-        project_name: bill.projects?.name || "",
+        room_unit_number: (bill.project_rooms as Record<string, unknown>)?.unit_number || "",
+        project_name: (bill.projects as Record<string, unknown>)?.name || "",
       })) as CompletionBill[];
     },
     enabled: !!subcontractor?.id,
@@ -188,8 +188,8 @@ export function useContractorCompletionBill(id: string | undefined) {
     queryFn: async () => {
       if (!id || !subcontractor?.id) return null;
 
-      const { data, error } = await (supabase as any)
-        .from("contractor_completion_bills")
+      const { data, error } = await supabase
+        .from("contractor_completion_bills" as never)
         .select(`
           *,
           project_rooms(unit_number),
@@ -240,8 +240,8 @@ export function useSubmitCompletion() {
       const totalAmount = lineItems.reduce((sum, item) => sum + item.total, 0);
 
       // Create the completion bill
-      const { data: bill, error: billError } = await (supabase as any)
-        .from("contractor_completion_bills")
+      const { data: bill, error: billError } = await supabase
+        .from("contractor_completion_bills" as never)
         .insert({
           room_id: params.room_id,
           contractor_id: subcontractor.id,

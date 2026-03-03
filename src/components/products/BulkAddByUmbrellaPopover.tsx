@@ -32,13 +32,13 @@ export function BulkAddByUmbrellaPopover({ onAddItems, priceField = "price" }: B
 
   const matchingProducts = useMemo(() => {
     if (!selectedUmbrellaId) return [];
-    return products.filter((p) => (p as any).qb_product_mapping_id === selectedUmbrellaId);
+    return products.filter((p) => p.qb_product_mapping_id === selectedUmbrellaId);
   }, [selectedUmbrellaId, products]);
 
   const selectedUmbrella = umbrellas.find((u) => u.id === selectedUmbrellaId);
 
   const handleSelectCategory = (umbrellaId: string) => {
-    const matching = products.filter((p) => (p as any).qb_product_mapping_id === umbrellaId);
+    const matching = products.filter((p) => p.qb_product_mapping_id === umbrellaId);
     if (matching.length === 0) {
       toast.info("No products found under this category");
       return;
@@ -115,7 +115,7 @@ export function BulkAddByUmbrellaPopover({ onAddItems, priceField = "price" }: B
             </p>
             <div className="max-h-60 overflow-y-auto space-y-1">
               {umbrellas.map((u) => {
-                const count = products.filter((p) => (p as any).qb_product_mapping_id === u.id).length;
+                const count = products.filter((p) => p.qb_product_mapping_id === u.id).length;
                 return (
                   <button
                     key={u.id}

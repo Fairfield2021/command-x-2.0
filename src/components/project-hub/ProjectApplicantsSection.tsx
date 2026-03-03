@@ -253,7 +253,7 @@ export function ProjectApplicantsSection({
       setPendingApprovalApp(null);
 
       // Get the created personnel ID from the result if available
-      const personnelId = (result as any)?.createdPersonnel?.id;
+      const personnelId = result?.personnel?.id;
 
       if (personnelId && (recordType === "personnel" || recordType === "personnel_vendor")) {
         // Show success toast with action to assign to project
@@ -273,8 +273,8 @@ export function ProjectApplicantsSection({
       } else {
         toast.success("Application approved successfully");
       }
-    } catch (error: any) {
-      toast.error(error.message || "Failed to approve application");
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "Failed to approve application");
     }
   };
 
@@ -284,8 +284,8 @@ export function ProjectApplicantsSection({
         applicationId: application.id,
       });
       toast.success("Application rejected");
-    } catch (error: any) {
-      toast.error(error.message || "Failed to reject application");
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "Failed to reject application");
     }
   };
 

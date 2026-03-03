@@ -16,6 +16,7 @@ export interface Product {
   is_taxable: boolean;
   item_type: ItemType;
   sku: string | null;
+  qb_product_mapping_id: string | null;
   created_at: string;
   updated_at: string;
 }

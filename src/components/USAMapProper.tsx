@@ -18,6 +18,13 @@ interface City {
   size: number;
 }
 
+interface GeoFeature {
+  geometry: {
+    type: string;
+    coordinates: number[][][] | number[][][][];
+  };
+}
+
 const cities: City[] = [
   { name: 'Seattle', lat: 47.6062, lon: -122.3321, size: 5 },
   { name: 'Portland', lat: 45.5152, lon: -122.6784, size: 4 },
@@ -52,7 +59,7 @@ const USAMapProper = ({
   showButton = false
 }: USAMapProperProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [geoData, setGeoData] = useState<any>(null);
+  const [geoData, setGeoData] = useState<{ features: GeoFeature[] } | null>(null);
 
   // Load GeoJSON data
   useEffect(() => {
@@ -87,12 +94,14 @@ const USAMapProper = ({
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       // Draw USA states
-      geoData.features.forEach((feature: any) => {
+      geoData.features.forEach((feature: GeoFeature) => {
         const coordinates = feature.geometry.coordinates;
-        const polygons = feature.geometry.type === 'MultiPolygon' ? coordinates : [coordinates];
+        const polygons: number[][][][] = feature.geometry.type === 'MultiPolygon'
+          ? (coordinates as number[][][][])
+          : [coordinates as number[][][]];
 
-        polygons.forEach((polygon: any) => {
-          polygon.forEach((ring: any) => {
+        polygons.forEach((polygon: number[][][]) => {
+          polygon.forEach((ring: number[][]) => {
             ctx.beginPath();
             ring.forEach((coord: number[], i: number) => {
               const { x, y } = project(coord[0], coord[1]);

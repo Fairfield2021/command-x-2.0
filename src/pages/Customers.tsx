@@ -420,7 +420,7 @@ const Customers = () => {
               <Label htmlFor="customer-type">Customer Type</Label>
               <Select
                 value={formData.customer_type}
-                onValueChange={(value) => setFormData({ ...formData, customer_type: value as any })}
+                onValueChange={(value) => setFormData({ ...formData, customer_type: value as typeof formData.customer_type })}
               >
                 <SelectTrigger id="customer-type" className="bg-secondary border-border">
                   <SelectValue />
