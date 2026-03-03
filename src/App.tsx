@@ -54,6 +54,7 @@ import Invoices from "./pages/Invoices";
 import InvoiceDetail from "./pages/InvoiceDetail";
 import TimeTracking from "./pages/TimeTracking";
 import OverheadAnalysis from "./pages/OverheadAnalysis";
+import Reports from "./pages/ReportsPage";
 import TeamTimesheet from "./pages/TeamTimesheet";
 import Reimbursements from "./pages/Reimbursements";
 import ProjectAssignments from "./pages/ProjectAssignments";
@@ -416,6 +417,7 @@ const App = () => {
                       <Route path="/invoices/:id" element={<InvoiceDetail />} />
                       <Route path="/time-tracking" element={<TimeTracking />} />
                       <Route path="/overhead-analysis" element={<OverheadAnalysis />} />
+                      <Route path="/reports" element={<Reports />} />
                       <Route
                         path="/team-timesheet"
                         element={<TeamTimesheet />}
