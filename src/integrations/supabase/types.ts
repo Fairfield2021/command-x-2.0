@@ -1440,6 +1440,13 @@ export type Database = {
             foreignKeyName: "change_order_vendor_bills_vendor_bill_id_fkey"
             columns: ["vendor_bill_id"]
             isOneToOne: false
+            referencedRelation: "ap_aging_summary"
+            referencedColumns: ["bill_id"]
+          },
+          {
+            foreignKeyName: "change_order_vendor_bills_vendor_bill_id_fkey"
+            columns: ["vendor_bill_id"]
+            isOneToOne: false
             referencedRelation: "vendor_bills"
             referencedColumns: ["id"]
           },
@@ -5724,6 +5731,13 @@ export type Database = {
             foreignKeyName: "project_labor_expenses_vendor_bill_id_fkey"
             columns: ["vendor_bill_id"]
             isOneToOne: false
+            referencedRelation: "ap_aging_summary"
+            referencedColumns: ["bill_id"]
+          },
+          {
+            foreignKeyName: "project_labor_expenses_vendor_bill_id_fkey"
+            columns: ["vendor_bill_id"]
+            isOneToOne: false
             referencedRelation: "vendor_bills"
             referencedColumns: ["id"]
           },
@@ -6538,6 +6552,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "quickbooks_bill_mappings_bill_id_fkey"
+            columns: ["bill_id"]
+            isOneToOne: true
+            referencedRelation: "ap_aging_summary"
+            referencedColumns: ["bill_id"]
+          },
           {
             foreignKeyName: "quickbooks_bill_mappings_bill_id_fkey"
             columns: ["bill_id"]
@@ -7880,6 +7901,13 @@ export type Database = {
             foreignKeyName: "time_entries_vendor_bill_id_fkey"
             columns: ["vendor_bill_id"]
             isOneToOne: false
+            referencedRelation: "ap_aging_summary"
+            referencedColumns: ["bill_id"]
+          },
+          {
+            foreignKeyName: "time_entries_vendor_bill_id_fkey"
+            columns: ["vendor_bill_id"]
+            isOneToOne: false
             referencedRelation: "vendor_bills"
             referencedColumns: ["id"]
           },
@@ -8533,6 +8561,13 @@ export type Database = {
             foreignKeyName: "vendor_bill_attachments_bill_id_fkey"
             columns: ["bill_id"]
             isOneToOne: false
+            referencedRelation: "ap_aging_summary"
+            referencedColumns: ["bill_id"]
+          },
+          {
+            foreignKeyName: "vendor_bill_attachments_bill_id_fkey"
+            columns: ["bill_id"]
+            isOneToOne: false
             referencedRelation: "vendor_bills"
             referencedColumns: ["id"]
           },
@@ -8588,6 +8623,13 @@ export type Database = {
           unit_cost?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "vendor_bill_line_items_bill_id_fkey"
+            columns: ["bill_id"]
+            isOneToOne: false
+            referencedRelation: "ap_aging_summary"
+            referencedColumns: ["bill_id"]
+          },
           {
             foreignKeyName: "vendor_bill_line_items_bill_id_fkey"
             columns: ["bill_id"]
@@ -8729,6 +8771,13 @@ export type Database = {
           reference_number?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "vendor_bill_payments_bill_id_fkey"
+            columns: ["bill_id"]
+            isOneToOne: false
+            referencedRelation: "ap_aging_summary"
+            referencedColumns: ["bill_id"]
+          },
           {
             foreignKeyName: "vendor_bill_payments_bill_id_fkey"
             columns: ["bill_id"]
@@ -9350,6 +9399,47 @@ export type Database = {
       }
     }
     Views: {
+      ap_aging_summary: {
+        Row: {
+          aging_bucket: string | null
+          amount_paid: number | null
+          balance_due: number | null
+          bill_date: string | null
+          bill_id: string | null
+          bill_number: string | null
+          days_past_due: number | null
+          due_date: string | null
+          payment_status: string | null
+          project_id: string | null
+          project_name: string | null
+          total_amount: number | null
+          vendor_id: string | null
+          vendor_name: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_bill_line_items_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "job_cost_summary"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "vendor_bill_line_items_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_bills_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job_cost_summary: {
         Row: {
           addendum_value: number | null
@@ -9370,6 +9460,21 @@ export type Database = {
           total_invoiced: number | null
           total_remaining: number | null
           total_sov_lines: number | null
+        }
+        Relationships: []
+      }
+      portfolio_summary: {
+        Row: {
+          active_projects: number | null
+          avg_completion: number | null
+          overall_margin_percent: number | null
+          total_ap: number | null
+          total_committed: number | null
+          total_contract_value: number | null
+          total_expenses: number | null
+          total_gross_profit: number | null
+          total_invoiced: number | null
+          total_open_commitments: number | null
         }
         Relationships: []
       }
