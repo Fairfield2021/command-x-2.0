@@ -508,8 +508,8 @@ export function JobHubFinancialsTab({
                     currentUserId={currentUserId}
                     projectId={projectId}
                     contractId={summary?.contract_id}
-                    customerId={(t as any).customer_id}
-                    customerName={(t as any).customer?.name ?? ""}
+                    customerId={t.customer_id}
+                    customerName={t.customer?.name ?? ""}
                   />
                 ))}
               </div>

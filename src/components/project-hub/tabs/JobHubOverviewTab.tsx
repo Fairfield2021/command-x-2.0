@@ -11,13 +11,34 @@ import { useSovLines } from "@/hooks/useSovLines";
 import { formatCurrency } from "@/lib/utils";
 import type { Milestone } from "@/integrations/supabase/hooks/useMilestones";
 
+interface ProjectInfo {
+  id: string;
+  status: string;
+  customer_po?: string;
+  start_date: string;
+  end_date?: string | null;
+  address?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+  poc_name?: string;
+  poc_phone?: string;
+  poc_email?: string;
+  description?: string;
+}
+
+interface CustomerInfo {
+  name: string;
+  company?: string;
+}
+
 interface JobHubOverviewTabProps {
   projectId: string;
-  project: any;
-  customer: any;
+  project: ProjectInfo;
+  customer: CustomerInfo | null;
   milestones: Milestone[] | undefined;
   overallCompletion: number;
-  projectJobOrders: any[];
+  projectJobOrders: { id: string }[];
 }
 
 export function JobHubOverviewTab({
@@ -79,7 +100,7 @@ export function JobHubOverviewTab({
               <ClipboardList className="h-5 w-5 text-primary" />
               <CardTitle className="font-heading">Contract</CardTitle>
             </div>
-            <StatusBadge status={firstContract.status as any} />
+            <StatusBadge status={firstContract.status as React.ComponentProps<typeof StatusBadge>["status"]} />
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

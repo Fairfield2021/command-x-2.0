@@ -64,7 +64,7 @@ import { logger } from '@/utils/logger';
 
 const QuickBooksSettings = () => {
   const [searchParams] = useSearchParams();
-  const [selectedConflict, setSelectedConflict] = useState<any>(null);
+  const [selectedConflict, setSelectedConflict] = useState<Record<string, unknown> | null>(null);
   const [vendorImportProgress, setVendorImportProgress] = useState<{
     processed: number;
     total: number;
@@ -637,7 +637,7 @@ const QuickBooksSettings = () => {
                 </CardHeader>
                 <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0">
                   <div className="space-y-2">
-                    {conflicts.map((conflict: any) => (
+                    {conflicts.map((conflict) => (
                       <div
                         key={conflict.id}
                         className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer min-h-[44px] active:bg-muted/70"
@@ -712,8 +712,8 @@ const QuickBooksSettings = () => {
                                 typeof log.details === "object" &&
                                 "imported" in log.details && (
                                   <span>
-                                    • {(log.details as any).imported} imported,{" "}
-                                    {(log.details as any).updated} updated
+                                    • {(log.details as Record<string, unknown>).imported as number} imported,{" "}
+                                    {(log.details as Record<string, unknown>).updated as number} updated
                                   </span>
                                 )}
                             </p>

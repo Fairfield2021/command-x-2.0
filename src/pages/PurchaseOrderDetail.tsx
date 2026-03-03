@@ -155,7 +155,7 @@ const PurchaseOrderDetail = () => {
         purchaseOrder: { status: "completed" },
       });
       toast.success("Purchase order marked as complete!");
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error("Failed to mark purchase order as complete");
     }
   };
@@ -241,7 +241,7 @@ const PurchaseOrderDetail = () => {
       await deletePurchaseOrder.mutateAsync(purchaseOrder.id);
       toast.success("Purchase order deleted successfully");
       navigate("/purchase-orders");
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error("Failed to delete purchase order");
     } finally {
       setIsDeleting(false);

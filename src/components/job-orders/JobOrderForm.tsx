@@ -45,9 +45,47 @@ interface LineItem {
   total: number;
 }
 
+interface JobOrderInitialData {
+  number?: string;
+  customer_name?: string;
+  status?: string;
+  tax_rate?: number;
+  start_date?: string;
+  completion_date?: string;
+  line_items?: {
+    product_id?: string;
+    description: string;
+    quantity: number;
+    unit_price: number;
+    markup: number;
+    total: number;
+  }[];
+  [key: string]: unknown;
+}
+
+interface JobOrderSubmitData {
+  jobOrder: {
+    status: string;
+    tax_rate: number;
+    tax_amount: number;
+    subtotal: number;
+    total: number;
+    remaining_amount: number;
+    start_date: string;
+    completion_date: string | null;
+  };
+  lineItems: {
+    description: string;
+    quantity: number;
+    unit_price: number;
+    markup: number;
+    total: number;
+  }[];
+}
+
 interface JobOrderFormProps {
-  initialData?: any;
-  onSubmit: (data: any) => void;
+  initialData?: JobOrderInitialData;
+  onSubmit: (data: JobOrderSubmitData) => void;
   onCancel: () => void;
   isSubmitting?: boolean;
 }
@@ -75,7 +113,7 @@ export const JobOrderForm = ({
 
   const [lineItems, setLineItems] = useState<LineItem[]>(() => {
     if (initialData?.line_items && initialData.line_items.length > 0) {
-      return initialData.line_items.map((item: any) => ({
+      return initialData.line_items.map((item) => ({
         id: crypto.randomUUID(),
         product_id: item.product_id,
         description: item.description,
@@ -307,7 +345,7 @@ export const JobOrderForm = ({
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="space-y-2">
               <Label htmlFor="status">Status *</Label>
-              <Select value={status} onValueChange={(v: any) => setStatus(v)}>
+              <Select value={status} onValueChange={(v) => setStatus(v as typeof status)}>
                 <SelectTrigger className="bg-secondary border-border">
                   <SelectValue />
                 </SelectTrigger>
