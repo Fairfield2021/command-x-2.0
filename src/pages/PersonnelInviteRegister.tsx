@@ -139,7 +139,6 @@ const PersonnelInviteRegister = () => {
       toast.success("Registration completed successfully!");
       setStep(6); // Success step
     } catch (error: any) {
-      console.error("Registration error:", error);
       toast.error(error.message || "Failed to complete registration");
     } finally {
       setIsSubmitting(false);

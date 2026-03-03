@@ -159,7 +159,7 @@ export function TimeEntryForm({
       onOpenChange(false);
       form.reset();
     } catch (error) {
-      console.error("Failed to save time entry:", error);
+      // Error handled by mutation's onError
     }
   };
 

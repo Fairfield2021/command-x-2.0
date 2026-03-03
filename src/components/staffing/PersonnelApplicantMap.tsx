@@ -133,7 +133,6 @@ export function PersonnelApplicantMap({ mapboxToken, isAdmin = false }: Personne
       .not('clock_in_at', 'is', null);
 
     if (error) {
-      console.error('Error fetching active clocks:', error);
       return;
     }
 
@@ -384,7 +383,6 @@ export function PersonnelApplicantMap({ mapboxToken, isAdmin = false }: Personne
       const { data, error } = await supabase.functions.invoke<BackfillResults>('run-geocode-backfill');
       
       if (error) {
-        console.error("Backfill error:", error);
         toast.error("Backfill failed: " + error.message);
         return;
       }
@@ -398,7 +396,6 @@ export function PersonnelApplicantMap({ mapboxToken, isAdmin = false }: Personne
         toast.error("Backfill error: " + data.error);
       }
     } catch (err) {
-      console.error("Backfill error:", err);
       toast.error("Failed to run backfill");
     } finally {
       setBackfillRunning(false);

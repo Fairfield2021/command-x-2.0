@@ -99,7 +99,6 @@ export default function AcceptInvitation() {
 
       setInvitation(data);
     } catch (error: any) {
-      console.error("Error loading invitation:", error);
       toast({
         title: "Error",
         description: "Failed to load invitation details.",
@@ -149,7 +148,7 @@ export default function AcceptInvitation() {
           },
         });
       } catch (notifyError) {
-        console.error("Failed to send notification to admin:", notifyError);
+        // notification failure is non-critical
       }
 
       toast({
@@ -159,7 +158,6 @@ export default function AcceptInvitation() {
 
       navigate("/");
     } catch (error: any) {
-      console.error("Error accepting invitation:", error);
       toast({
         title: "Error accepting invitation",
         description: error.message || "Failed to accept invitation. Please try again.",
@@ -221,7 +219,7 @@ export default function AcceptInvitation() {
           },
         });
       } catch (notifyError) {
-        console.error("Failed to send notification to admin:", notifyError);
+        // notification failure is non-critical
       }
 
       toast({
@@ -231,7 +229,6 @@ export default function AcceptInvitation() {
 
       navigate("/");
     } catch (error: any) {
-      console.error("Error logging in:", error);
       toast({
         title: "Login failed",
         description: error.message || "Failed to log in. Please check your password.",
@@ -339,7 +336,6 @@ export default function AcceptInvitation() {
           },
         });
       } catch (notifyError) {
-        console.error("Failed to send notification to admin:", notifyError);
         // Don't block the user signup if notification fails
       }
 
@@ -351,7 +347,6 @@ export default function AcceptInvitation() {
       // Sign in will happen automatically via the auth state listener
       navigate("/");
     } catch (error: any) {
-      console.error("Error accepting invitation:", error);
       toast({
         title: "Error creating account",
         description: error.message || "Failed to create your account. Please try again.",

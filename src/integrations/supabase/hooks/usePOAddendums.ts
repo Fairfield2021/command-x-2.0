@@ -201,11 +201,9 @@ export const useAddPOAddendum = () => {
           });
           
           if (sendError) {
-            console.error("Failed to send approval email:", sendError);
             toast.error("Addendum created but failed to send approval email");
           }
         } catch (err) {
-          console.error("Error sending approval email:", err);
         }
       }
 
@@ -447,11 +445,9 @@ export const useUpdatePOAddendum = () => {
           });
           
           if (sendError) {
-            console.error("Failed to send approval email:", sendError);
             toast.error("Addendum updated but failed to send approval email");
           }
         } catch (err) {
-          console.error("Error sending approval email:", err);
         }
       }
 
@@ -484,7 +480,6 @@ export const useDeletePOAddendum = () => {
           .remove([data.filePath]);
 
         if (deleteFileError) {
-          console.warn("Failed to delete file:", deleteFileError);
         }
       }
 

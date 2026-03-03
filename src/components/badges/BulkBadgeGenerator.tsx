@@ -89,7 +89,6 @@ export const BulkBadgeGenerator = ({
       toast.success(`Generated ${selectedIds.length} badge(s) successfully`);
       onOpenChange(false);
     } catch (error) {
-      console.error("Failed to generate badges:", error);
       toast.error("Failed to generate badges. Please try again.");
     } finally {
       setIsGenerating(false);

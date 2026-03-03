@@ -44,7 +44,6 @@ export function useDashboardConfig() {
         .maybeSingle();
 
       if (error) {
-        console.error("Error fetching dashboard config:", error);
         throw error;
       }
 
@@ -166,7 +165,6 @@ export function useDashboardConfig() {
           context.previousConfig
         );
       }
-      console.error("Error updating dashboard config:", error);
       toast.error("Failed to save dashboard configuration");
     },
     onSettled: () => {
@@ -195,7 +193,6 @@ export function useDashboardConfig() {
       toast.success("Dashboard reset to default");
     },
     onError: (error) => {
-      console.error("Error resetting dashboard config:", error);
       toast.error("Failed to reset dashboard");
     },
   });

@@ -365,11 +365,8 @@ export const useSubmitApplication = () => {
       smsConsentPhone?: string;
       smsConsentTextVersion?: string;
     }) => {
-      console.log("[Application] Starting submission for posting:", posting_id);
-      console.log("[Application] Applicant data:", applicantData);
       
       // First, check if applicant exists
-      console.log("[Application] Checking for existing applicant by email:", applicantData.email);
       const { data: existingApplicant, error: fetchError } = await supabase
         .from("applicants")
         .select("id")
@@ -377,14 +374,11 @@ export const useSubmitApplication = () => {
         .maybeSingle();
 
       if (fetchError) {
-        console.error("[Application] Error checking existing applicant:", fetchError);
         throw fetchError;
       }
-      console.log("[Application] Existing applicant result:", existingApplicant);
 
       // Allow repeat applications - existing personnel/applicants can apply to new positions
       // or re-apply to the same position (creates a new application each time)
-      console.log("[Application] Allowing application regardless of existing applications");
 
       let applicantId: string;
 
@@ -392,7 +386,6 @@ export const useSubmitApplication = () => {
         // Use existing applicant ID - don't attempt to update (would fail RLS for public users)
         // Applicant info updates can happen during admin review if needed
         applicantId = existingApplicant.id;
-        console.log("[Application] Using existing applicant:", applicantId);
         
         // Check if this applicant has an ACTIVE (non-rejected) application for this job posting
         // Allow re-application if previous application was rejected/removed
@@ -405,17 +398,14 @@ export const useSubmitApplication = () => {
           .maybeSingle();
         
         if (checkError) {
-          console.error("[Application] Error checking existing application:", checkError);
           throw checkError;
         }
         
         if (existingApplication) {
-          console.log("[Application] Duplicate application detected for same job posting");
           throw new Error("DUPLICATE_APPLICATION");
         }
       } else {
         // Create new applicant
-        console.log("[Application] Creating new applicant");
         const { data: newApplicant, error: insertError } = await supabase
           .from("applicants")
           .insert({
@@ -434,11 +424,9 @@ export const useSubmitApplication = () => {
           .single();
 
         if (insertError) {
-          console.error("[Application] Error creating applicant:", insertError);
           throw insertError;
         }
         applicantId = newApplicant.id;
-        console.log("[Application] New applicant created:", applicantId);
       }
 
       // Files are now uploaded immediately by FormFileUpload component
@@ -447,17 +435,13 @@ export const useSubmitApplication = () => {
       for (const [fieldId, value] of Object.entries(answers)) {
         // Skip empty objects (failed uploads or unset file fields)
         if (typeof value === "object" && value !== null && !Array.isArray(value) && Object.keys(value).length === 0) {
-          console.log("[Application] Skipping empty object for field:", fieldId);
           continue;
         }
         // Keep all other values (including URL strings from successful uploads)
         processedAnswers[fieldId] = value;
       }
-      console.log("[Application] Processed answers:", processedAnswers);
 
       // Create the application with geo data and timestamps
-      console.log("[Application] Creating application record for applicant:", applicantId);
-      console.log("[Application] Geo data:", geo);
       
       const { data: application, error: appError } = await supabase
         .from("applications")
@@ -485,15 +469,12 @@ export const useSubmitApplication = () => {
         .single();
 
       if (appError) {
-        console.error("[Application] Error creating application:", appError);
         throw appError;
       }
-      console.log("[Application] Application created successfully:", application.id);
 
       // Send SMS confirmation if consent was given
       if (smsConsent && smsConsentPhone) {
         try {
-          console.log("[Application] Sending SMS confirmation to:", smsConsentPhone);
           await supabase.functions.invoke("send-application-sms-confirmation", {
             body: {
               applicationId: application.id,
@@ -501,10 +482,8 @@ export const useSubmitApplication = () => {
               firstName: applicantData.first_name,
             },
           });
-          console.log("[Application] SMS confirmation sent successfully");
         } catch (smsError) {
           // Non-critical error - log but don't fail the submission
-          console.error("[Application] Error sending SMS confirmation (non-critical):", smsError);
         }
       }
 
@@ -529,13 +508,11 @@ export const useSubmitApplication = () => {
           const address = addressParts.join(", ");
           
           if (address) {
-            console.log("[Application] Auto-geocoding applicant address:", address);
             const { data: geo } = await supabase.functions.invoke("geocode", {
               body: { address },
             });
 
             if (geo?.ok && geo.lat && geo.lng) {
-              console.log("[Application] Geocode successful:", geo.lat, geo.lng);
               await supabase
                 .from("applicants")
                 .update({
@@ -547,7 +524,6 @@ export const useSubmitApplication = () => {
                 })
                 .eq("id", applicantId);
             } else {
-              console.log("[Application] Geocode returned no result:", geo?.reason || geo?.error);
               // Mark as geocodable but without coordinates
               await supabase
                 .from("applicants")
@@ -564,7 +540,6 @@ export const useSubmitApplication = () => {
         }
       } catch (geoError) {
         // Non-critical error - log but don't fail the submission
-        console.error("[Application] Geocoding failed (non-critical):", geoError);
       }
 
       return application;
@@ -673,7 +648,6 @@ export const useApproveApplicationWithType = () => {
               },
             });
           } catch (emailErr) {
-            console.error("[Approve] Error sending onboarding email:", emailErr);
           }
         }
       }
@@ -746,7 +720,6 @@ export const useApproveApplicationWithType = () => {
 
       // For personnel-only type, always create a linked vendor for QuickBooks sync
       if (recordType === 'personnel' && createdPersonnel && !createdVendor) {
-        console.log('[Approve] Personnel-only type, creating linked vendor for QB sync');
         const { data: existingVendorByEmail } = await supabase
           .from("vendors")
           .select()
@@ -774,7 +747,6 @@ export const useApproveApplicationWithType = () => {
               .eq("id", createdPersonnel.id);
             
             createdVendor = personnelVendor;
-            console.log('[Approve] Created linked vendor for personnel:', personnelVendor.id);
           }
         } else {
           // Link to existing vendor
@@ -784,7 +756,6 @@ export const useApproveApplicationWithType = () => {
             .eq("id", createdPersonnel.id);
           
           createdVendor = existingVendorByEmail;
-          console.log('[Approve] Linked personnel to existing vendor:', existingVendorByEmail.id);
         }
       }
 
@@ -799,20 +770,17 @@ export const useApproveApplicationWithType = () => {
         if (qbConfig?.is_connected) {
           if (recordType === 'customer' && createdCustomer) {
             // Sync as QuickBooks Customer
-            console.log('[Approve] Syncing customer to QuickBooks:', createdCustomer.id);
             await supabase.functions.invoke('quickbooks-sync-customers', {
               body: { action: 'sync-single', customerId: createdCustomer.id }
             });
           } else if (createdVendor) {
             // Personnel, Vendor, or Personnel+Vendor → all have createdVendor set now
-            console.log('[Approve] Syncing vendor to QuickBooks:', createdVendor.id);
             await supabase.functions.invoke('quickbooks-sync-vendors', {
               body: { action: 'sync-single', vendorId: createdVendor.id }
             });
           }
         }
       } catch (qbError) {
-        console.error('[Approve] QuickBooks sync error (non-fatal):', qbError);
         // Don't throw - approval succeeded, QB sync is secondary
       }
 
@@ -933,11 +901,9 @@ export const useApproveApplication = () => {
         );
 
         if (emailError) {
-          console.error("[Approve] Failed to send onboarding email:", emailError);
           // Don't throw - approval succeeded, email is secondary
         }
       } catch (emailErr) {
-        console.error("[Approve] Error sending onboarding email:", emailErr);
         // Don't throw - approval succeeded, email is secondary
       }
 

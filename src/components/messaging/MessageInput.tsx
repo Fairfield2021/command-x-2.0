@@ -68,7 +68,7 @@ export function MessageInput({
         textareaRef.current.style.height = "auto";
       }
     } catch (error) {
-      console.error("Failed to send message:", error);
+      // Send failure handled by caller
     }
   };
 

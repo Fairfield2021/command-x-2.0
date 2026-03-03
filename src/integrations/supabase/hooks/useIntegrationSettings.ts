@@ -26,12 +26,10 @@ export function useIntegrationSetting(settingKey: string) {
           .maybeSingle();
 
         if (error) {
-          console.error("Error fetching integration setting:", error);
           return null;
         }
         return data as IntegrationSetting | null;
       } catch (err) {
-        console.error("Exception fetching integration setting:", err);
         return null;
       }
     },
@@ -81,7 +79,6 @@ export function useUpdateIntegrationSetting() {
       });
     },
     onError: (error: Error) => {
-      console.error("Failed to update integration setting:", error);
       toast.error("Failed to update setting");
     },
   });
@@ -111,7 +108,6 @@ export function useToggleAutoSyncPersonnelToQB() {
       });
     },
     onError: (error: Error) => {
-      console.error("Failed to toggle auto-sync setting:", error);
       toast.error("Failed to update setting");
     },
   });

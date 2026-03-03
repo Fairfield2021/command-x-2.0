@@ -72,7 +72,6 @@ export function WeeklyProjectFolder({
       await onSave(project.id, localHours);
       toast.success(`Saved time entries for ${project.name}`);
     } catch (error) {
-      console.error("Error saving time entries:", error);
       toast.error("Failed to save time entries");
     } finally {
       setIsSaving(false);

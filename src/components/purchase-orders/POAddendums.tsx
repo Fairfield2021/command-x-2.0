@@ -245,7 +245,6 @@ export function POAddendums({ purchaseOrderId, purchaseOrderNumber, isClosed }: 
       .createSignedUrl(addendum.file_path, 60);
 
     if (error || !data?.signedUrl) {
-      console.error("Failed to get download URL:", error);
       return;
     }
 

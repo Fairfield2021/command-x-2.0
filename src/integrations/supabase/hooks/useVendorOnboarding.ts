@@ -103,7 +103,6 @@ export function useVendorOnboardingToken(token: string | undefined) {
         .maybeSingle();
 
       if (tokenError) {
-        console.error("Error fetching token:", tokenError);
         return { isValid: false, isExpired: false, isUsed: false, token: null, vendor: null };
       }
 
@@ -127,7 +126,6 @@ export function useVendorOnboardingToken(token: string | undefined) {
         .single();
 
       if (vendorError) {
-        console.error("Error fetching vendor:", vendorError);
         return { isValid: false, isExpired: false, isUsed: false, token: tokenData, vendor: null };
       }
 
@@ -207,7 +205,6 @@ export function useCompleteVendorOnboarding() {
       toast.success("Vendor onboarding completed successfully!");
     },
     onError: (error: Error) => {
-      console.error("Error completing vendor onboarding:", error);
       toast.error(error.message || "Failed to complete onboarding");
     },
   });
@@ -242,7 +239,6 @@ export function useSendVendorOnboardingSMS() {
       toast.success("Vendor onboarding SMS sent successfully!");
     },
     onError: (error: Error) => {
-      console.error("Error sending vendor onboarding SMS:", error);
       toast.error(error.message || "Failed to send SMS");
     },
   });
@@ -277,7 +273,6 @@ export function useSendVendorOnboardingInvitation() {
       toast.success("Vendor onboarding invitation sent successfully!");
     },
     onError: (error: Error) => {
-      console.error("Error sending vendor onboarding invitation:", error);
       toast.error(error.message || "Failed to send invitation");
     },
   });

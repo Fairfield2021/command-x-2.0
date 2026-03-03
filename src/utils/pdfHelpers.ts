@@ -85,7 +85,6 @@ export const loadCompanyLogo = async (): Promise<string | null> => {
     });
     return base64;
   } catch (error) {
-    console.error("Failed to load logo:", error);
     return null;
   }
 };

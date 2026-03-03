@@ -41,7 +41,6 @@ export async function getSignedUrl(
     .createSignedUrl(path, expiresIn);
   
   if (error) {
-    console.error("Error creating signed URL:", error);
     return null;
   }
   return data?.signedUrl || null;

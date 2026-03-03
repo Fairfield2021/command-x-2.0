@@ -100,7 +100,6 @@ export function useAddRateBracket() {
       toast.success("Rate bracket added successfully");
     },
     onError: (error: Error) => {
-      console.error("Error adding rate bracket:", error);
       if (error.message.includes("duplicate")) {
         toast.error("A rate bracket with this name already exists for this project");
       } else {
@@ -132,7 +131,6 @@ export function useUpdateRateBracket() {
       toast.success("Rate bracket updated successfully");
     },
     onError: (error: Error) => {
-      console.error("Error updating rate bracket:", error);
       if (error.message.includes("duplicate")) {
         toast.error("A rate bracket with this name already exists for this project");
       } else {
@@ -161,7 +159,6 @@ export function useDeleteRateBracket() {
       toast.success("Rate bracket deleted successfully");
     },
     onError: (error: Error) => {
-      console.error("Error deleting rate bracket:", error);
       if (error.message.includes("violates foreign key")) {
         toast.error("Cannot delete rate bracket that is assigned to personnel");
       } else {

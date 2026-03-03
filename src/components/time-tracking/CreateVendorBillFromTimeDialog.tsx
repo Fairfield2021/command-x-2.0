@@ -242,7 +242,6 @@ export function CreateVendorBillFromTimeDialog({
     });
 
     if (error) {
-      console.error('Error creating vendor for personnel:', error);
       throw new Error(`Failed to create vendor for ${personnelName}`);
     }
 
@@ -328,13 +327,8 @@ export function CreateVendorBillFromTimeDialog({
               const syncResult = await supabase.functions.invoke('quickbooks-create-bill', {
                 body: { billId: result.id }
               });
-              if (syncResult.error) {
-                console.error("QuickBooks sync failed for bill:", result.id, syncResult.error);
-              } else {
-                console.log("QuickBooks sync successful for bill:", result.id);
-              }
+              // QB sync errors are non-fatal - bill is still created
             } catch (qbError) {
-              console.error("QuickBooks sync failed for bill:", result.id, qbError);
               // Don't fail the whole operation, bill is still created
             }
           }
@@ -346,7 +340,7 @@ export function CreateVendorBillFromTimeDialog({
             .in('id', summary.entryIds);
 
           if (updateError) {
-            console.error("Error linking time entries to bill:", updateError);
+            // Non-fatal: bill created but entries not linked
           }
 
           // Create project_labor_expenses record to track labor costs for job costing
@@ -374,7 +368,7 @@ export function CreateVendorBillFromTimeDialog({
               });
 
             if (expenseError) {
-              console.error("Error creating project labor expense:", expenseError);
+              // Non-fatal: expense record creation failed
             }
           }
         }
@@ -392,7 +386,6 @@ export function CreateVendorBillFromTimeDialog({
         navigate('/vendor-bills');
       }
     } catch (error) {
-      console.error("Error creating vendor bills:", error);
       toast.error("Failed to create vendor bills");
     } finally {
       setIsSubmitting(false);

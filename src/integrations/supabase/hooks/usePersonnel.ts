@@ -593,7 +593,6 @@ export const useHardDeletePersonnel = () => {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      console.log("[Personnel] Starting comprehensive hard delete for:", id);
       
       // ============================================
       // 1. DELETE records that should be fully removed
@@ -688,7 +687,6 @@ export const useHardDeletePersonnel = () => {
 
       if (error) throw error;
       
-      console.log("[Personnel] Hard delete completed successfully");
     },
     onSuccess: () => {
       // Invalidate all affected queries
@@ -704,7 +702,6 @@ export const useHardDeletePersonnel = () => {
       toast.success("Personnel permanently deleted");
     },
     onError: (error: Error) => {
-      console.error("[Personnel] Hard delete failed:", error);
       toast.error(`Failed to permanently delete: ${error.message}`);
     },
   });

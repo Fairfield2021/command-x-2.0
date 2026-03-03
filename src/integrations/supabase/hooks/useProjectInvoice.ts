@@ -104,7 +104,6 @@ export const useAddProjectInvoice = () => {
           .in("id", tm_ticket_ids);
 
         if (tmUpdateError) {
-          console.error("Failed to update T&M ticket status:", tmUpdateError);
         }
       }
 
@@ -117,7 +116,6 @@ export const useAddProjectInvoice = () => {
           .single();
 
         if (coFetchError) {
-          console.error("Failed to fetch change order:", coFetchError);
           continue;
         }
 
@@ -133,7 +131,6 @@ export const useAddProjectInvoice = () => {
           .eq("id", changeOrderId);
 
         if (coUpdateError) {
-          console.error("Failed to update change order amounts:", coUpdateError);
         }
       }
 
@@ -150,7 +147,6 @@ export const useAddProjectInvoice = () => {
           });
         }
       } catch (qbError) {
-        console.error("QuickBooks sync failed:", qbError);
       }
 
       return newInvoice;

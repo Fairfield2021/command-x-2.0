@@ -60,7 +60,6 @@ export function DeleteAccountSection() {
       await signOut();
       navigate("/auth");
     } catch (error) {
-      console.error("Delete account error:", error);
       toast.error(error instanceof Error ? error.message : "Failed to delete account");
     } finally {
       setIsDeleting(false);

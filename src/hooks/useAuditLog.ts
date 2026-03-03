@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
+import { logger } from '@/utils/logger';
 
 export type ActionType = 
   | "create" | "update" | "delete" | "view" 
@@ -69,10 +70,10 @@ export const useAuditLog = () => {
         }]);
 
       if (error) {
-        console.error("Failed to log audit action:", error);
+        logger.error("Failed to log audit action:", error);
       }
     } catch (err) {
-      console.error("Error in audit logging:", err);
+      logger.error("Error in audit logging:", err);
     }
   }, []);
 

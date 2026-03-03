@@ -497,7 +497,6 @@ export function EnhancedTimeEntryForm({
       setSelectedPersonnelIds([]);
       setDailyPersonnelHours({});
     } catch (error: any) {
-      console.error("Failed to save time entry:", error);
       toast({ title: error?.message ?? "Failed to save time entry", variant: "destructive" });
     }
   };
@@ -556,7 +555,7 @@ export function EnhancedTimeEntryForm({
         setSelectedPersonnelIds([]);
         setHolidayDays({});
       } catch (error) {
-        console.error("Failed to save weekly entries:", error);
+        // Error handled by mutation's onError
       }
     } else {
       // No personnel selected, use single user weekly hours
@@ -588,7 +587,7 @@ export function EnhancedTimeEntryForm({
         setWeeklyHours({});
         setHolidayDays({});
       } catch (error) {
-        console.error("Failed to save weekly entries:", error);
+        // Error handled by mutation's onError
       }
     }
   };

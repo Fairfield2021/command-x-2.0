@@ -60,21 +60,18 @@ export function useUserRole() {
             supabase.from("user_roles").select("role").eq("user_id", user.id).single(),
             5000
           ).catch((err) => {
-            console.warn("Role query failed:", err);
             return { data: null, error: err } as RoleQueryResult;
           }) as Promise<RoleQueryResult>,
           withTimeout(
             supabase.from("vendors").select("id").eq("user_id", user.id).maybeSingle(),
             5000
           ).catch((err) => {
-            console.warn("Vendor query failed:", err);
             return { data: null, error: err } as IdQueryResult;
           }) as Promise<IdQueryResult>,
           withTimeout(
             supabase.from("personnel").select("id").eq("user_id", user.id).maybeSingle(),
             5000
           ).catch((err) => {
-            console.warn("Personnel query failed:", err);
             return { data: null, error: err } as IdQueryResult;
           }) as Promise<IdQueryResult>,
         ]);
@@ -82,24 +79,12 @@ export function useUserRole() {
         if (!mounted) return;
 
         // Process role result
-        if (roleResult.error && roleResult.error.code !== "PGRST116") {
-          console.error("Error fetching user role:", roleResult.error);
-        }
         setRole(roleResult.data?.role || null);
 
-        // Process vendor result
-        if (vendorResult.error) {
-          console.error("Error checking vendor link:", vendorResult.error);
-        }
         setIsVendor(!!vendorResult.data);
 
-        // Process personnel result
-        if (personnelResult.error) {
-          console.error("Error checking personnel link:", personnelResult.error);
-        }
         setIsPersonnel(!!personnelResult.data);
       } catch (error) {
-        console.error("Error fetching user role:", error);
         if (mounted) {
           setRole(null);
           setIsVendor(false);

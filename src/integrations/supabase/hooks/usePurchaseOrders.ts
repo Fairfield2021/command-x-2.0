@@ -156,13 +156,11 @@ export const useAddPurchaseOrder = () => {
       try {
         const qbConnected = await isQuickBooksConnected();
         if (qbConnected) {
-          console.log("QuickBooks connected - syncing purchase order:", poData.id);
           await supabase.functions.invoke("quickbooks-create-purchase-order", {
             body: { purchaseOrderId: poData.id },
           });
         }
       } catch (qbError) {
-        console.error("QuickBooks sync error (non-blocking):", qbError);
         // Don't throw - QB sync failure shouldn't prevent PO creation
       }
 

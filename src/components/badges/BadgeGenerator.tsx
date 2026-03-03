@@ -71,7 +71,6 @@ export const BadgeGenerator = ({
       }
     } catch (error) {
       toast.error("Failed to generate badge");
-      console.error(error);
     } finally {
       setIsGenerating(false);
     }

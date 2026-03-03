@@ -117,7 +117,7 @@ export function NewConversationDialog({
 
       setRecipients(data);
     } catch (error) {
-      console.error("Error fetching recipients:", error);
+      // Fetch failed silently
     } finally {
       setIsLoading(false);
     }
@@ -144,7 +144,7 @@ export function NewConversationDialog({
       setSelectedRecipient(null);
       setSearch("");
     } catch (error) {
-      console.error("Error creating conversation:", error);
+      // Creation failed silently
     }
   };
 

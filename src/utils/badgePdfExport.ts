@@ -71,7 +71,6 @@ const generateQRCodeDataURL = async (text: string): Promise<string> => {
       errorCorrectionLevel: "M",
     });
   } catch (error) {
-    console.error("Failed to generate QR code:", error);
     throw error;
   }
 };
@@ -161,17 +160,14 @@ const fetchImageAsBase64 = async (url: string): Promise<string | null> => {
   try {
     // Skip local paths that won't work with fetch
     if (!url || url.startsWith("/") || url.startsWith("./")) {
-      console.warn("Skipping local path for image:", url);
       return null;
     }
     // Block private IPs and non-https URLs (SSRF prevention)
     if (!isAllowedImageUrl(url)) {
-      console.warn("Blocked disallowed image URL:", url);
       return null;
     }
     const response = await fetch(url);
     if (!response.ok) {
-      console.error("Failed to fetch image, status:", response.status);
       return null;
     }
     const blob = await response.blob();
@@ -182,7 +178,6 @@ const fetchImageAsBase64 = async (url: string): Promise<string | null> => {
       reader.readAsDataURL(blob);
     });
   } catch (error) {
-    console.error("Failed to fetch image:", error);
     return null;
   }
 };
@@ -258,7 +253,7 @@ export const generateBadgePDF = async (
         logoEndX = 0.1 + logoSize + 0.08;
       }
     } catch (error) {
-      console.error("Failed to add company logo:", error);
+      // Logo failed to load, continue without it
     }
   }
 
@@ -281,7 +276,7 @@ export const generateBadgePDF = async (
         `${siteUrl}/personnel/${personnel.id}`
       );
     } catch (error) {
-      console.error("Failed to generate QR code:", error);
+      // QR code generation failed, continue without it
     }
   }
 
@@ -298,7 +293,7 @@ export const generateBadgePDF = async (
           photoAdded = true;
         }
       } catch (error) {
-        console.error("Failed to add photo:", error);
+        // Photo failed to load, will show placeholder
       }
     }
     // Show placeholder if no photo or failed to load
@@ -551,7 +546,7 @@ export const generateBulkBadgePDF = async (
         pdf.addImage(logoBase64, "PNG", x + 0.1, y + 0.01, logoSize, logoSize);
         logoEndX = x + 0.1 + logoSize + 0.08;
       } catch (error) {
-        console.error("Failed to add company logo:", error);
+        // Logo failed to load, continue without it
       }
     }
 
@@ -574,7 +569,7 @@ export const generateBulkBadgePDF = async (
           `${siteUrl}/personnel/${personnel.id}`
         );
       } catch (error) {
-        console.error("Failed to generate QR code:", error);
+        // QR code generation failed, continue without it
       }
     }
 
@@ -591,7 +586,7 @@ export const generateBulkBadgePDF = async (
             photoAdded = true;
           }
         } catch (error) {
-          console.error("Failed to add photo:", error);
+          // Photo failed to load, will show placeholder
         }
       }
       // Show placeholder if no photo or failed to load

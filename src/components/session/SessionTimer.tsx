@@ -68,7 +68,6 @@ export function SessionTimer() {
         toast.error(data?.error || "Failed to reset idle time");
       }
     } catch (err) {
-      console.error("Error resetting idle time:", err);
       toast.error("Failed to reset idle time");
     } finally {
       setIsFixingIdle(false);

@@ -26,7 +26,6 @@ export default function StaffingMapView() {
         const { data, error } = await supabase.functions.invoke('get-mapbox-token');
         
         if (error) {
-          console.error("Error fetching Mapbox token:", error);
           setError("Could not fetch Mapbox token from server");
         } else if (data?.token) {
           setMapboxToken(data.token);
@@ -34,7 +33,6 @@ export default function StaffingMapView() {
           setError("Mapbox token not configured");
         }
       } catch (err) {
-        console.error("Error:", err);
         setError("Failed to load map configuration");
       } finally {
         setLoading(false);

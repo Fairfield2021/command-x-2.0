@@ -108,7 +108,7 @@ export function Generate1099Dialog({
         reimbursementsTotal: 0,
       });
     } catch (error) {
-      console.error("Error fetching data:", error);
+      // Data fetch failed silently - UI will show empty state
     } finally {
       setIsLoading(false);
     }
@@ -135,7 +135,6 @@ export function Generate1099Dialog({
       await downloadForm1099(options);
       toast.success("1099-NEC downloaded successfully");
     } catch (error) {
-      console.error("Error generating 1099:", error);
       toast.error("Failed to generate 1099-NEC. Please try again.");
     } finally {
       setIsGenerating(false);

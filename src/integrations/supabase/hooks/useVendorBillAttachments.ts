@@ -33,7 +33,6 @@ export const useVendorBillAttachments = (billId: string) => {
           filter: `bill_id=eq.${billId}`,
         },
         (payload) => {
-          console.log("[Realtime] Attachment change detected:", payload.eventType);
           // Invalidate the query to refetch fresh data
           queryClient.invalidateQueries({ queryKey: ["vendor-bill-attachments", billId] });
         }
@@ -77,8 +76,6 @@ export const syncAttachmentToQuickBooks = async (
     // supabase.functions.invoke will automatically attach the current session JWT.
     const tokenPreview = `${session.access_token.slice(0, 10)}...${session.access_token.slice(-6)}`;
 
-    console.log("Syncing attachment to QuickBooks:", { attachmentId, billId });
-    console.log("Auth token preview (client):", tokenPreview);
     
     const response = await supabase.functions.invoke("quickbooks-sync-bill-attachment", {
       body: {
@@ -91,7 +88,6 @@ export const syncAttachmentToQuickBooks = async (
     });
 
     if (response.error) {
-      console.error("QuickBooks attachment sync error:", response.error);
       const errorDetails = response.error.message || response.error.name || "Unknown error";
       return { success: false, error: `Sync failed: ${errorDetails}` };
     }
@@ -105,7 +101,6 @@ export const syncAttachmentToQuickBooks = async (
       };
     }
   } catch (err: any) {
-    console.error("QuickBooks attachment sync exception:", err);
     return { success: false, error: err.message || "Sync failed" };
   }
 };
@@ -179,7 +174,6 @@ export const useSyncPendingAttachments = () => {
           // Don't count as failed if bill isn't synced yet
           if (!result.error?.includes("not synced") && !result.error?.includes("not fully synced")) {
             failed++;
-            console.warn(`Attachment ${attachment.id} sync failed:`, result.error);
           }
         }
       }
@@ -219,7 +213,6 @@ const deleteAttachmentFromQuickBooks = async (
       return { success: false, error: "Not authenticated" };
     }
 
-    console.log("Deleting attachment from QuickBooks:", { attachmentId, billId });
     
     const response = await supabase.functions.invoke("quickbooks-delete-bill-attachment", {
       body: { attachmentId, billId },
@@ -229,7 +222,6 @@ const deleteAttachmentFromQuickBooks = async (
     });
 
     if (response.error) {
-      console.error("QuickBooks attachment delete error:", response.error);
       return { success: false, error: response.error.message || "Delete failed" };
     }
 
@@ -239,7 +231,6 @@ const deleteAttachmentFromQuickBooks = async (
       return { success: false, error: response.data?.error || "Delete failed" };
     }
   } catch (err: any) {
-    console.error("QuickBooks attachment delete exception:", err);
     return { success: false, error: err.message || "Delete failed" };
   }
 };
@@ -266,19 +257,16 @@ export const useDeleteVendorBillAttachment = () => {
       deleteAttachmentFromQuickBooks(attachmentId, billId)
         .then((result) => {
           if (result.success) {
-            console.log("Attachment deleted from QuickBooks:", result.message);
             toast.success("Deleted from QuickBooks", {
               description: result.message || "Attachment removed from QuickBooks",
             });
           } else if (result.error && !result.error.includes("never synced")) {
-            console.warn("QuickBooks delete warning:", result.error);
             toast.warning("QuickBooks sync", {
               description: result.error,
             });
           }
         })
         .catch((err) => {
-          console.error("QuickBooks delete failed:", err);
         });
     },
     onSuccess: (_, { billId }) => {

@@ -13,7 +13,6 @@ const AppWalkthroughDownload = () => {
       await generateAppWalkthroughPDF();
       toast({ title: "PDF Downloaded", description: "Application walkthrough PDF has been generated." });
     } catch (err) {
-      console.error("PDF generation failed:", err);
       toast({ title: "Error", description: "Failed to generate PDF.", variant: "destructive" });
     } finally {
       setGenerating(false);

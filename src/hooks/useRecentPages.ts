@@ -113,7 +113,7 @@ export function useRecentPages() {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
       } catch (e) {
-        console.warn('Failed to save recent pages to localStorage:', e);
+        // localStorage save failed
       }
       
       return updated;

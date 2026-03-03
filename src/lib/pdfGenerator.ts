@@ -27,7 +27,7 @@ function safeSetTextField(
     const field = form.getTextField(fieldName);
     field.setText(value);
   } catch (error) {
-    console.warn("Could not fill field " + fieldName + ":", error);
+    // Field not found in template, skip
   }
 }
 
@@ -66,7 +66,7 @@ export async function generateW9PDF(formData: W9PDFFormData): Promise<Blob> {
       const checkboxName = "topmostSubform[0].Page1[0].Boxes3a-b_ReadOrder[0].c1_1[" + checkboxIndex + "]";
       form.getCheckBox(checkboxName).check();
     } catch (error) {
-      console.warn("Could not check tax classification:", error);
+      // Checkbox not found in template, skip
     }
   }
 
@@ -130,7 +130,7 @@ export async function generateW9PDF(formData: W9PDFFormData): Promise<Blob> {
         height: Math.min(signatureDims.height, 40)
       });
     } catch (error) {
-      console.warn("Could not embed signature:", error);
+      // Signature embed failed, continue without it
     }
   }
 

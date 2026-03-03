@@ -98,7 +98,6 @@ export const PendingAttachmentsUpload = ({
         toast.success(`${newPendingFiles.length} file(s) added`);
       }
     } catch (error: any) {
-      console.error("Upload error:", error);
       toast.error(error.message || "Failed to upload files");
     } finally {
       setUploading(false);
@@ -121,7 +120,6 @@ export const PendingAttachmentsUpload = ({
       onFilesChange(pendingFiles.filter(f => f.id !== fileId));
       toast.success("File removed");
     } catch (error: any) {
-      console.error("Remove error:", error);
       toast.error("Failed to remove file");
     }
   };

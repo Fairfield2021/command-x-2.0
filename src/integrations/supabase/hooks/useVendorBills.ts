@@ -367,19 +367,16 @@ export const useUpdateVendorBill = () => {
             .maybeSingle();
 
           if (mapping && mapping.sync_status !== "voided" && mapping.quickbooks_bill_id) {
-            console.log("QuickBooks connected - updating bill:", id);
             const { error: syncError } = await supabase.functions.invoke("quickbooks-update-bill", {
               body: { billId: id },
             });
             if (syncError) {
               qbSyncFailed = true;
               qbErrorMessage = syncError.message || "Unknown sync error";
-              console.error("QuickBooks sync returned error:", syncError);
             }
           }
         }
       } catch (qbError) {
-        console.error("QuickBooks update sync error (non-blocking):", qbError);
         qbSyncFailed = true;
         qbErrorMessage = qbError instanceof Error ? qbError.message : "Unknown error";
         // Don't throw - QB sync failure shouldn't prevent bill update
@@ -398,7 +395,6 @@ export const useUpdateVendorBill = () => {
       
       if (result.qbSyncFailed) {
         toast.warning("Bill saved, but QuickBooks sync failed. Check sync status.");
-        console.error("QuickBooks sync error details:", result.qbErrorMessage);
       } else {
         toast.success("Vendor bill updated successfully");
       }
@@ -421,23 +417,18 @@ export const useDeleteVendorBill = () => {
       try {
         const qbConnected = await isQuickBooksConnected();
         if (qbConnected) {
-          console.log("[VendorBill] QuickBooks connected - voiding vendor bill:", id);
           const { data, error } = await supabase.functions.invoke("quickbooks-void-bill", {
             body: { billId: id },
           });
           
           if (error) {
-            console.error("[VendorBill] QB void function invocation error:", error);
             qbVoidResult = { success: false, error: error.message };
           } else if (data && !data.success) {
-            console.error("[VendorBill] QB void returned failure:", data.error);
             qbVoidResult = { success: false, error: data.error };
           } else {
-            console.log("[VendorBill] QB void successful:", data);
           }
         }
       } catch (qbError) {
-        console.error("[VendorBill] QuickBooks void error:", qbError);
         qbVoidResult = { success: false, error: qbError instanceof Error ? qbError.message : "Unknown error" };
       }
       
@@ -621,26 +612,20 @@ export const useHardDeleteVendorBill = () => {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      console.log("[VendorBill] Starting hard delete for:", id);
 
       // Check if QuickBooks is connected and try to void there first
       try {
         const qbConnected = await isQuickBooksConnected();
         if (qbConnected) {
-          console.log("[VendorBill] QB connected - voiding bill before hard delete:", id);
           const { data, error } = await supabase.functions.invoke("quickbooks-void-bill", {
             body: { billId: id },
           });
           if (error) {
-            console.error("[VendorBill] QB void invocation error during hard delete:", error);
           } else if (data && !data.success) {
-            console.error("[VendorBill] QB void returned failure during hard delete:", data.error);
           } else {
-            console.log("[VendorBill] QB void successful during hard delete:", data);
           }
         }
       } catch (qbError) {
-        console.error("[VendorBill] QuickBooks void error (non-blocking):", qbError);
       }
 
       // 1. Get all payment IDs for this bill to delete their attachments
@@ -658,7 +643,6 @@ export const useHardDeleteVendorBill = () => {
           .in("payment_id", paymentIds);
         
         if (paymentAttachError) {
-          console.error("Error deleting payment attachments:", paymentAttachError);
         }
       }
 
@@ -669,7 +653,6 @@ export const useHardDeleteVendorBill = () => {
         .eq("bill_id", id);
       
       if (paymentsError) {
-        console.error("Error deleting payments:", paymentsError);
       }
 
       // 4. Delete bill attachments
@@ -679,7 +662,6 @@ export const useHardDeleteVendorBill = () => {
         .eq("bill_id", id);
       
       if (attachError) {
-        console.error("Error deleting attachments:", attachError);
       }
 
       // 5. Delete line items
@@ -689,7 +671,6 @@ export const useHardDeleteVendorBill = () => {
         .eq("bill_id", id);
       
       if (lineItemsError) {
-        console.error("Error deleting line items:", lineItemsError);
       }
 
       // 6. Delete change order links
@@ -699,7 +680,6 @@ export const useHardDeleteVendorBill = () => {
         .eq("vendor_bill_id", id);
       
       if (coLinksError) {
-        console.error("Error deleting change order links:", coLinksError);
       }
 
       // 7. Delete QuickBooks mapping
@@ -709,7 +689,6 @@ export const useHardDeleteVendorBill = () => {
         .eq("bill_id", id);
       
       if (mappingError) {
-        console.error("Error deleting QB mapping:", mappingError);
       }
 
       // 8. Finally delete the bill itself

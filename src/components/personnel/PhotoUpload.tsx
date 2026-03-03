@@ -72,14 +72,12 @@ export const PhotoUpload = ({
           await onPhotoSaved(publicUrl);
           toast.success("Photo uploaded and saved");
         } catch (saveError) {
-          console.error("Error saving photo to database:", saveError);
           toast.error("Photo uploaded but failed to save - please save the form");
         }
       } else {
         toast.success("Photo uploaded - remember to save the form");
       }
     } catch (error) {
-      console.error("Error uploading photo:", error);
       toast.error("Failed to upload photo");
       setPreviewUrl(currentPhotoUrl || "");
     } finally {

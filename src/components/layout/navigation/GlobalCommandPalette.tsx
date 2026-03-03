@@ -130,7 +130,7 @@ export function GlobalCommandPalette({ open, onOpenChange }: GlobalCommandPalett
       ];
       setResults(all);
     } catch (err) {
-      console.error("Command palette search error:", err);
+      // Search failed silently
     } finally {
       setSearching(false);
     }

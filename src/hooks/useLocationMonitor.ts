@@ -39,22 +39,16 @@ export function useLocationMonitor(
   // Handle native geofence exit - auto clock out
   const handleGeofenceExit = useCallback(
     async (identifier: string) => {
-      console.log("[LocationMonitor] Geofence EXIT detected:", identifier);
-
       // Extract project ID from identifier
       const projectId = identifier.replace("project-", "");
 
       // Verify this is the active project
       if (!activeEntry || activeEntry.project_id !== projectId) {
-        console.log(
-          "[LocationMonitor] Geofence exit for non-active project, ignoring"
-        );
         return;
       }
 
       // Skip if on lunch
       if (activeEntry.is_on_lunch) {
-        console.log("[LocationMonitor] On lunch break, ignoring geofence exit");
         return;
       }
 
@@ -74,7 +68,6 @@ export function useLocationMonitor(
         );
 
         if (error) {
-          console.error("[LocationMonitor] Error on geofence exit:", error);
           return;
         }
 
@@ -92,7 +85,7 @@ export function useLocationMonitor(
           queryClient.invalidateQueries({ queryKey: ["time_entries"] });
         }
       } catch (err) {
-        console.error("[LocationMonitor] Failed to handle geofence exit:", err);
+        // Geofence exit handling failed silently
       }
     },
     [activeEntry, queryClient]
@@ -115,19 +108,16 @@ export function useLocationMonitor(
 
     // Skip if on lunch break
     if (activeEntry.is_on_lunch) {
-      console.log("[LocationMonitor] Skipping update - on lunch break");
       return;
     }
 
     // Skip if location verification not required
     if (!projectGeofence.require_clock_location) {
-      console.log("[LocationMonitor] Skipping update - location not required");
       return;
     }
 
     // Skip if no site coordinates
     if (!projectGeofence.site_lat || !projectGeofence.site_lng) {
-      console.log("[LocationMonitor] Skipping update - no site coordinates");
       return;
     }
 
@@ -150,24 +140,15 @@ export function useLocationMonitor(
 
     // Check if we have valid coordinates
     if (!lat || !lng) {
-      console.log("[LocationMonitor] No valid coordinates available");
       return;
     }
 
     // Throttle updates to prevent excessive calls
     const now = Date.now();
     if (now - lastUpdateRef.current < 30000) {
-      console.log("[LocationMonitor] Throttling - too soon since last update");
       return;
     }
     lastUpdateRef.current = now;
-
-    console.log("[LocationMonitor] Sending location update", {
-      lat,
-      lng,
-      accuracy,
-      source: isNative ? "native" : "web",
-    });
 
     setLastLocation({ lat, lng });
 
@@ -185,7 +166,6 @@ export function useLocationMonitor(
       );
 
       if (error) {
-        console.error("[LocationMonitor] Error updating location:", error);
         return;
       }
 
@@ -203,7 +183,7 @@ export function useLocationMonitor(
         queryClient.invalidateQueries({ queryKey: ["time_entries"] });
       }
     } catch (err) {
-      console.error("[LocationMonitor] Failed to send location update:", err);
+      // Location update failed silently
     }
   }, [
     activeEntry,
@@ -235,7 +215,6 @@ export function useLocationMonitor(
 
       // Skip if on lunch - pause geofencing
       if (activeEntry.is_on_lunch) {
-        console.log("[LocationMonitor] On lunch - pausing geofence monitoring");
         if (geofenceAddedRef.current) {
           await removeGeofence(geofenceAddedRef.current);
           geofenceAddedRef.current = null;
@@ -266,7 +245,6 @@ export function useLocationMonitor(
         });
 
         geofenceAddedRef.current = geofenceId;
-        console.log("[LocationMonitor] Native geofence added:", geofenceId);
       }
     };
 
@@ -318,13 +296,8 @@ export function useLocationMonitor(
       projectGeofence?.site_lng;
 
     if (!shouldMonitor) {
-      console.log("[LocationMonitor] Not monitoring - conditions not met");
       return;
     }
-
-    console.log("[LocationMonitor] Starting location monitoring", {
-      mode: isNative ? "native (geofence + polling)" : "web (polling only)",
-    });
 
     // Initial location update after a short delay
     const initialTimeout = setTimeout(() => {
@@ -341,9 +314,6 @@ export function useLocationMonitor(
     // Visibility change handler - send update when user returns to tab (web only)
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible" && shouldMonitor) {
-        console.log(
-          "[LocationMonitor] Tab became visible - sending location update"
-        );
         setTimeout(() => {
           sendLocationUpdate();
         }, 1000);

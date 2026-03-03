@@ -405,7 +405,6 @@ export function useUpdateUserPermissions() {
       toast.success("Permissions updated successfully");
     },
     onError: (error) => {
-      console.error("Error updating permissions:", error);
       toast.error("Failed to update permissions");
     },
   });

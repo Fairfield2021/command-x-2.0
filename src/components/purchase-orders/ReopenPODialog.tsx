@@ -31,7 +31,7 @@ export function ReopenPODialog({
       await reopenPO.mutateAsync(purchaseOrderId);
       onOpenChange(false);
     } catch (error) {
-      console.error("Error reopening PO:", error);
+      // Error handled by mutation's onError
     }
   };
 

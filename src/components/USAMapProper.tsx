@@ -59,7 +59,7 @@ const USAMapProper = ({
     fetch('/assets/us-states.json')
       .then(res => res.json())
       .then(data => setGeoData(data))
-      .catch(err => console.error('Failed to load GeoJSON:', err));
+      .catch(() => {});
   }, []);
 
   useEffect(() => {

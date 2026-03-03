@@ -345,7 +345,6 @@ export function ApplicationDetailDialog({
         toast.success("Edit request email resent to applicant");
       }
     } catch (error: any) {
-      console.error("Error resending edit request:", error);
       toast.error(error.message || "Failed to resend edit request");
     } finally {
       setIsResending(false);
@@ -424,7 +423,6 @@ export function ApplicationDetailDialog({
       setAdminBypassMode(false);
       onOpenChange(false);
     } catch (error: any) {
-      console.error("Error during admin bypass:", error);
       toast.error(error.message || "Failed to complete admin bypass");
     } finally {
       setIsSavingBypass(false);

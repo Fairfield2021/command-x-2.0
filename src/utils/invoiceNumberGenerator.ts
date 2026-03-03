@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from '@/utils/logger';
 
 /**
  * Generates the next invoice number using the appropriate source:
@@ -27,7 +28,7 @@ export async function getNextInvoiceNumber(): Promise<{ number: string; source: 
       return { number: qbData.nextNumber, source: 'quickbooks' };
     }
 
-    console.warn('⚠️ QuickBooks number generation failed, falling back to local numbering:', qbError || qbData?.error);
+    logger.warn('QuickBooks invoice number generation failed, falling back to local:', qbError || qbData?.error);
     // Fall through to local generation
   }
 
@@ -35,7 +36,6 @@ export async function getNextInvoiceNumber(): Promise<{ number: string; source: 
   const { data, error } = await supabase.rpc('generate_invoice_number');
 
   if (error) {
-    console.error('Local invoice number generation failed:', error);
     throw new Error('Failed to generate invoice number');
   }
 

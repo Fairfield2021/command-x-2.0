@@ -41,7 +41,6 @@ export function useCreateWeeklyLaborInvoice() {
       
       // Get fresh invoice number from QuickBooks (or local fallback)
       const { number: invoiceNumber, source } = await getNextInvoiceNumber();
-      console.log(`Generated weekly labor invoice number ${invoiceNumber} from ${source}`);
       
       // Create invoice with QuickBooks-synced number
       const invoiceData = {

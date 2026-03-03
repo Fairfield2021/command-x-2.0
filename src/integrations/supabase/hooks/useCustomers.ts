@@ -68,13 +68,11 @@ export const useAddCustomer = () => {
       try {
         const qbConnected = await isQuickBooksConnected();
         if (qbConnected) {
-          console.log("QuickBooks connected - syncing customer:", data.id);
           await supabase.functions.invoke("quickbooks-sync-customers", {
             body: { action: "sync-single", customerId: data.id },
           });
         }
       } catch (qbError) {
-        console.error("QuickBooks sync error (non-blocking):", qbError);
       }
 
       return data;
@@ -129,13 +127,11 @@ export const useUpdateCustomer = () => {
       try {
         const qbConnected = await isQuickBooksConnected();
         if (qbConnected) {
-          console.log("QuickBooks connected - syncing updated customer:", id);
           await supabase.functions.invoke("quickbooks-sync-customers", {
             body: { action: "sync-single", customerId: id },
           });
         }
       } catch (qbError) {
-        console.error("QuickBooks sync error (non-blocking):", qbError);
       }
 
       return data;

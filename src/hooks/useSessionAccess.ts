@@ -49,7 +49,6 @@ export function useSessionAccess() {
 
         setHasAccess(permData?.can_view === true);
       } catch (e) {
-        console.error("Error checking session access:", e);
         if (isMounted) setHasAccess(false);
       }
       if (isMounted) setIsChecking(false);

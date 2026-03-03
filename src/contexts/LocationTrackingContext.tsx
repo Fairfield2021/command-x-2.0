@@ -58,7 +58,6 @@ export function LocationTrackingProvider({ children }: LocationTrackingProviderP
           setPermissionStatus("prompt");
         }
       } catch (err) {
-        console.error("[LocationTracking] Failed to check permission:", err);
         setPermissionStatus("unknown");
       }
     } else {
@@ -94,7 +93,6 @@ export function LocationTrackingProvider({ children }: LocationTrackingProviderP
         
         return hasPermission;
       } catch (err: any) {
-        console.error("[LocationTracking] Failed to request permission:", err);
         setLastError(err.message || "Failed to request location permission");
         return false;
       }

@@ -69,7 +69,6 @@ const InvoiceDetail = () => {
       
       refetch();
     } catch (error: any) {
-      console.error("Error sending invoice:", error);
       const errorMessage = error.message?.includes("domain") 
         ? "Failed to send invoice. Please verify your email domain in Resend."
         : "Failed to send invoice. Please try again.";

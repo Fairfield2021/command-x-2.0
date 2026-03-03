@@ -153,12 +153,10 @@ export function useOnboardingToken(token: string | undefined) {
                 },
               },
             }).catch((err) => {
-              console.error("[Onboarding] Failed to send started notification:", err);
             });
           }
         }
       } catch (notifError) {
-        console.error("[Onboarding] Error sending started notification:", notifError);
       }
       const { data: personnelData, error: personnelError } = await supabase
         .from("personnel")
@@ -237,7 +235,6 @@ export function useCompleteOnboarding() {
       w9Certification?: boolean;
       icaSignature?: string | null;
     }) => {
-      console.log("[Onboarding] Starting onboarding completion for personnel:", personnelId);
 
       // Prepare documents array for the RPC function
       // Map the document fields correctly - CategoryDocumentUpload uses 'type' for MIME type
@@ -283,24 +280,19 @@ export function useCompleteOnboarding() {
       });
 
       if (error) {
-        console.error("[Onboarding] RPC error:", error);
         throw error;
       }
 
       const result = data as { success: boolean; error?: string; message?: string };
 
       if (!result.success) {
-        console.error("[Onboarding] Function returned error:", result.error);
         throw new Error(result.error || "Failed to complete onboarding");
       }
 
-      console.log("[Onboarding] Completed successfully:", result.message);
-      console.log("[Onboarding] Documents saved:", formData.documents.length);
 
       // Send confirmation email (fire and forget - don't block on this)
       try {
         const personnelName = `${formData.first_name} ${formData.last_name}`;
-        console.log("[Onboarding] Sending confirmation email to:", formData.email);
         
         await supabase.functions.invoke("send-onboarding-confirmation-email", {
           body: {
@@ -309,10 +301,8 @@ export function useCompleteOnboarding() {
             personnelName,
           },
         });
-        console.log("[Onboarding] Confirmation email sent successfully");
       } catch (emailError) {
         // Don't fail the whole operation if email fails
-        console.error("[Onboarding] Failed to send confirmation email:", emailError);
       }
 
       // Notify admins about completed onboarding
@@ -330,9 +320,7 @@ export function useCompleteOnboarding() {
             },
           },
         });
-        console.log("[Onboarding] Admin notification sent for completed onboarding");
       } catch (notifError) {
-        console.error("[Onboarding] Failed to send completion notification:", notifError);
       }
 
       // Trigger auto-sync to QuickBooks if enabled
@@ -347,21 +335,16 @@ export function useCompleteOnboarding() {
         const isAutoSyncEnabled = (autoSyncSetting?.setting_value as { enabled?: boolean })?.enabled;
 
         if (isAutoSyncEnabled) {
-          console.log("[Onboarding] Auto-sync to QuickBooks enabled, triggering sync");
           supabase.functions.invoke("sync-personnel-to-quickbooks", {
             body: { personnel_id: personnelId },
           }).then((result) => {
             if (result.error) {
-              console.error("[Onboarding] Auto-sync to QuickBooks failed:", result.error);
             } else {
-              console.log("[Onboarding] Auto-sync to QuickBooks completed:", result.data);
             }
           }).catch((syncError) => {
-            console.error("[Onboarding] Auto-sync to QuickBooks error:", syncError);
           });
         }
       } catch (autoSyncError) {
-        console.error("[Onboarding] Error checking auto-sync setting:", autoSyncError);
       }
 
       return { success: true };
@@ -373,7 +356,6 @@ export function useCompleteOnboarding() {
       toast.success("Onboarding completed successfully!");
     },
     onError: (error: Error) => {
-      console.error("[Onboarding] Completion failed:", error);
       toast.error(`Failed to complete onboarding: ${error.message}`);
     },
   });
@@ -395,7 +377,6 @@ export function useRevokeOnboardingToken() {
       personnelId: string;
       reason?: string;
     }) => {
-      console.log("[Onboarding] Revoking token for personnel:", personnelId);
 
       // Get current user
       const { data: { user } } = await supabase.auth.getUser();
@@ -448,7 +429,6 @@ export function useRevokeOnboardingToken() {
       toast.success("Onboarding link revoked successfully");
     },
     onError: (error: Error) => {
-      console.error("[Onboarding] Revoke failed:", error);
       toast.error(`Failed to revoke onboarding link: ${error.message}`);
     },
   });
@@ -470,7 +450,6 @@ export function useReverseRegistrationApproval() {
       registrationId: string;
       reason?: string;
     }) => {
-      console.log("[Registration] Reversing approval:", registrationId);
 
       const { data, error } = await supabase.functions.invoke(
         "reverse-personnel-approval",
@@ -491,7 +470,6 @@ export function useReverseRegistrationApproval() {
       toast.success("Registration approval reversed successfully");
     },
     onError: (error: Error) => {
-      console.error("[Registration] Reverse failed:", error);
       toast.error(`Failed to reverse approval: ${error.message}`);
     },
   });

@@ -120,7 +120,6 @@ export default function DocumentCenter() {
       const url = await getDocumentUrl(doc.file_path, doc.source_type);
       setPreviewUrl(url);
     } catch (error) {
-      console.error("Error getting preview URL:", error);
       toast.error("Failed to load document preview");
     } finally {
       setIsLoadingUrl(false);
@@ -135,7 +134,6 @@ export default function DocumentCenter() {
         toast.error("Failed to download document");
       }
     } catch (error) {
-      console.error("Download error:", error);
       toast.error("Failed to download document");
     } finally {
       setDownloadingId(null);

@@ -201,7 +201,6 @@ export default function EditApplication() {
 
         setIsLoading(false);
       } catch (err) {
-        console.error("Error fetching application:", err);
         setError("Failed to load application. Please try again.");
         setIsLoading(false);
       }
@@ -271,7 +270,6 @@ export default function EditApplication() {
         }]);
 
       if (revisionError) {
-        console.error("Error creating revision:", revisionError);
         // Continue anyway - revision is nice to have
       }
 
@@ -305,7 +303,6 @@ export default function EditApplication() {
         .eq("id", application.applicant_id);
 
       if (applicantError) {
-        console.error("Error updating applicant:", applicantError);
         throw applicantError;
       }
 
@@ -332,14 +329,12 @@ export default function EditApplication() {
         .eq("id", application.id);
 
       if (appError) {
-        console.error("Error updating application:", appError);
         throw appError;
       }
 
       toast.success("Your application has been updated!");
       setSubmitted(true);
     } catch (err: any) {
-      console.error("Error submitting edit:", err);
       toast.error(err.message || "Failed to update application");
     } finally {
       setIsSubmitting(false);

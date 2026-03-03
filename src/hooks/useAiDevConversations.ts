@@ -54,7 +54,6 @@ export function useAiDevConversations() {
       .order("updated_at", { ascending: false });
 
     if (error) {
-      console.error("Error fetching conversations:", error);
       return;
     }
 
@@ -71,7 +70,6 @@ export function useAiDevConversations() {
       .order("created_at", { ascending: true });
 
     if (error) {
-      console.error("Error fetching messages:", error);
       return;
     }
 
@@ -92,7 +90,6 @@ export function useAiDevConversations() {
       .single();
 
     if (error) {
-      console.error("Error creating conversation:", error);
       toast({
         title: "Error",
         description: "Failed to create conversation",
@@ -128,7 +125,6 @@ export function useAiDevConversations() {
       .single();
 
     if (error) {
-      console.error("Error adding message:", error);
       return null;
     }
 
@@ -167,7 +163,6 @@ export function useAiDevConversations() {
       .eq("id", conversationId);
 
     if (error) {
-      console.error("Error deleting conversation:", error);
       toast({
         title: "Error",
         description: "Failed to delete conversation",

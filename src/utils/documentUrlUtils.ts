@@ -39,13 +39,11 @@ export async function getDocumentUrl(
       .createSignedUrl(filePath, 3600); // 1 hour expiry
 
     if (error) {
-      console.error("Error creating signed URL:", error);
       return null;
     }
 
     return data?.signedUrl || null;
   } catch (error) {
-    console.error("Error getting document URL:", error);
     return null;
   }
 }
@@ -61,7 +59,6 @@ export async function downloadDocument(
   try {
     const url = await getDocumentUrl(filePath, sourceType);
     if (!url) {
-      console.error("Could not get document URL");
       return false;
     }
 
@@ -84,7 +81,6 @@ export async function downloadDocument(
     
     return true;
   } catch (error) {
-    console.error("Error downloading document:", error);
     return false;
   }
 }

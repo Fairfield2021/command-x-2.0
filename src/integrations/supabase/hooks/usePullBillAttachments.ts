@@ -22,7 +22,6 @@ export const usePullBillAttachments = () => {
         throw new Error("Not authenticated");
       }
 
-      console.log("Pulling attachments from QuickBooks for bill:", billId);
 
       const response = await supabase.functions.invoke("quickbooks-pull-bill-attachments", {
         body: { billId },

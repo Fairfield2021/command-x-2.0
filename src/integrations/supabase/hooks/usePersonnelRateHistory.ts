@@ -100,7 +100,6 @@ export function useUpdatePersonnelPayRate() {
 
       // Ignore error if no existing record (first rate being set)
       if (closeError && closeError.code !== "PGRST116") {
-        console.error("Error closing previous rate:", closeError);
       }
 
       // Step 2: Insert new rate history record
@@ -148,7 +147,6 @@ export function useUpdatePersonnelPayRate() {
       });
     },
     onError: (error: Error) => {
-      console.error("Failed to update pay rate:", error);
       toast.error(error.message || "Failed to update pay rate");
     },
   });

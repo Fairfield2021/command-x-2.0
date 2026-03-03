@@ -41,8 +41,6 @@ export default function VendorLogin() {
     setShowNetworkError(false);
 
     try {
-      console.info(`[VendorLogin] signIn: start | origin: ${window.location.origin}`);
-
       const signInPromise = supabase.auth.signInWithPassword({
         email,
         password,
@@ -52,8 +50,6 @@ export default function VendorLogin() {
 
       if (error) throw error;
 
-      console.info("[VendorLogin] signIn: success, checking vendor link");
-      
       // Check if user is linked to vendor
       const {
         data: { user },
@@ -73,7 +69,6 @@ export default function VendorLogin() {
         }
       }
     } catch (error: unknown) {
-      console.error("[VendorLogin] signIn: exception", error);
       if (isNetworkError(error)) {
         const networkErr = classifyNetworkError(error);
         setShowNetworkError(true);

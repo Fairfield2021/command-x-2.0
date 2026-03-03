@@ -50,7 +50,6 @@ export function useDeletePersonnelDocument() {
         .remove([filePath]);
 
       if (storageError) {
-        console.warn("[Documents] Storage deletion warning:", storageError);
         // Continue anyway - file might already be deleted or in different location
       }
 
@@ -69,7 +68,6 @@ export function useDeletePersonnelDocument() {
       toast.success("Document deleted successfully");
     },
     onError: (error: Error) => {
-      console.error("[Documents] Delete failed:", error);
       toast.error(`Failed to delete document: ${error.message}`);
     },
   });
@@ -88,7 +86,6 @@ export function useGetPersonnelDocumentUrl() {
       if (error) throw error;
       return data?.signedUrl || null;
     } catch (error) {
-      console.error("[Documents] Failed to get signed URL:", error);
       return null;
     }
   };

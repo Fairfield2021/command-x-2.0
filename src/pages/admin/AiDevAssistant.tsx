@@ -88,7 +88,6 @@ export default function AiDevAssistant() {
 
       setGoal("");
     } catch (error) {
-      console.error("Error sending message:", error);
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to get response",

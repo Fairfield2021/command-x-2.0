@@ -90,7 +90,6 @@ export function useUpdateSensitivePermissions() {
       queryClient.invalidateQueries({ queryKey: ["sensitive-permissions", variables.userId] });
     },
     onError: (error) => {
-      console.error("Error updating sensitive permissions:", error);
       toast.error("Failed to update sensitive data permissions");
     },
   });

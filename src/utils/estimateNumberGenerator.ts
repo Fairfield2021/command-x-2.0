@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from '@/utils/logger';
 
 /**
  * Generates the next estimate number using bidirectional sync:
@@ -32,7 +33,7 @@ export async function getNextEstimateNumber(): Promise<{ number: string; source:
       return { number: uniqueNumber, source: 'quickbooks' };
     }
 
-    console.error('QuickBooks number generation failed, falling back to local:', qbError || qbData?.error);
+    logger.warn('QuickBooks estimate number generation failed, falling back to local:', qbError || qbData?.error);
     // Fall through to local generation
   }
 
@@ -40,7 +41,6 @@ export async function getNextEstimateNumber(): Promise<{ number: string; source:
   const { data, error } = await supabase.rpc('generate_estimate_number');
 
   if (error) {
-    console.error('Local estimate number generation failed:', error);
     throw new Error('Failed to generate estimate number');
   }
 
@@ -67,7 +67,6 @@ async function ensureUniqueNumber(suggestedNumber: string): Promise<string> {
   }
 
   // Collision found - find next available number
-  console.log(`Estimate number ${suggestedNumber} already exists, finding next available...`);
 
   // Extract the base pattern and find the next available
   const baseMatch = suggestedNumber.match(/^(.+?)(\d+)$/);

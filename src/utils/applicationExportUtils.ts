@@ -406,7 +406,7 @@ export async function exportApplicationsToExcel(
           ext: { width: 50, height: 50 },
         });
       } catch (e) {
-        console.error("Failed to add image:", e);
+        // Image embed failed, continue without it
       }
     }
   }

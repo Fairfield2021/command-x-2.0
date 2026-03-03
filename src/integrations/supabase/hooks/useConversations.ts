@@ -318,7 +318,6 @@ export function useSendConversationMessage() {
           });
 
           if (smsError) {
-            console.error("Failed to send SMS:", smsError);
             // Update message type back to in_app if SMS failed
             await supabase
               .from("conversation_messages")
@@ -326,7 +325,6 @@ export function useSendConversationMessage() {
               .eq("id", data.id);
           }
         } catch (smsErr) {
-          console.error("SMS sending error:", smsErr);
         }
       }
 

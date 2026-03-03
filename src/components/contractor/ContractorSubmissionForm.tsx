@@ -89,7 +89,6 @@ export function ContractorSubmissionForm({ formType, onSuccess, language }: Cont
       toast.success(t("submissionSuccess"));
       onSuccess();
     } catch (error) {
-      console.error("Submission error:", error);
       toast.error(t("submissionError"));
     } finally {
       setSubmitting(false);

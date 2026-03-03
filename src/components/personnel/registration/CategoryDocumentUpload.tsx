@@ -92,13 +92,11 @@ export const CategoryDocumentUpload = ({
       });
 
       if (response.error) {
-        console.error('Verification error:', response.error);
         return null;
       }
 
       return response.data as VerificationResult;
     } catch (error) {
-      console.error('Error verifying document:', error);
       return null;
     }
   };
@@ -124,7 +122,6 @@ export const CategoryDocumentUpload = ({
 
     if (error) {
       toast.error(`Failed to upload ${file.name}`);
-      console.error("Upload error:", error);
       return null;
     }
 

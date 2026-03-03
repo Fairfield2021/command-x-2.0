@@ -34,7 +34,6 @@ export async function finalizeAttachments(
         .copy(pending.tempPath, finalPath);
 
       if (copyError) {
-        console.error("Copy error:", copyError);
         throw new Error(`Failed to copy file: ${pending.file_name}`);
       }
 
@@ -92,7 +91,6 @@ export async function finalizeAttachments(
       }
 
       if (dbError) {
-        console.error("DB error:", dbError);
         throw new Error(`Failed to save attachment record: ${pending.file_name}`);
       }
 
@@ -104,7 +102,6 @@ export async function finalizeAttachments(
 
     return { success: true };
   } catch (error: any) {
-    console.error("Finalize attachments error:", error);
     return { success: false, error: error.message };
   }
 }
@@ -124,6 +121,6 @@ export async function cleanupPendingAttachments(
       .from("document-attachments")
       .remove(paths);
   } catch (error) {
-    console.error("Cleanup error:", error);
+    // Cleanup is best-effort
   }
 }

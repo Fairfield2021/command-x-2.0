@@ -106,7 +106,6 @@ export const useAddProject = () => {
             }).eq("id", data.id);
           }
         } catch (e) {
-          console.error("Auto-geocode failed:", e);
         }
       }
 
@@ -186,7 +185,6 @@ export const useUpdateProject = () => {
             }).eq("id", id);
           }
         } catch (e) {
-          console.error("Auto-geocode failed:", e);
         }
       }
 

@@ -71,7 +71,6 @@ export function PaymentAttachmentsList({
         window.open(data.signedUrl, "_blank");
       }
     } catch (error) {
-      console.error("Preview error:", error);
       toast.error("Failed to preview file");
     }
   };
@@ -91,7 +90,6 @@ export function PaymentAttachmentsList({
 
       window.open(data.signedUrl, "_blank");
     } catch (error) {
-      console.error("Download error:", error);
       toast.error("Failed to download file");
     }
   };

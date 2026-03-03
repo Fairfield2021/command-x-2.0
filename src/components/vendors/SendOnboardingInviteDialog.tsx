@@ -124,7 +124,7 @@ export function SendOnboardingInviteDialog({
 
       handleClose(false);
     } catch (error) {
-      console.error("Error sending onboarding invite:", error);
+      // Error handled by mutation's onError
     } finally {
       setIsSubmitting(false);
     }

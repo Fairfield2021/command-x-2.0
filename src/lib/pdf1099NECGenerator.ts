@@ -31,7 +31,7 @@ function safeSetTextField(
     const field = form.getTextField(fieldName);
     field.setText(value);
   } catch (error) {
-    console.warn("Could not fill field " + fieldName);
+    // Field not found in template, skip
   }
 }
 
@@ -90,9 +90,6 @@ export async function generate1099NECPDF(formData: Form1099NECData): Promise<Blo
   });
   const pdfDoc = await PDFDocument.load(existingPdfBytes, { ignoreEncryption: true });
   const form = pdfDoc.getForm();
-
-  const fields = form.getFields();
-  console.log("Available 1099-NEC form fields:", fields.map(function(f) { return f.getName(); }));
 
   for (let i = 0; i < COPY_PREFIXES.length; i++) {
     fillFormCopy(form, formData, COPY_PREFIXES[i]);

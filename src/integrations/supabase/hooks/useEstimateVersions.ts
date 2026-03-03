@@ -241,7 +241,6 @@ export function useRestoreEstimateVersion() {
     },
     onError: (error) => {
       toast.error("Failed to restore version");
-      console.error("Restore error:", error);
     },
   });
 }

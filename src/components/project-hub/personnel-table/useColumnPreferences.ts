@@ -16,7 +16,7 @@ export function useColumnPreferences() {
         }));
       }
     } catch (e) {
-      console.error("Failed to parse column preferences:", e);
+      // Ignore corrupted localStorage data
     }
     return PERSONNEL_COLUMNS.map((col) => ({
       ...col,
@@ -33,7 +33,7 @@ export function useColumnPreferences() {
       }, {} as Record<string, boolean>);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
     } catch (e) {
-      console.error("Failed to save column preferences:", e);
+      // Ignore localStorage write failures
     }
   }, []);
 

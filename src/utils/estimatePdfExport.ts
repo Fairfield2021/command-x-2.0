@@ -108,7 +108,7 @@ export const generateEstimatePDF = async (estimate: EstimateData): Promise<void>
     const logoX = pageWidth - margin - logoWidth;
     doc.addImage(base64, "PNG", logoX, yPos - 5, logoWidth, logoHeight);
   } catch (error) {
-    console.error("Failed to load logo:", error);
+    // Logo failed to load, continue without it
   }
 
   // "ESTIMATE" title - blue, top-left

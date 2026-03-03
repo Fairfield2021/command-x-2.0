@@ -75,7 +75,7 @@ export function useTodaySessions(externalHasAccess?: boolean, externalAccessChec
         if (error) throw error;
         setTodaySessions(data || []);
       } catch (e) {
-        console.error("Error fetching today's sessions:", e);
+        // Failed to fetch today's sessions
       }
       setIsLoading(false);
     };

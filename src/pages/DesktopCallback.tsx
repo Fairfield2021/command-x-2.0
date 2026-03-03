@@ -40,8 +40,6 @@ const DesktopCallback = () => {
       // Construct the deep link URL for the desktop app
       const deepLinkUrl = `commandx://auth/callback#access_token=${encodeURIComponent(accessToken)}&refresh_token=${encodeURIComponent(refreshToken)}`;
 
-      console.log("[DesktopCallback] Redirecting to desktop app:", deepLinkUrl);
-
       // Redirect to the custom protocol
       window.location.href = deepLinkUrl;
 
@@ -53,7 +51,6 @@ const DesktopCallback = () => {
         );
       }, 3000);
     } catch (err) {
-      console.error("[DesktopCallback] Error:", err);
       setStatus("error");
       setErrorMessage("An unexpected error occurred. Please try again.");
     }

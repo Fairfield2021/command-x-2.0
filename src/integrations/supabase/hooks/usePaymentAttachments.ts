@@ -78,7 +78,6 @@ export const useUploadVendorBillPaymentAttachment = () => {
     },
     onError: (error) => {
       toast.error("Failed to upload file");
-      console.error(error);
     },
   });
 };
@@ -113,7 +112,6 @@ export const useDeleteVendorBillPaymentAttachment = () => {
     },
     onError: (error) => {
       toast.error("Failed to delete file");
-      console.error(error);
     },
   });
 };
@@ -182,7 +180,6 @@ export const useUploadInvoicePaymentAttachment = () => {
     },
     onError: (error) => {
       toast.error("Failed to upload file");
-      console.error(error);
     },
   });
 };
@@ -217,7 +214,6 @@ export const useDeleteInvoicePaymentAttachment = () => {
     },
     onError: (error) => {
       toast.error("Failed to delete file");
-      console.error(error);
     },
   });
 };

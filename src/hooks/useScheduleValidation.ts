@@ -40,7 +40,6 @@ export function useScheduleValidation(personnelId: string | undefined, projectId
         .maybeSingle();
 
       if (error) {
-        console.error("Error fetching schedule:", error);
         // If there's an error, allow clock-in (fail open for schedule check)
         return {
           hasSchedule: false,

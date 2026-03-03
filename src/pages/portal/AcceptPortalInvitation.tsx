@@ -50,7 +50,6 @@ export default function AcceptPortalInvitation() {
       toast.success("Account created successfully! You can now sign in.");
       navigate("/portal/login");
     } catch (error: any) {
-      console.error("Account creation error:", error);
       toast.error(error.message || "Failed to create account");
     } finally {
       setLoading(false);

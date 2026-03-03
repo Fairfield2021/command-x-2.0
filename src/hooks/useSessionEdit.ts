@@ -106,7 +106,6 @@ export function useSessionEdit() {
       });
     },
     onError: (error) => {
-      console.error("Error updating session:", error);
       toast({
         title: "Error",
         description: "Failed to update session times.",
@@ -167,7 +166,6 @@ export function useSessionEdit() {
       });
     },
     onError: (error) => {
-      console.error("Error creating session:", error);
       toast({
         title: "Error",
         description: "Failed to create session.",

@@ -49,7 +49,6 @@ export const RegistrationDocumentUpload = ({
 
     if (error) {
       toast.error(`Failed to upload ${file.name}`);
-      console.error("Upload error:", error);
       return null;
     }
 

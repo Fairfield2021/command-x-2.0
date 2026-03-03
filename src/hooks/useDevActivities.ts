@@ -88,7 +88,7 @@ export function useDevActivities(dateRange?: DateRange, targetUserId?: string | 
       toast.success("Activity saved");
     },
     onError: (error) => {
-      console.error("Failed to create activity:", error);
+
       toast.error("Failed to save activity");
     },
   });
@@ -111,7 +111,7 @@ export function useDevActivities(dateRange?: DateRange, targetUserId?: string | 
       toast.success(`${data.length} activities saved`);
     },
     onError: (error) => {
-      console.error("Failed to create activities:", error);
+
       toast.error("Failed to save activities");
     },
   });
@@ -133,7 +133,7 @@ export function useDevActivities(dateRange?: DateRange, targetUserId?: string | 
       toast.success("Activity updated");
     },
     onError: (error) => {
-      console.error("Failed to update activity:", error);
+
       toast.error("Failed to update activity");
     },
   });
@@ -152,7 +152,7 @@ export function useDevActivities(dateRange?: DateRange, targetUserId?: string | 
       toast.success("Activity deleted");
     },
     onError: (error) => {
-      console.error("Failed to delete activity:", error);
+
       toast.error("Failed to delete activity");
     },
   });
@@ -174,7 +174,7 @@ export function useDevActivities(dateRange?: DateRange, targetUserId?: string | 
       toast.success(`${ids.length} activities updated`);
     },
     onError: (error) => {
-      console.error("Failed to bulk update activities:", error);
+
       toast.error("Failed to update activities");
     },
   });
@@ -196,7 +196,7 @@ export function useDevActivities(dateRange?: DateRange, targetUserId?: string | 
       toast.success(`${ids.length} activities deleted`);
     },
     onError: (error) => {
-      console.error("Failed to bulk delete activities:", error);
+
       toast.error("Failed to delete activities");
     },
   });
@@ -256,7 +256,6 @@ export function useAnalyzeScreenshot() {
         message: data.message,
       };
     } catch (error) {
-      console.error("Screenshot analysis failed:", error);
       throw error;
     } finally {
       setIsAnalyzing(false);

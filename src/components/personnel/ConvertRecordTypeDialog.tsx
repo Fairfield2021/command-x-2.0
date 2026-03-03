@@ -132,7 +132,6 @@ export const ConvertRecordTypeDialog = ({
             description: `${vendor.name} is now linked as a vendor.`,
           });
         } catch (qbError) {
-          console.error("QuickBooks sync failed:", qbError);
           toast.success("Vendor record created and linked", {
             description: "QuickBooks sync pending - can be retried from vendor page",
           });
@@ -232,7 +231,6 @@ export const ConvertRecordTypeDialog = ({
             description: `Personnel deactivated. New vendor record created.`,
           });
         } catch (qbError) {
-          console.error("QuickBooks sync failed:", qbError);
           toast.success("Switched to Vendor", {
             description: "QuickBooks sync pending - can be retried from vendor page",
           });

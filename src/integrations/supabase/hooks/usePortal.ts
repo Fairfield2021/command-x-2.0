@@ -351,7 +351,6 @@ export function useSendPortalInvitation() {
       });
       
       if (emailError) {
-        console.error("Failed to send invitation email:", emailError);
         throw new Error("Invitation created but failed to send email");
       }
       

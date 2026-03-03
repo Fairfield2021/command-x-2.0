@@ -26,7 +26,6 @@ export function W9FormPreview({ w9Form, ssnLastFour, ssnFull }: W9FormPreviewPro
       });
       toast.success("W-9 downloaded successfully");
     } catch (error) {
-      console.error("Error downloading W-9:", error);
       toast.error("Failed to download W-9. Please try again.");
     } finally {
       setIsDownloading(false);

@@ -96,7 +96,6 @@ export const useDeleteProjectDocument = () => {
         .remove([filePath]);
 
       if (storageError) {
-        console.error("Storage delete error:", storageError);
       }
 
       // Delete record

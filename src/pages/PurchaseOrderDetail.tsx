@@ -121,7 +121,6 @@ const PurchaseOrderDetail = () => {
 
       toast.success(`Purchase order ${approved ? 'approved' : 'rejected'} successfully!`);
     } catch (error: any) {
-      console.error(`Error ${approved ? 'approving' : 'rejecting'} purchase order:`, error);
       toast.error(error.message || `Failed to ${approved ? 'approve' : 'reject'} purchase order`);
     } finally {
       setIsApproving(false);
@@ -141,7 +140,6 @@ const PurchaseOrderDetail = () => {
 
       toast.success("Purchase order sent to vendor successfully!");
     } catch (error: any) {
-      console.error("Error sending purchase order:", error);
       toast.error(error.message || "Failed to send purchase order");
     } finally {
       setIsSending(false);
@@ -158,7 +156,6 @@ const PurchaseOrderDetail = () => {
       });
       toast.success("Purchase order marked as complete!");
     } catch (error: any) {
-      console.error("Error marking complete:", error);
       toast.error("Failed to mark purchase order as complete");
     }
   };
@@ -245,7 +242,6 @@ const PurchaseOrderDetail = () => {
       toast.success("Purchase order deleted successfully");
       navigate("/purchase-orders");
     } catch (error: any) {
-      console.error("Error deleting purchase order:", error);
       toast.error("Failed to delete purchase order");
     } finally {
       setIsDeleting(false);

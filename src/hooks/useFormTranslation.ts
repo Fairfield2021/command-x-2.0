@@ -135,7 +135,6 @@ export function useFormTranslation({
           localStorage.setItem(cacheKey, JSON.stringify(data.translations));
         }
       } catch (err: any) {
-        console.error('[useFormTranslation] Error:', err);
         toast.error('Translation failed. Showing original content.');
         setTranslations(null);
       } finally {

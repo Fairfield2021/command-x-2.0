@@ -70,7 +70,6 @@ export function useApplicantLookup() {
       });
 
       if (error) {
-        console.error("[useApplicantLookup] Error:", error);
         setIsLookingUp(false);
         return null;
       }
@@ -88,7 +87,6 @@ export function useApplicantLookup() {
       setIsLookingUp(false);
       return null;
     } catch (err) {
-      console.error("[useApplicantLookup] Exception:", err);
       setIsLookingUp(false);
       return null;
     }

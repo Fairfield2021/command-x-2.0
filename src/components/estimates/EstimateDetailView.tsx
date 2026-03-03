@@ -136,7 +136,6 @@ export function EstimateDetailView({ estimateId }: EstimateDetailViewProps) {
       // Refetch estimate to get updated data
       window.location.reload();
     } catch (error: any) {
-      console.error("Error sending estimate:", error);
       toast.error(error.message || "Failed to send estimate");
     } finally {
       setIsSending(false);

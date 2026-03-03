@@ -238,7 +238,7 @@ export function useClockIn() {
                 attempt_time: attemptTime,
                 minutes_late: minutesLate,
               },
-            }).catch(err => console.error("Failed to notify late clock attempt:", err));
+            }).catch(() => {});
             
             throw new Error(`LATE_CLOCK_IN_BLOCKED:${Math.round(minutesLate)}:${schedule.scheduled_start_time}`);
           }

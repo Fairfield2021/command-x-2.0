@@ -24,7 +24,6 @@ export const useProfile = () => {
         .single();
 
       if (error) {
-        console.error("Error fetching profile:", error);
         return null;
       }
 
@@ -43,7 +42,6 @@ export const useProfiles = () => {
         .order("first_name", { ascending: true });
 
       if (error) {
-        console.error("Error fetching profiles:", error);
         return [];
       }
 

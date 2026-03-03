@@ -202,7 +202,7 @@ export function useAutoSaveDraft({
       setHasUnsavedChanges(false);
       queryClient.invalidateQueries({ queryKey: ["estimates"] });
     } catch (error) {
-      console.error("Failed to save draft:", error);
+      // Draft save failed
     } finally {
       setIsSaving(false);
     }

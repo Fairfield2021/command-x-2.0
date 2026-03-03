@@ -146,7 +146,6 @@ export function SessionHistoryTable({
       });
       
       if (error) {
-        console.error('Error recalculating idle:', error);
         toast({
           title: "Failed to recalculate",
           description: error.message,
@@ -163,7 +162,6 @@ export function SessionHistoryTable({
           const parsed = JSON.parse(storedState);
           if (parsed.sessionId === sessionId) {
             localStorage.removeItem(STORAGE_KEY);
-            console.log('Cleared localStorage to prevent overwrite');
           }
         } catch (e) {
           // Ignore parse errors
@@ -180,7 +178,6 @@ export function SessionHistoryTable({
         description: `Corrected: ${formatDuration(data.previousIdleSeconds)} → ${formatDuration(data.newIdleSeconds)}`,
       });
     } catch (err) {
-      console.error('Error:', err);
       toast({
         title: "Error",
         description: "Failed to recalculate idle time",

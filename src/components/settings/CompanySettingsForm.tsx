@@ -53,7 +53,7 @@ export const CompanySettingsForm = () => {
         overtime_multiplier: parseFloat(data.overtime_multiplier) || 1.5,
       });
     } catch (error) {
-      console.error("Error updating company settings:", error);
+      // Error handled by mutation's onError
     }
   };
 

@@ -186,7 +186,6 @@ export function ImportRoomsDialog({ open, onOpenChange, projectId, summaryItems 
       toast.success(`Found ${rows.length} rooms`);
     } catch (err) {
       toast.error('Failed to parse file');
-      console.error(err);
     }
   }, []);
 
@@ -234,7 +233,6 @@ export function ImportRoomsDialog({ open, onOpenChange, projectId, summaryItems 
       toast.success(`Extracted ${rows.length} rooms`);
     } catch (err) {
       toast.error('AI extraction failed');
-      console.error(err);
     } finally {
       setIsExtracting(false);
     }

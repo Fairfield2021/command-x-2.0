@@ -205,9 +205,7 @@ export function useAssignPersonnelToProject() {
             force: true
           }
         });
-        console.log(`Assignment SMS sent for personnel ${data.personnel_id}`);
       } catch (smsError) {
-        console.error(`Failed to send assignment SMS:`, smsError);
         // Don't fail the assignment if SMS fails
       }
       
@@ -335,7 +333,6 @@ export function useBulkAssignPersonnelToProject() {
                 }]);
             }
           } catch (scheduleError) {
-            console.error(`Failed to create schedule for personnel ${assignment.personnel_id}:`, scheduleError);
           }
         }
       }
@@ -353,9 +350,7 @@ export function useBulkAssignPersonnelToProject() {
               force: true
             }
           });
-          console.log(`Assignment SMS sent for personnel ${assignment.personnel_id}`);
         } catch (smsError) {
-          console.error(`Failed to send assignment SMS for personnel ${assignment.personnel_id}:`, smsError);
           // Don't fail the assignment if SMS fails
         }
       }

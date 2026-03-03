@@ -19,7 +19,7 @@ export const useNativeStatusBar = () => {
           await StatusBar.setBackgroundColor({ color: '#e5e5e5' });
         }
       } catch (e) {
-        console.log('StatusBar update failed:', e);
+        // StatusBar update failed
       }
     };
 

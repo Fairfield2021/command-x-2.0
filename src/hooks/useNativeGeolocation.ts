@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Capacitor } from "@capacitor/core";
+import { logger } from '@/utils/logger';
 
 // Types for background geolocation
 interface GeofenceConfig {
@@ -68,7 +69,7 @@ export function useNativeGeolocation(
       bgGeoRef.current = BackgroundGeolocation;
       return BackgroundGeolocation;
     } catch (err) {
-      console.error("[NativeGeo] Failed to load BackgroundGeolocation:", err);
+      logger.error("[NativeGeo] Failed to load BackgroundGeolocation:", err);
       setError("Failed to load native geolocation plugin");
       return null;
     }
@@ -131,7 +132,6 @@ export function useNativeGeolocation(
         if (onGeofenceExit) {
           geofenceListenerRef.current = BackgroundGeolocation.onGeofence(
             (event: any) => {
-              console.log("[NativeGeo] Geofence event:", event);
               if (event.action === "EXIT") {
                 onGeofenceExit(event.identifier);
               }
@@ -144,7 +144,6 @@ export function useNativeGeolocation(
         setIsTracking(true);
         return true;
       } catch (err: any) {
-        console.error("[NativeGeo] Failed to start tracking:", err);
         setError(err.message || "Failed to start location tracking");
         return false;
       }
@@ -165,7 +164,7 @@ export function useNativeGeolocation(
           geofenceListenerRef.current = null;
         }
       } catch (err) {
-        console.error("[NativeGeo] Failed to stop tracking:", err);
+        // Stop tracking failed silently
       }
     }
     setIsTracking(false);
@@ -199,7 +198,6 @@ export function useNativeGeolocation(
         setLastLocation(locationData);
         return locationData;
       } catch (err: any) {
-        console.error("[NativeGeo] Failed to get location:", err);
         setError(err.message || "Failed to get location");
         return initialLocationData;
       }
@@ -240,7 +238,6 @@ export function useNativeGeolocation(
   const addGeofence = useCallback(
     async (config: GeofenceConfig): Promise<void> => {
       if (!isNative) {
-        console.log("[NativeGeo] Geofencing not available on web");
         return;
       }
 
@@ -257,9 +254,7 @@ export function useNativeGeolocation(
           notifyOnExit: config.notifyOnExit ?? true,
           notifyOnDwell: config.notifyOnDwell ?? false,
         });
-        console.log("[NativeGeo] Geofence added:", config.identifier);
       } catch (err: any) {
-        console.error("[NativeGeo] Failed to add geofence:", err);
         setError(err.message || "Failed to add geofence");
       }
     },
@@ -273,9 +268,8 @@ export function useNativeGeolocation(
 
       try {
         await bgGeoRef.current.removeGeofence(identifier);
-        console.log("[NativeGeo] Geofence removed:", identifier);
       } catch (err: any) {
-        console.error("[NativeGeo] Failed to remove geofence:", err);
+        // Remove geofence failed silently
       }
     },
     [isNative]
@@ -287,9 +281,8 @@ export function useNativeGeolocation(
 
     try {
       await bgGeoRef.current.removeGeofences();
-      console.log("[NativeGeo] All geofences removed");
     } catch (err: any) {
-      console.error("[NativeGeo] Failed to remove geofences:", err);
+      // Remove all geofences failed silently
     }
   }, [isNative]);
 

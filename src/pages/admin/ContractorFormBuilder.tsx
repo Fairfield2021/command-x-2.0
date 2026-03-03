@@ -98,7 +98,6 @@ export default function ContractorFormBuilder() {
       });
       toast.success(`${activeTab === "bill" ? "Bill" : "Expense"} form saved`);
     } catch (error) {
-      console.error("Save error:", error);
       toast.error("Failed to save form configuration");
     } finally {
       setSaving(false);

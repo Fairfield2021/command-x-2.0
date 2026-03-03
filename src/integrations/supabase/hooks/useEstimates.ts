@@ -227,13 +227,11 @@ export const useAddEstimate = () => {
       try {
         const qbConnected = await isQuickBooksConnected();
         if (qbConnected) {
-          console.log("QuickBooks connected - syncing estimate:", estimateData.id);
           await supabase.functions.invoke("quickbooks-create-estimate", {
             body: { estimateId: estimateData.id },
           });
         }
       } catch (qbError) {
-        console.error("QuickBooks sync error (non-blocking):", qbError);
         // Don't throw - QB sync failure shouldn't prevent estimate creation
       }
 
@@ -314,9 +312,7 @@ export const useUpdateEstimate = () => {
 
       // Auto-sync to QuickBooks if connected and estimate is synced
       try {
-        console.log("[QB Sync] Checking QuickBooks connection for estimate update:", data.id);
         const qbConnected = await isQuickBooksConnected();
-        console.log("[QB Sync] QuickBooks connected:", qbConnected);
         
         if (qbConnected) {
           // Check if estimate was previously synced
@@ -326,32 +322,23 @@ export const useUpdateEstimate = () => {
             .eq("estimate_id", data.id)
             .maybeSingle();
 
-          console.log("[QB Sync] Estimate mapping found:", mapping);
 
           if (mapping && mapping.sync_status !== "voided") {
-            console.log("[QB Sync] Invoking quickbooks-update-estimate for:", data.id);
             const { data: syncResult, error: syncError } = await supabase.functions.invoke("quickbooks-update-estimate", {
               body: { estimateId: data.id },
             });
             
             if (syncError) {
-              console.error("[QB Sync] Edge function error:", syncError);
             } else {
-              console.log("[QB Sync] Sync result:", syncResult);
               if (syncResult?.success) {
-                console.log("[QB Sync] Estimate successfully synced to QuickBooks");
               } else if (syncResult?.error) {
-                console.error("[QB Sync] Sync failed:", syncResult.error);
               }
             }
           } else if (!mapping) {
-            console.log("[QB Sync] No existing mapping - estimate not yet synced to QuickBooks");
           } else {
-            console.log("[QB Sync] Estimate is voided in QuickBooks, skipping update");
           }
         }
       } catch (qbError) {
-        console.error("[QB Sync] QuickBooks update sync error (non-blocking):", qbError);
       }
 
       return estimateData;
@@ -387,13 +374,11 @@ export const useDeleteEstimate = () => {
       try {
         const qbConnected = await isQuickBooksConnected();
         if (qbConnected) {
-          console.log("QuickBooks connected - voiding estimate:", id);
           await supabase.functions.invoke("quickbooks-void-estimate", {
             body: { estimateId: id },
           });
         }
       } catch (qbError) {
-        console.error("QuickBooks void error (non-blocking):", qbError);
       }
       
       // First, unlink any job orders that reference this estimate
@@ -648,17 +633,14 @@ export const useConvertEstimateToInvoice = () => {
       try {
         const qbConnected = await isQuickBooksConnected();
         if (qbConnected) {
-          console.log("QuickBooks connected - syncing invoice from estimate:", invoice.id);
           const { error: qbError } = await supabase.functions.invoke("quickbooks-create-invoice", {
             body: { invoiceId: invoice.id },
           });
           if (qbError) {
-            console.error("QuickBooks sync error:", qbError);
             toast.warning("Invoice created, but QuickBooks sync failed");
           }
         }
       } catch (qbError) {
-        console.error("QuickBooks sync error (non-blocking):", qbError);
         toast.warning("Invoice created, but QuickBooks sync failed");
       }
 

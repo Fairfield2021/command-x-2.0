@@ -73,9 +73,7 @@ export const usePersonalActivityHistory = (options: UsePersonalActivityHistoryOp
 
       const { data: auditData, error: auditError } = await auditQuery;
 
-      if (auditError) {
-        console.error("Error fetching audit logs:", auditError);
-      } else if (auditData) {
+      if (!auditError && auditData) {
         auditData.forEach(log => {
           activities.push({
             id: log.id,
@@ -112,9 +110,7 @@ export const usePersonalActivityHistory = (options: UsePersonalActivityHistoryOp
 
         const { data: sessionData, error: sessionError } = await sessionQuery;
 
-        if (sessionError) {
-          console.error("Error fetching session activities:", sessionError);
-        } else if (sessionData) {
+        if (!sessionError && sessionData) {
         sessionData.forEach(activity => {
             activities.push({
               id: activity.id,
@@ -157,7 +153,6 @@ export const useRecentActivitySummary = (limit = 5) => {
         .limit(limit);
 
       if (error) {
-        console.error("Error fetching recent activity:", error);
         return [];
       }
 

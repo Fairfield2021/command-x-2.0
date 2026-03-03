@@ -299,7 +299,6 @@ export function useSubmitCompletion() {
           await supabase.from("admin_notifications").insert(notifications);
         }
       } catch (e) {
-        console.warn("Failed to send notifications:", e);
       }
 
       return bill;
@@ -463,7 +462,6 @@ export function useUpdateCompletionBillStatus() {
           });
         }
       } catch (e) {
-        console.warn("Failed to send notifications:", e);
       }
 
       return data;

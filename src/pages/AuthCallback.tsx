@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Session } from "@supabase/supabase-js";
+import { logger } from '@/utils/logger';
 
 const AuthCallback = () => {
   const navigate = useNavigate();
@@ -37,7 +38,7 @@ const AuthCallback = () => {
           });
 
         if (profileError) {
-          console.error("Profile creation error:", profileError);
+          logger.error("Profile creation failed during auth callback:", profileError);
         }
       }
 
@@ -109,7 +110,7 @@ const AuthCallback = () => {
       toast.success("Logged in successfully");
       navigate("/");
     } catch (err) {
-      console.error("Auth callback exception:", err);
+      logger.error("Auth callback exception:", err);
       setError("An unexpected error occurred");
       // Sign out on error to prevent partial auth state
       await supabase.auth.signOut();
@@ -122,8 +123,6 @@ const AuthCallback = () => {
     // Listen for auth state changes - this handles OAuth callbacks properly
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log("[AuthCallback] Auth event:", event, "Session:", !!session);
-
         if (event === 'SIGNED_IN' && session) {
           // OAuth completed successfully
           await handleAuthenticatedUser(session);
@@ -138,7 +137,6 @@ const AuthCallback = () => {
 
             if (!accessToken) {
               // No tokens in URL and no session - something went wrong
-              console.log("[AuthCallback] No session and no tokens in URL");
               setError("No session found");
               toast.error("Authentication failed. Please try again.");
               setTimeout(() => navigate("/auth"), 2000);

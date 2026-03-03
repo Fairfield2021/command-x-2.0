@@ -298,7 +298,6 @@ export default function UserManagement() {
 
       setUsers(usersWithRoles);
     } catch (error) {
-      console.error("Error fetching users:", error);
       toast({
         title: "Error loading users",
         description: "Failed to load user list. Please try again.",
@@ -321,7 +320,7 @@ export default function UserManagement() {
       if (error) throw error;
       setPersonnelOptions(data || []);
     } catch (error) {
-      console.error("Error fetching personnel options:", error);
+      // silently ignore - personnel options are non-critical
     }
   };
 
@@ -346,7 +345,6 @@ export default function UserManagement() {
       // Refresh user list
       await fetchUsers();
     } catch (error: any) {
-      console.error("Error updating role:", error);
       toast({
         title: "Error updating role",
         description: error.message || "Failed to update user role. Please try again.",
@@ -376,7 +374,6 @@ export default function UserManagement() {
       await fetchUsers();
       await fetchPersonnelOptions();
     } catch (error: any) {
-      console.error("Error deleting user:", error);
       toast({
         title: "Error removing user",
         description: error.message || "Failed to remove user. Please try again.",
@@ -497,7 +494,6 @@ export default function UserManagement() {
         await fetchActivityLogs();
       }
     } catch (error: any) {
-      console.error("Error:", error);
       toast({
         title: createManually ? "Error creating user" : "Error sending invitation",
         description: error.message || "Failed to complete. Please try again.",
@@ -532,7 +528,7 @@ export default function UserManagement() {
         target_role: targetRole,
       });
     } catch (error) {
-      console.error('Error logging activity:', error);
+      // silently ignore - activity logging is non-critical
     }
   };
 
@@ -601,7 +597,6 @@ export default function UserManagement() {
       if (error) throw error;
       setActivityLogs(data || []);
     } catch (error: any) {
-      console.error("Error fetching activity logs:", error);
       toast({
         title: "Error",
         description: "Failed to load activity logs",
@@ -631,7 +626,6 @@ export default function UserManagement() {
       
       setInvitations(transformed);
     } catch (error) {
-      console.error("Error fetching invitations:", error);
       toast({
         title: "Error loading invitations",
         description: "Failed to load pending invitations.",
@@ -666,7 +660,6 @@ export default function UserManagement() {
       
       await fetchActivityLogs();
     } catch (error: any) {
-      console.error("Error resending invitation:", error);
       toast({
         title: "Error resending invitation",
         description: error.message || "Failed to resend invitation.",
@@ -698,7 +691,6 @@ export default function UserManagement() {
       await fetchInvitations();
       await fetchActivityLogs();
     } catch (error: any) {
-      console.error("Error cancelling invitation:", error);
       toast({
         title: "Error cancelling invitation",
         description: error.message || "Failed to cancel invitation.",

@@ -81,7 +81,6 @@ export function InviteVendorDialog({
         setPassword("");
         setConfirmPassword("");
       } catch (error: any) {
-        console.error("Error creating vendor account:", error);
         toast.error(error.message || "Failed to create account");
       } finally {
         setIsCreating(false);

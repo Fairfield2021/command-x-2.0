@@ -157,7 +157,6 @@ export const ImportWorkOrderDialog = ({
       setExtractedItems(items);
       toast.success(`Extracted ${items.length} line items`);
     } catch (error) {
-      console.error("Error processing file:", error);
       toast.error(
         error instanceof Error ? error.message : "Failed to process work order"
       );
@@ -256,7 +255,6 @@ export const ImportWorkOrderDialog = ({
       onOpenChange(false);
       navigate(`/job-orders/${result.id}`);
     } catch (error) {
-      console.error("Error creating job order:", error);
       toast.error("Failed to create job order");
     }
   };

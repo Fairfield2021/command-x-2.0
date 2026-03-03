@@ -3,11 +3,10 @@
  * Provides timeout handling, health checks, and error classification for authentication flows
  */
 
+import { logger } from '@/utils/logger';
+
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const BUILD_VERSION = import.meta.env.VITE_BUILD_TIMESTAMP || new Date().toISOString().slice(0, 10);
-
-// Log build info on module load (helps identify stale bundles)
-console.info(`[Build] version: ${BUILD_VERSION}, origin: ${window.location.origin}`);
 
 export interface NetworkError {
   isNetworkError: true;
@@ -98,7 +97,7 @@ export function classifyNetworkError(error: unknown): NetworkError {
     technicalDetails += " | Type: Aborted";
   }
 
-  console.error("[Auth Network]", technicalDetails);
+  logger.error("[Auth Network]", technicalDetails);
 
   return {
     isNetworkError: true,
@@ -114,7 +113,7 @@ export function classifyNetworkError(error: unknown): NetworkError {
  */
 export async function pingAuthHealth(timeoutMs = 5000): Promise<AuthHealthResult> {
   if (!SUPABASE_URL) {
-    console.error("[Auth Health] SUPABASE_URL is not defined");
+    logger.error("[Auth Health] SUPABASE_URL is not defined");
     return {
       healthy: false,
       latencyMs: 0,
@@ -139,7 +138,6 @@ export async function pingAuthHealth(timeoutMs = 5000): Promise<AuthHealthResult
     const latencyMs = Math.round(performance.now() - startTime);
 
     // Any HTTP response means the server is reachable (even 4xx/5xx)
-    console.info(`[Auth Health] Ping successful: ${response.status} in ${latencyMs}ms`);
     return {
       healthy: true,
       latencyMs,
@@ -149,7 +147,7 @@ export async function pingAuthHealth(timeoutMs = 5000): Promise<AuthHealthResult
     const latencyMs = Math.round(performance.now() - startTime);
     
     const errMsg = error instanceof Error ? error.message : "Unknown error";
-    console.warn("[Auth Health] Ping failed:", errMsg);
+    logger.warn("[Auth Health] Ping failed:", errMsg);
 
     return {
       healthy: false,
@@ -187,7 +185,6 @@ export async function copyDiagnostics(): Promise<boolean> {
     await navigator.clipboard.writeText(getDiagnostics());
     return true;
   } catch {
-    console.error("[Diagnostics] Failed to copy to clipboard");
     return false;
   }
 }

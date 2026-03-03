@@ -137,7 +137,6 @@ export function NotificationPreferences({ userId, onSave }: NotificationPreferen
         });
       }
     } catch (error) {
-      console.error("Error fetching notification preferences:", error);
       toast({
         title: "Error",
         description: "Failed to load notification preferences",
@@ -179,7 +178,6 @@ export function NotificationPreferences({ userId, onSave }: NotificationPreferen
       
       onSave?.(preferences);
     } catch (error: any) {
-      console.error("Error saving preferences:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to save preferences",

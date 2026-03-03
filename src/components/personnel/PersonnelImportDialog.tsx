@@ -74,7 +74,6 @@ export const PersonnelImportDialog = ({ open, onOpenChange }: PersonnelImportDia
         toast.success(`All ${validationResult.valid.length} rows validated successfully`);
       }
     } catch (error) {
-      console.error("Error parsing CSV:", error);
       toast.error("Failed to parse CSV file");
       setStep("upload");
       setFile(null);
@@ -107,7 +106,6 @@ export const PersonnelImportDialog = ({ open, onOpenChange }: PersonnelImportDia
           await bulkAdd.mutateAsync(cleanBatch as any);
           successCount += batch.length;
         } catch (error) {
-          console.error("Batch import error:", error);
           failedCount += batch.length;
         }
 
@@ -126,7 +124,6 @@ export const PersonnelImportDialog = ({ open, onOpenChange }: PersonnelImportDia
         toast.warning(`Imported ${successCount} records, ${failedCount} failed`);
       }
     } catch (error) {
-      console.error("Import error:", error);
       toast.error("Failed to import personnel records");
       setStep("preview");
     } finally {

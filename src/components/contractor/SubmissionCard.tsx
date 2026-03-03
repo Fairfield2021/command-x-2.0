@@ -39,7 +39,6 @@ export function SubmissionCard({ submission }: SubmissionCardProps) {
       link.click();
       document.body.removeChild(link);
     } catch (error) {
-      console.error("Download error:", error);
       toast.error("Failed to download file");
     } finally {
       setDownloadingFile(null);
@@ -51,7 +50,6 @@ export function SubmissionCard({ submission }: SubmissionCardProps) {
       await deleteSubmission.mutateAsync(submission.id);
       toast.success("Submission deleted");
     } catch (error) {
-      console.error("Delete error:", error);
       toast.error("Failed to delete submission");
     }
   };

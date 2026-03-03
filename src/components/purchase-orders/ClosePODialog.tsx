@@ -33,7 +33,7 @@ export function ClosePODialog({
       await closePO.mutateAsync(purchaseOrderId);
       onOpenChange(false);
     } catch (error) {
-      console.error("Error closing PO:", error);
+      // Error handled by mutation's onError
     }
   };
 

@@ -43,14 +43,12 @@ export const RequestNewLinkForm = ({ onBack }: RequestNewLinkFormProps) => {
       );
 
       if (fnError) {
-        console.error("Error requesting new link:", fnError);
         setError("Failed to send request. Please try again later.");
         return;
       }
 
       setSubmitted(true);
     } catch (err) {
-      console.error("Error:", err);
       setError("An unexpected error occurred. Please try again later.");
     } finally {
       setIsSubmitting(false);

@@ -124,7 +124,6 @@ export const FileAttachmentUpload = ({
         fileInputRef.current.value = "";
       }
     } catch (error: any) {
-      console.error("Upload error:", error);
       toast.error(error.message || "Failed to upload file");
     } finally {
       setUploading(false);
@@ -145,7 +144,6 @@ export const FileAttachmentUpload = ({
       await onDelete(attachment.id, attachment.file_path);
       toast.success("Attachment deleted");
     } catch (error: any) {
-      console.error("Delete error:", error);
       toast.error(error.message || "Failed to delete attachment");
     } finally {
       setDeleting(null);
@@ -174,7 +172,6 @@ export const FileAttachmentUpload = ({
       document.body.removeChild(link);
       window.URL.revokeObjectURL(blobUrl);
     } catch (error: any) {
-      console.error("Download error:", error);
       toast.error("Failed to download file");
     }
   };
@@ -198,7 +195,6 @@ export const FileAttachmentUpload = ({
         window.open(data.signedUrl, "_blank");
       }
     } catch (error) {
-      console.error("Preview error:", error);
       toast.error("Failed to preview file");
     }
   };

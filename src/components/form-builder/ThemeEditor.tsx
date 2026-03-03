@@ -80,7 +80,6 @@ export function ThemeEditor({ theme, onUpdate }: ThemeEditorProps) {
       onUpdate({ ...theme, backgroundImage: publicUrl, backgroundGradient: undefined });
       toast.success("Background image uploaded");
     } catch (error) {
-      console.error("Upload error:", error);
       toast.error("Failed to upload image");
     } finally {
       setIsUploading(false);

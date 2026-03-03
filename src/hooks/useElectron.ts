@@ -24,18 +24,13 @@ export function useElectron() {
       setIsElectron(true);
 
       // Get platform info
-      window.electronAPI.getPlatform().then(setPlatform).catch(console.error);
+      window.electronAPI.getPlatform().then(setPlatform).catch(() => {});
 
       // Get app version
       window.electronAPI
         .getAppVersion()
         .then(setAppVersion)
-        .catch(console.error);
-
-      // Listen for main process messages
-      window.electronAPI.onMainProcessMessage((message) => {
-        console.log("Message from main process:", message);
-      });
+        .catch(() => {});
 
       // Listen for update status
       window.electronAPI.onUpdateStatus?.((info) => {

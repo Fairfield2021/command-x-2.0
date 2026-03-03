@@ -27,8 +27,6 @@ export default function SubcontractorLogin() {
     setShowNetworkError(false);
 
     try {
-      console.info(`[SubcontractorLogin] signIn: start | origin: ${window.location.origin}`);
-
       const signInPromise = supabase.auth.signInWithPassword({
         email,
         password,
@@ -38,8 +36,6 @@ export default function SubcontractorLogin() {
 
       if (error) throw error;
 
-      console.info("[SubcontractorLogin] signIn: success, checking contractor link");
-      
       // Check if user is linked to a contractor
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
@@ -58,7 +54,6 @@ export default function SubcontractorLogin() {
         }
       }
     } catch (error: unknown) {
-      console.error("[SubcontractorLogin] signIn: exception", error);
       if (isNetworkError(error)) {
         const networkErr = classifyNetworkError(error);
         setShowNetworkError(true);

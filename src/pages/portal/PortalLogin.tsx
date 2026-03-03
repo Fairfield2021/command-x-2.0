@@ -41,8 +41,6 @@ export default function PortalLogin() {
     setShowNetworkError(false);
 
     try {
-      console.info(`[PortalLogin] signIn: start | origin: ${window.location.origin}`);
-
       const signInPromise = supabase.auth.signInWithPassword({
         email,
         password,
@@ -52,8 +50,6 @@ export default function PortalLogin() {
 
       if (error) throw error;
 
-      console.info("[PortalLogin] signIn: success, checking personnel link");
-      
       // Check if user is linked to personnel
       const {
         data: { user },
@@ -73,7 +69,6 @@ export default function PortalLogin() {
         }
       }
     } catch (error: unknown) {
-      console.error("[PortalLogin] signIn: exception", error);
       if (isNetworkError(error)) {
         const networkErr = classifyNetworkError(error);
         setShowNetworkError(true);

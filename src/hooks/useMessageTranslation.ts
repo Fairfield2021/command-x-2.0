@@ -43,7 +43,6 @@ export function useMessageTranslation() {
     const cacheKey = getCacheKey(text, targetLanguage);
     const cached = cacheRef.current.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-      console.log('[useMessageTranslation] Cache hit');
       return cached.result;
     }
 
@@ -80,7 +79,6 @@ export function useMessageTranslation() {
 
       return result;
     } catch (err: any) {
-      console.error('[useMessageTranslation] Error:', err);
       const errorMessage = err.message || 'Translation failed';
       setError(errorMessage);
       return null;

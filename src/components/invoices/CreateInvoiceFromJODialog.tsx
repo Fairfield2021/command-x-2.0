@@ -86,7 +86,6 @@ export function CreateInvoiceFromJODialog({
         const result = await getNextInvoiceNumber();
         setInvoiceNumber(result.number);
       } catch (error) {
-        console.error('Error fetching invoice number:', error);
         toast.error('Failed to generate invoice number');
       } finally {
         setIsLoadingNumber(false);
@@ -198,7 +197,6 @@ export function CreateInvoiceFromJODialog({
       onOpenChange(false);
       navigate(`/invoices/${result.id}`);
     } catch (error) {
-      console.error("Error creating invoice:", error);
       toast.error("Failed to create invoice");
     } finally {
       setIsSubmitting(false);

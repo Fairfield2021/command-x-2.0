@@ -115,7 +115,6 @@ export function DevActivityUpload({ onAnalysisComplete, onManualEntry }: DevActi
 
       onAnalysisComplete(result.activities);
     } catch (error) {
-      console.error("Analysis failed:", error);
       toast.error(error instanceof Error ? error.message : "Analysis failed. Please try again.");
     }
   };

@@ -260,7 +260,6 @@ export function useBulkAssignUserToProjects() {
 
           if (smsError) {
             smsFailed += 1;
-            console.error(`SMS failed for personnel ${assignment.personnel_id}:`, smsError);
           }
         }
 

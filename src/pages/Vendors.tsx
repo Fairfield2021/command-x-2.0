@@ -617,7 +617,6 @@ const Vendors = () => {
           await syncVendorToQB.mutateAsync(newVendor.id);
           toast.success("Vendor synced to QuickBooks");
         } catch (error) {
-          console.error("QuickBooks sync failed:", error);
           toast.warning("Vendor created but QuickBooks sync failed. You can sync manually later.");
         }
       }

@@ -402,8 +402,6 @@ export function CreateCustomerInvoiceFromTimeDialog({
     try {
       // Get fresh invoice number from QuickBooks (or local fallback)
       const { number: invoiceNumber, source } = await getNextInvoiceNumber();
-      console.log(`Generated invoice number ${invoiceNumber} from ${source}`);
-
       // Build line items from editable descriptions
       const lineItems = selectedLineItems.map(item => ({
         product_name: item.productName,
@@ -449,7 +447,6 @@ export function CreateCustomerInvoiceFromTimeDialog({
           .in('id', entryIdsToUpdate);
 
         if (updateError) {
-          console.error("Error linking time entries to invoice:", updateError);
           toast.error("Invoice created but failed to link time entries");
         }
       }
@@ -462,7 +459,7 @@ export function CreateCustomerInvoiceFromTimeDialog({
         navigate(`/invoices/${result.id}`);
       }
     } catch (error) {
-      console.error("Error creating customer invoice:", error);
+      // Error handled by mutation's onError
     } finally {
       setIsSubmitting(false);
     }

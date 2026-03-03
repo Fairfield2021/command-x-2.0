@@ -154,7 +154,6 @@ export function UnassignPersonnelDialog({
         });
         setAssetDispositions(initialDispositions);
       } catch (error) {
-        console.error("Failed to fetch active assets:", error);
         toast.error("Failed to load assets");
       } finally {
         setIsLoadingAssets(false);
@@ -285,7 +284,6 @@ export function UnassignPersonnelDialog({
       onOpenChange(false);
       onComplete?.();
     } catch (error) {
-      console.error("Failed to unassign personnel:", error);
       toast.error("Failed to unassign personnel");
     } finally {
       setIsProcessing(false);

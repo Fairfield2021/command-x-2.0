@@ -49,7 +49,6 @@ export function FormFileUpload({
   }, [uploading, onUploadStateChange]);
 
   const validateFile = useCallback((file: File): string | null => {
-    console.log("[FormFileUpload] Validating file:", file.name, "Size:", file.size, "Type:", file.type);
     if (file.size > maxFileSize * 1024 * 1024) {
       return `File exceeds ${maxFileSize}MB limit`;
     }
@@ -57,11 +56,9 @@ export function FormFileUpload({
   }, [maxFileSize]);
 
   const uploadFile = async (file: File): Promise<string | null> => {
-    console.log("[FormFileUpload] Starting upload to bucket:", storageBucket);
     try {
       const fileExt = file.name.split(".").pop();
       const uniqueFileName = `${storagePath}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-      console.log("[FormFileUpload] Uploading file as:", uniqueFileName);
 
       const { error: uploadError, data } = await supabase.storage
         .from(storageBucket)
@@ -71,33 +68,26 @@ export function FormFileUpload({
         });
 
       if (uploadError) {
-        console.error("[FormFileUpload] Upload error:", uploadError);
         throw uploadError;
       }
-
-      console.log("[FormFileUpload] Upload successful, data:", data);
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from(storageBucket)
         .getPublicUrl(uniqueFileName);
 
-      console.log("[FormFileUpload] Public URL generated:", publicUrl);
       return publicUrl;
     } catch (err) {
-      console.error("[FormFileUpload] Failed to upload file:", err);
       return null;
     }
   };
 
   const processFile = useCallback(async (file: File) => {
-    console.log("[FormFileUpload] Processing file:", file.name);
     setError(null);
     setUploadSuccess(false);
     
     const validationError = validateFile(file);
     if (validationError) {
-      console.error("[FormFileUpload] Validation failed:", validationError);
       setError(validationError);
       return;
     }
@@ -110,23 +100,19 @@ export function FormFileUpload({
     if (file.type.startsWith("image/")) {
       const url = URL.createObjectURL(file);
       setPreview(url);
-      console.log("[FormFileUpload] Image preview created");
     } else {
       setPreview(null);
     }
 
     // Upload immediately
     setUploading(true);
-    console.log("[FormFileUpload] Starting upload...");
     const publicUrl = await uploadFile(file);
     setUploading(false);
 
     if (publicUrl) {
-      console.log("[FormFileUpload] Upload complete, calling onChange with URL:", publicUrl);
       setUploadSuccess(true);
       onChange(publicUrl);
     } else {
-      console.error("[FormFileUpload] Upload failed - no URL returned");
       setError("Failed to upload file. Please try again.");
       setFileName(null);
       setFileSize(null);

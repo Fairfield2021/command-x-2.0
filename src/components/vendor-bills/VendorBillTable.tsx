@@ -338,7 +338,6 @@ export function VendorBillTable({ bills }: VendorBillTableProps) {
         await syncToQB.mutateAsync(bill.id);
         successCount++;
       } catch (error) {
-        console.error("Failed to sync bill:", bill.id, error);
         errorCount++;
       }
     }
@@ -408,14 +407,12 @@ export function VendorBillTable({ bills }: VendorBillTableProps) {
           try {
             await syncToQB.mutateAsync(id);
           } catch (error) {
-            console.error("QB sync failed for bill:", id, error);
             // Don't count as failure - DB update succeeded
           }
         }
 
         successCount++;
       } catch (error) {
-        console.error("Failed to update bill:", id, error);
         failCount++;
       }
 

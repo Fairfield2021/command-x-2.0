@@ -403,7 +403,6 @@ export function useSessionTracking(externalHasAccess?: boolean, externalAccessCh
                 session_end: new Date().toISOString(),
               })
               .in("id", olderSessionIds);
-            console.log(`Closed ${olderSessionIds.length} duplicate active sessions`);
           }
 
           // Resume the most recent active session
@@ -424,10 +423,9 @@ export function useSessionTracking(externalHasAccess?: boolean, externalAccessCh
           lastActivityTimeRef.current = Date.now();
           idleCorrectionVersionRef.current = serverCorrectionVersion;
 
-          console.log(`Resumed session from ${new Date(sessionStart).toLocaleTimeString()}, correction version: ${serverCorrectionVersion}`);
         }
       } catch (e) {
-        console.error("Error loading session:", e);
+        // Session load failed
       }
       setIsLoading(false);
     };
@@ -476,7 +474,6 @@ export function useSessionTracking(externalHasAccess?: boolean, externalAccessCh
           const serverVersion = (serverSession as { idle_correction_version?: number }).idle_correction_version || 0;
           if (serverVersion > idleCorrectionVersionRef.current) {
             // Server was corrected! Adopt the server's idle time
-            console.log(`Server correction detected: v${idleCorrectionVersionRef.current} -> v${serverVersion}, adopting server idle: ${serverSession.total_idle_seconds}s`);
             setIdleSeconds(serverSession.total_idle_seconds || 0);
             idleCorrectionVersionRef.current = serverVersion;
             // Reset any ongoing idle period to prevent re-inflation
@@ -487,7 +484,7 @@ export function useSessionTracking(externalHasAccess?: boolean, externalAccessCh
           }
         }
       } catch (e) {
-        console.error("Error checking server correction:", e);
+        // Server correction check failed
       }
       
       // Get current idle seconds including any ongoing idle period
@@ -511,7 +508,7 @@ export function useSessionTracking(externalHasAccess?: boolean, externalAccessCh
           })
           .eq("id", sessionId);
       } catch (e) {
-        console.error("Error syncing session:", e);
+        // Session sync failed
       }
     };
 
@@ -574,7 +571,7 @@ export function useSessionTracking(externalHasAccess?: boolean, externalAccessCh
           metadata: metadata as Record<string, never> || {},
         }]);
       } catch (e) {
-        console.error("Error logging activity:", e);
+        // Activity logging failed
       }
     },
     [hasAccess, sessionId, user]
@@ -620,7 +617,6 @@ export function useSessionTracking(externalHasAccess?: boolean, externalAccessCh
           isIdleRef.current = false;
           clockedInAtRef.current = sessionStart;
           lastActivityTimeRef.current = Date.now();
-          console.log("Resumed existing active session");
           return;
         }
 
@@ -657,7 +653,7 @@ export function useSessionTracking(externalHasAccess?: boolean, externalAccessCh
           action_name: `Clocked in (${type})`,
         }]);
       } catch (e) {
-        console.error("Error clocking in:", e);
+        // Clock-in failed
       }
     },
     [hasAccess, user, isClockedIn]
@@ -714,7 +710,7 @@ export function useSessionTracking(externalHasAccess?: boolean, externalAccessCh
         idleTimeoutRef.current = null;
       }
     } catch (e) {
-      console.error("Error clocking out:", e);
+      // Clock-out failed
     }
   }, [hasAccess, sessionId, user, idleSeconds, getElapsedSeconds]);
 

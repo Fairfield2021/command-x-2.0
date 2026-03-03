@@ -388,7 +388,6 @@ const PersonnelOnboarding = () => {
       // Redirect to personalized thank you page
       navigate(`/onboarding-complete/${token}`, { replace: true });
     } catch (error) {
-      console.error("[Onboarding] Submit error:", error);
       // The mutation's onError handler shows a toast, but add fallback
       if (error instanceof Error && !error.message.includes("toast")) {
         toast.error("Failed to complete onboarding. Please try again.");

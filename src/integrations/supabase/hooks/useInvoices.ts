@@ -241,7 +241,6 @@ export const useAddInvoice = () => {
         }
       } catch (qbError) {
         // Log but don't fail the invoice creation
-        console.error("QuickBooks sync failed:", qbError);
       }
 
       return newInvoice;
@@ -401,7 +400,6 @@ export const useUpdateInvoice = () => {
         }
       } catch (qbError) {
         // Log but don't fail the invoice update
-        console.error("QuickBooks sync failed:", qbError);
       }
 
       return updatedInvoice;
@@ -461,17 +459,13 @@ export const useDeleteInvoice = () => {
           });
 
         if (voidError) {
-          console.warn("QuickBooks void error:", voidError);
           qbError = voidError.message || "Failed to void in QuickBooks";
         } else if (voidResult?.voided) {
           qbVoided = true;
-          console.log("Invoice voided in QuickBooks");
         } else if (voidResult?.error) {
           qbError = voidResult.error;
-          console.warn("QuickBooks void returned error:", qbError);
         }
       } catch (err) {
-        console.warn("QuickBooks void exception:", err);
         qbError =
           err instanceof Error ? err.message : "Unknown QuickBooks error";
       }
@@ -535,10 +529,7 @@ export const useDeleteInvoice = () => {
             .eq("id", invoice.change_order_id);
 
           if (coUpdateError) {
-            console.error(
-              "Failed to restore change order balance:",
-              coUpdateError
-            );
+            // Non-critical: change order balance restore failed
           }
         }
       }

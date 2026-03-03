@@ -144,7 +144,6 @@ export function W9FormView({ personnelId, personnelSsnLastFour, personnelSsnFull
       });
       toast.success("W-9 PDF downloaded successfully");
     } catch (error) {
-      console.error("Error generating W-9 PDF:", error);
       toast.error("Failed to generate W-9 PDF");
     }
   };

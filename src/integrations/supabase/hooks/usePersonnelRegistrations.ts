@@ -163,9 +163,7 @@ export function useSubmitRegistration() {
             },
           },
         });
-        console.log("[Registration] Admin notification sent for new application");
       } catch (notifError) {
-        console.error("[Registration] Failed to send admin notification:", notifError);
         // Non-fatal, don't throw
       }
 

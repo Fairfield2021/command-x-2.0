@@ -38,7 +38,6 @@ export const useProjectSubledgerTotals = (
       const { data, error } = await query;
 
       if (error) {
-        console.error("Subledger totals query error:", error);
         return { recognizedRevenue: 0, actualCosts: 0 };
       }
 

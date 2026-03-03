@@ -666,7 +666,6 @@ export function WeeklyTimesheet({
           break;
       }
     } catch (error) {
-      console.error("Export error:", error);
       toast.error("Failed to export time entries");
     } finally {
       setIsExporting(false);

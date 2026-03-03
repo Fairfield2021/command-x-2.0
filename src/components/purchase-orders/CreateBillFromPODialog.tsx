@@ -94,7 +94,6 @@ export function CreateBillFromPODialog({
         .order("sort_order", { ascending: true });
 
       if (error) {
-        console.error("Error fetching addendum line items:", error);
         return;
       }
 
@@ -263,8 +262,6 @@ export function CreateBillFromPODialog({
       });
 
       // Finalize any pending attachments FIRST - must complete before QB sync
-      console.log(`[CreateBillFromPO] Bill created: ${result.id}, finalizing ${pendingAttachments.length} attachments...`);
-      
       if (pendingAttachments.length > 0 && user) {
         const attachResult = await finalizeAttachments(
           pendingAttachments,
@@ -272,15 +269,13 @@ export function CreateBillFromPODialog({
           "vendor_bill",
           user.id
         );
-        console.log(`[CreateBillFromPO] Attachments finalized:`, attachResult);
-        
+
         if (!attachResult.success) {
           toast.warning("Bill created but some attachments failed to upload");
         }
-        
+
         // Small delay to ensure DB writes are committed before QB sync
         await new Promise(resolve => setTimeout(resolve, 500));
-        console.log(`[CreateBillFromPO] Post-attachment delay complete, proceeding to QB sync`);
       }
 
       // Sync to QuickBooks AFTER attachments are finalized
@@ -291,22 +286,19 @@ export function CreateBillFromPODialog({
           .single();
 
         if (qbConfig?.is_connected) {
-          console.log(`[CreateBillFromPO] Starting QuickBooks sync for bill: ${result.id}`);
-          const syncResult = await supabase.functions.invoke("quickbooks-create-bill", {
+          await supabase.functions.invoke("quickbooks-create-bill", {
             body: { billId: result.id },
           });
-          console.log(`[CreateBillFromPO] QuickBooks sync complete:`, syncResult.data);
           toast.success("Bill created and synced to QuickBooks");
         }
       } catch (qbError) {
-        console.warn("[CreateBillFromPO] QuickBooks sync failed:", qbError);
         toast.warning("Bill created, but QuickBooks sync failed. You can retry later.");
       }
 
       onOpenChange(false);
       navigate(`/vendor-bills/${result.id}`);
     } catch (error) {
-      console.error("Error creating vendor bill:", error);
+      // Error handled by mutation's onError
     }
   };
 

@@ -57,7 +57,6 @@ export function ReceiptUpload({ personnelId, onUpload, existingUrl }: ReceiptUpl
       onUpload(publicUrl);
       toast.success("Receipt uploaded successfully");
     } catch (error: any) {
-      console.error("Upload error:", error);
       toast.error(error.message || "Failed to upload receipt");
     } finally {
       setUploading(false);

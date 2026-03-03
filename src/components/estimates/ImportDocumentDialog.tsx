@@ -118,13 +118,11 @@ export const ImportDocumentDialog = ({
         );
 
         if (error) {
-          console.error(`Error processing ${file.name}:`, error);
           toast.error(`Failed to process ${file.name}`);
           continue;
         }
 
         if (!data.success) {
-          console.error(`Failed to extract from ${file.name}:`, data.error);
           toast.error(`Failed to extract from ${file.name}`);
           continue;
         }
@@ -173,7 +171,6 @@ export const ImportDocumentDialog = ({
         toast.error("No items could be extracted from the files");
       }
     } catch (error) {
-      console.error("Error processing files:", error);
       toast.error(
         error instanceof Error ? error.message : "Failed to process documents"
       );

@@ -137,7 +137,6 @@ export function useChangeOrder(id: string | undefined) {
         .maybeSingle();
 
       if (error) {
-        console.error('Error fetching change order:', error);
         throw error;
       }
 

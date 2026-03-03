@@ -358,7 +358,6 @@ export function WH347ExportDialog({
       toast.success("WH-347 form generated successfully");
       handleOpenChange(false);
     } catch (error) {
-      console.error("Error generating WH-347:", error);
       toast.error("Failed to generate WH-347 form");
     } finally {
       setIsGenerating(false);

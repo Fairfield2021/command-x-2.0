@@ -82,7 +82,6 @@ export function RestoreLineItemsDialog({
         }))
       );
     } catch (error) {
-      console.error("Error fetching job order line items:", error);
       toast.error("Failed to load line items from job order");
     } finally {
       setIsLoading(false);

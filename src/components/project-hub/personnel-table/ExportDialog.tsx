@@ -113,7 +113,6 @@ export function ExportDialog({
       toast.success(`Exported ${exportData.length} personnel to ${format.toUpperCase()}`);
       onOpenChange(false);
     } catch (error) {
-      console.error("Export failed:", error);
       toast.error("Failed to export personnel data");
     }
   };

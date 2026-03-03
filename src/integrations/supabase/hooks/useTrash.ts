@@ -78,7 +78,6 @@ export const useDeletedItems = (entityType?: TrashEntityType, limit = 50) => {
             .limit(limit);
 
           if (error) {
-            console.error(`Error fetching deleted ${type}:`, error);
             continue;
           }
 
@@ -103,7 +102,6 @@ export const useDeletedItems = (entityType?: TrashEntityType, limit = 50) => {
             });
           });
         } catch (err) {
-          console.error(`Error processing ${type}:`, err);
         }
       }
 
@@ -161,16 +159,12 @@ export const usePermanentlyDelete = () => {
           });
 
           if (error) {
-            console.error("QuickBooks delete failed:", error);
             qbWarning = `Could not delete from QuickBooks: ${error.message}`;
           } else if (data && !data.success && data.error) {
-            console.warn("QuickBooks delete warning:", data.error);
             qbWarning = data.error;
           } else if (data?.deleted) {
-            console.log("Invoice deleted from QuickBooks successfully");
           }
         } catch (qbError: any) {
-          console.error("QuickBooks delete error:", qbError);
           qbWarning = `QuickBooks sync error: ${qbError.message || "Unknown error"}`;
         }
 
@@ -181,7 +175,6 @@ export const usePermanentlyDelete = () => {
             .delete()
             .eq("invoice_id", id);
         } catch (mappingError) {
-          console.error("Failed to clean up QB mapping:", mappingError);
         }
       }
 
@@ -193,16 +186,12 @@ export const usePermanentlyDelete = () => {
           });
 
           if (error) {
-            console.error("QuickBooks customer deactivate failed:", error);
             qbWarning = `Could not deactivate in QuickBooks: ${error.message}`;
           } else if (data && !data.success && data.error) {
-            console.warn("QuickBooks deactivate warning:", data.error);
             qbWarning = data.error;
           } else if (data?.deactivated) {
-            console.log("Customer deactivated in QuickBooks successfully");
           }
         } catch (qbError: any) {
-          console.error("QuickBooks deactivate error:", qbError);
           qbWarning = `QuickBooks sync error: ${qbError.message || "Unknown error"}`;
         }
 
@@ -213,7 +202,6 @@ export const usePermanentlyDelete = () => {
             .delete()
             .eq("customer_id", id);
         } catch (mappingError) {
-          console.error("Failed to clean up QB customer mapping:", mappingError);
         }
       }
 

@@ -102,7 +102,6 @@ export const CreateProjectInvoiceDialog = ({
           setInvoiceNumber(number);
           setNumberSource(source);
         } catch (error) {
-          console.error('Failed to get invoice number:', error);
           setInvoiceNumber(`INV-${Date.now().toString().slice(-6)}`);
           setNumberSource('local');
         } finally {

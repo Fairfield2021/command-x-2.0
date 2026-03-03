@@ -381,13 +381,9 @@ export default function PublicApplicationForm() {
   const isAnyFileUploading = uploadingFields.size > 0;
 
   const validateCustomFields = () => {
-    console.log("[Validation] Starting validation of custom fields");
-    console.log("[Validation] Custom answers:", customAnswers);
-    
     for (const field of customFields) {
       if (field.required) {
         const value = customAnswers[field.id];
-        console.log(`[Validation] Checking field ${field.id} (${field.type}):`, value);
         
         // Check for empty values
         if (value === undefined || value === "" || value === null) {
@@ -401,11 +397,9 @@ export default function PublicApplicationForm() {
           const isValidUrl = typeof value === "string" && value.startsWith("http");
           
           if (isEmptyObject || !isValidUrl) {
-            console.error(`[Validation] File field ${field.id} has invalid value:`, value);
             toast.error(`Please upload a file for ${field.label}`);
             return false;
           }
-          console.log(`[Validation] File field ${field.id} is valid URL:`, value);
         }
         
         // Special validation for address
@@ -423,7 +417,6 @@ export default function PublicApplicationForm() {
         }
       }
     }
-    console.log("[Validation] All custom fields validated successfully");
     return true;
   };
 
@@ -457,11 +450,6 @@ export default function PublicApplicationForm() {
 
     // Validate custom fields
     if (!validateCustomFields()) return;
-
-    console.log("[Form] Submitting application with data:", data);
-    console.log("[Form] Custom answers:", customAnswers);
-    console.log("[Form] Geo data:", geoData);
-    console.log("[Form] SMS consent:", smsConsent);
 
     try {
       // Extract address fields from customAnswers if present
@@ -502,17 +490,13 @@ export default function PublicApplicationForm() {
         smsConsentPhone: smsConsent ? data.phone : undefined,
         smsConsentTextVersion: smsConsent ? 'v1.0' : undefined,
       });
-      console.log("[Form] Application submitted successfully");
       toast.success("Thank you for applying! We appreciate your interest and will review your application soon.");
       setSubmitted(true);
     } catch (err: any) {
-      console.error("[Form] Application submission error:", err);
-      
       if (err?.message === "DUPLICATE_APPLICATION") {
         toast.error("You have already applied for this specific position. You can still apply for other open positions.");
       } else if (err?.message?.includes("row-level security")) {
         toast.error("Permission error. Please contact support if this persists.");
-        console.error("[Form] RLS policy error - check database policies");
       } else if (err?.code === "PGRST301") {
         toast.error("Database connection error. Please try again.");
       } else if (err?.code === "23505") {
