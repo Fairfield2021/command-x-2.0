@@ -43,7 +43,7 @@ export default function VendorNewBill() {
   useEffect(() => {
     if (selectedPO?.po_line_items && selectedPO.po_line_items.length > 0) {
       setLineItems(
-        selectedPO.po_line_items.map((item: any) => ({
+        selectedPO.po_line_items.map((item) => ({
           id: crypto.randomUUID(),
           description: item.description,
           quantity: item.quantity,

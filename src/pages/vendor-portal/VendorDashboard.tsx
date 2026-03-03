@@ -112,7 +112,7 @@ export default function VendorDashboard() {
       {
         key: "status",
         header: "Status",
-        render: (po) => <StatusBadge status={po.status as any} />,
+        render: (po) => <StatusBadge status={po.status as string} />,
       },
       {
         key: "revised_total",
@@ -143,7 +143,7 @@ export default function VendorDashboard() {
       {
         key: "status",
         header: "Status",
-        render: (bill) => <StatusBadge status={bill.status as any} />,
+        render: (bill) => <StatusBadge status={bill.status as string} />,
       },
       {
         key: "total",
@@ -266,7 +266,7 @@ export default function VendorDashboard() {
                               {po.project_name}
                             </p>
                         </div>
-                        <StatusBadge status={po.status as any} />
+                        <StatusBadge status={po.status as string} />
                       </div>
                         <div className="flex justify-between items-center text-sm">
                           <span className="text-muted-foreground">
@@ -330,7 +330,7 @@ export default function VendorDashboard() {
                               PO: {bill.po_number}
                             </p>
                         </div>
-                        <StatusBadge status={bill.status as any} />
+                        <StatusBadge status={bill.status as string} />
                       </div>
                         <div className="flex justify-between items-center text-sm">
                           <span className="text-muted-foreground">

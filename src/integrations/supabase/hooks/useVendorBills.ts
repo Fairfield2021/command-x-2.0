@@ -192,7 +192,7 @@ export const useVendorBillsByProject = (projectId: string | undefined) => {
 
       // Group by bill and sum totals
       const billTotals: Record<string, { bill: VendorBill; allocated_amount: number }> = {};
-      lineItems.forEach((item: any) => {
+      lineItems.forEach((item) => {
         if (!billTotals[item.bill_id]) {
           billTotals[item.bill_id] = {
             bill: item.vendor_bills,

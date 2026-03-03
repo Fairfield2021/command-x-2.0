@@ -42,7 +42,7 @@ export default function VendorBillsList() {
       {
         key: "status",
         header: "Status",
-        render: (bill) => <StatusBadge status={bill.status as any} />,
+        render: (bill) => <StatusBadge status={bill.status as string} />,
       },
       {
         key: "total",
@@ -125,7 +125,7 @@ export default function VendorBillsList() {
                         PO: {bill.po_number}
                       </p>
                     </div>
-                    <StatusBadge status={bill.status as any} />
+                    <StatusBadge status={bill.status as string} />
                   </div>
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-muted-foreground">

@@ -344,8 +344,8 @@ export function ApplicationDetailDialog({
       } else {
         toast.success("Edit request email resent to applicant");
       }
-    } catch (error: any) {
-      toast.error(error.message || "Failed to resend edit request");
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "Failed to resend edit request");
     } finally {
       setIsResending(false);
     }
@@ -422,7 +422,7 @@ export function ApplicationDetailDialog({
       toast.success("Application approved via admin bypass");
       setAdminBypassMode(false);
       onOpenChange(false);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.message || "Failed to complete admin bypass");
     } finally {
       setIsSavingBypass(false);
