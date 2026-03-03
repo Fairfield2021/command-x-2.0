@@ -14,12 +14,14 @@ const DesktopCallback = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout | undefined;
+
     try {
       // Get the tokens from the URL hash
       // The OAuth provider redirects with: /auth/desktop-callback#access_token=...&refresh_token=...
       const hash = window.location.hash.substring(1);
       const hashParams = new URLSearchParams(hash);
-      
+
       const accessToken = hashParams.get("access_token");
       const refreshToken = hashParams.get("refresh_token");
       const error = hashParams.get("error");
@@ -44,7 +46,7 @@ const DesktopCallback = () => {
       window.location.href = deepLinkUrl;
 
       // Show a message in case the redirect doesn't work immediately
-      setTimeout(() => {
+      timeoutId = setTimeout(() => {
         setStatus("error");
         setErrorMessage(
           "If the app didn't open automatically, please make sure Command X is installed and try again."
@@ -54,6 +56,10 @@ const DesktopCallback = () => {
       setStatus("error");
       setErrorMessage("An unexpected error occurred. Please try again.");
     }
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, []);
 
   if (status === "error") {

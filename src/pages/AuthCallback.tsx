@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
@@ -10,6 +10,7 @@ const AuthCallback = () => {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
   const [processed, setProcessed] = useState(false);
+  const errorTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleAuthenticatedUser = useCallback(async (session: Session) => {
     if (processed) return;
@@ -115,11 +116,13 @@ const AuthCallback = () => {
       // Sign out on error to prevent partial auth state
       await supabase.auth.signOut();
       toast.error("Authentication failed. Please try again.");
-      setTimeout(() => navigate("/auth"), 2000);
+      errorTimeoutRef.current = setTimeout(() => navigate("/auth"), 2000);
     }
   }, [navigate, processed]);
 
   useEffect(() => {
+    const timeoutIds: NodeJS.Timeout[] = [];
+
     // Listen for auth state changes - this handles OAuth callbacks properly
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
@@ -139,7 +142,7 @@ const AuthCallback = () => {
               // No tokens in URL and no session - something went wrong
               setError("No session found");
               toast.error("Authentication failed. Please try again.");
-              setTimeout(() => navigate("/auth"), 2000);
+              timeoutIds.push(setTimeout(() => navigate("/auth"), 2000));
             }
             // If tokens exist, wait for SIGNED_IN event
           }
@@ -147,7 +150,11 @@ const AuthCallback = () => {
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      timeoutIds.forEach(id => clearTimeout(id));
+      if (errorTimeoutRef.current) clearTimeout(errorTimeoutRef.current);
+    };
   }, [navigate, handleAuthenticatedUser]);
 
   if (error) {

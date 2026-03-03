@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface FoundApplicantData {
@@ -101,6 +101,13 @@ export function useApplicantLookup() {
       lookupApplicant(email, phone);
     }, delay);
   }, [lookupApplicant]);
+
+  // Clear pending debounce on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
 
   const clearApplicant = useCallback(() => {
     setFoundApplicant(null);

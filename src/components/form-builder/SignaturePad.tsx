@@ -62,7 +62,8 @@ export function SignaturePad({
   useEffect(() => {
     if (isOpen) {
       // Small delay to ensure canvas is mounted
-      setTimeout(initCanvas, 50);
+      const timerId = setTimeout(initCanvas, 50);
+      return () => clearTimeout(timerId);
     }
   }, [isOpen, initCanvas]);
 
