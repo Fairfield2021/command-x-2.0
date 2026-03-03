@@ -28,6 +28,7 @@ import {
   MessageSquareText,
   FileBox,
   Hammer,
+  LineChart,
 } from "lucide-react";
 import {
   Sidebar,
@@ -90,6 +91,7 @@ const navSections: NavSection[] = [
       { title: "Assignments", url: "/project-assignments", icon: CalendarCheck },
       { title: "Products", url: "/products", icon: Package },
       { title: "Documents", url: "/document-center", icon: Folder },
+      { title: "Reports", url: "/reports", icon: LineChart },
       { title: "Messages", url: "/messages", icon: MessageSquareText },
     ],
   },
