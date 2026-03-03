@@ -6,6 +6,7 @@ import { RevenueChartRow } from "./RevenueChartRow";
 import { RecentInvoicesTable } from "./RecentInvoicesTable";
 import { RecentActivityTable } from "./RecentActivityTable";
 import { InvoiceAgingSummary } from "./InvoiceAgingSummary";
+import { FinancialOverview } from "./FinancialOverview";
 
 import { MobileSessionCard } from "@/components/session/MobileSessionCard";
 import { useDashboardConfig } from "@/hooks/useDashboardConfig";
@@ -233,6 +234,9 @@ export function RowBasedDashboard() {
 
         {/* Row 2: KPI Bar */}
         <KPIBar />
+
+        {/* Financial Overview */}
+        <FinancialOverview />
 
         {/* Row 3: Quick Actions */}
         <QuickActionsRow />
