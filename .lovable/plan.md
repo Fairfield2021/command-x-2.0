@@ -1,39 +1,34 @@
 
 
-# Migration: AP Aging Summary + Portfolio Summary Views
+# Reports Page + SOV Status Report
 
-## Issue with Provided SQL
+## Files to Create/Modify
 
-The `vendor_bills` table schema doesn't match the SQL provided:
-- No `bill_number` column → actual column is `number`
-- No `total_amount` → actual column is `total`
-- No `project_id` on `vendor_bills` → project lives on `vendor_bill_line_items`
-- `amount_paid` exists but as `amount_paid` (matches)
+### 1. Create `src/pages/ReportsPage.tsx`
+- Page header: "Reports" / "Financial reports across all projects"
+- Grid of 5 report cards (SOV Status, Job Cost, Commitments, AP Aging, Change Orders) with icons, titles, descriptions
+- `activeReport` state toggles which report renders below the grid
+- Only SOV Status is implemented now; others show "Coming soon" placeholder
+- Visual style matches dashboard cards
 
-## Corrected Approach
+### 2. Create `src/components/reports/SovStatusReport.tsx`
+- **Project selector**: Popover + Command listing all projects that have contracts. Uses `useProjects` to get all projects, `useContracts` to find which have contracts, then filters
+- **Data fetching**: `useContractsByProject(selectedProjectId)` → get first contract → `useSovLines(contractId)`
+- **Summary header**: 5 KPI cards — Contract Value, Total Committed, Total Invoiced, Balance Remaining, Avg % Complete (computed from SOV lines)
+- **Table**: Line #, Description, Total Value, Committed, Expenses, Invoiced, Remaining, % Complete — with color coding (amber committed, green expenses, teal invoiced)
+- **Footer row**: Column totals
+- **Export CSV**: Button that builds CSV from visible data and triggers download via Blob/URL
+- **Empty state**: "Select a project to view its SOV status"
 
-### 1. AP Aging Summary View
+### 3. Modify `src/App.tsx`
+- Add `import Reports from "./pages/ReportsPage"`
+- Add `<Route path="/reports" element={<Reports />} />` in the SidebarLayout group (after `/overhead-analysis`)
 
-Since `vendor_bills` has no `project_id`, the view will join through `vendor_bill_line_items` to get project info. Bills can span multiple projects, so I'll use `DISTINCT` bill-level rows with the project from line items (or NULL if none).
+### 4. Modify `src/components/layout/navigation/AppNavigationSidebar.tsx`
+- Add `{ title: "Reports", url: "/reports", icon: BarChart3 }` to the Workspace section items, after "Documents"
 
-Corrected column mappings:
-- `vb.number` instead of `vb.bill_number`
-- `vb.total` instead of `vb.total_amount`
-- `vb.amount_paid` stays
-- `(vb.total - vb.amount_paid)` for `balance_due`
-- Project comes from a lateral join to `vendor_bill_line_items`
-
-### 2. Portfolio Summary View
-
-The `job_cost_summary` view has all referenced columns. This SQL is valid as-is.
-
-### Migration File
-
-Single migration with both `CREATE OR REPLACE VIEW` statements and `GRANT SELECT` for each.
-
-## Technical Details
-
-- Creates two read-only views (no table modifications)
-- Grants `SELECT` to `authenticated` role
-- AP aging uses corrected column names and joins through line items for project context
+### Technical Notes
+- `useContracts()` fetches all contracts to determine which projects have contracts for the selector
+- SOV line fields map directly: `total_value`, `committed_cost`, `actual_cost` (expenses), `invoiced_to_date`, `balance_remaining`, `percent_complete`
+- CSV export: iterate SOV lines, join with commas, create `text/csv` Blob, trigger download via anchor click
 
