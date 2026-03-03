@@ -44,71 +44,75 @@ export default function AcceptInvitation() {
       return;
     }
 
-    loadInvitation();
+    let mounted = true;
+    const load = async () => {
+      if (!token) return;
+      try {
+        const { data, error } = await supabase
+          .from("invitations")
+          .select("id, email, role, status, expires_at")
+          .eq("token", token)
+          .single();
+
+        if (!mounted) return;
+        if (error) throw error;
+
+        if (!data) {
+          toast({
+            title: "Invalid invitation",
+            description: "This invitation link is invalid or has been removed.",
+            variant: "destructive",
+          });
+          navigate("/auth");
+          return;
+        }
+
+        if (data.status !== "pending") {
+          toast({
+            title: "Invitation already used",
+            description: "This invitation has already been accepted.",
+            variant: "destructive",
+          });
+          navigate("/auth");
+          return;
+        }
+
+        if (new Date(data.expires_at) < new Date()) {
+          toast({
+            title: "Invitation expired",
+            description: "This invitation has expired. Please contact an administrator.",
+            variant: "destructive",
+          });
+          navigate("/auth");
+          return;
+        }
+
+        setInvitation(data);
+      } catch (error: unknown) {
+        if (mounted) {
+          toast({
+            title: "Error",
+            description: "Failed to load invitation details.",
+            variant: "destructive",
+          });
+          navigate("/auth");
+        }
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+    load();
+    return () => { mounted = false; };
   }, [token, navigate]);
 
   useEffect(() => {
-    if (user) {
-      supabase.auth.getUser().then(({ data }) => {
-        setUserEmail(data.user?.email || null);
-      });
-    }
+    if (!user) return;
+    let mounted = true;
+    supabase.auth.getUser().then(({ data }) => {
+      if (mounted) setUserEmail(data.user?.email || null);
+    });
+    return () => { mounted = false; };
   }, [user]);
-
-  const loadInvitation = async () => {
-    if (!token) return;
-
-    try {
-      const { data, error } = await supabase
-        .from("invitations")
-        .select("id, email, role, status, expires_at")
-        .eq("token", token)
-        .single();
-
-      if (error) throw error;
-
-      if (!data) {
-        toast({
-          title: "Invalid invitation",
-          description: "This invitation link is invalid or has been removed.",
-          variant: "destructive",
-        });
-        navigate("/auth");
-        return;
-      }
-
-      if (data.status !== "pending") {
-        toast({
-          title: "Invitation already used",
-          description: "This invitation has already been accepted.",
-          variant: "destructive",
-        });
-        navigate("/auth");
-        return;
-      }
-
-      if (new Date(data.expires_at) < new Date()) {
-        toast({
-          title: "Invitation expired",
-          description: "This invitation has expired. Please contact an administrator.",
-          variant: "destructive",
-        });
-        navigate("/auth");
-        return;
-      }
-
-      setInvitation(data);
-    } catch (error: unknown) {
-      toast({
-        title: "Error",
-        description: "Failed to load invitation details.",
-        variant: "destructive",
-      });
-      navigate("/auth");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleAcceptAsExistingUser = async () => {
     if (!invitation || !user) return;

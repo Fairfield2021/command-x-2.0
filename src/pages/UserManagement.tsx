@@ -133,10 +133,12 @@ export default function UserManagement() {
   }, [isAdmin, roleLoading, permLoading, canView, navigate, toast]);
 
   useEffect(() => {
+    let mounted = true;
     const getCurrentUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
+      if (!mounted) return;
       setCurrentUserId(user?.id || null);
-      
+
       if (user?.id) {
         // Fetch notification preferences
         const { data: prefs } = await supabase
@@ -144,8 +146,8 @@ export default function UserManagement() {
           .select("*")
           .eq("user_id", user.id)
           .maybeSingle();
-        
-        setNotificationPreferences(prefs);
+
+        if (mounted) setNotificationPreferences(prefs);
       }
     };
     getCurrentUser();
@@ -153,6 +155,7 @@ export default function UserManagement() {
     fetchInvitations();
     fetchActivityLogs();
     fetchPersonnelOptions();
+    return () => { mounted = false; };
   }, []);
 
   // Reset to page 1 when filters change

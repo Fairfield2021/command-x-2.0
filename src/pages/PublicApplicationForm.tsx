@@ -134,6 +134,9 @@ export default function PublicApplicationForm() {
 
   // Fetch form template if the posting has one
   useEffect(() => {
+    if (!posting) return;
+
+    let mounted = true;
     const fetchTemplate = async () => {
       if (posting?.form_template_id) {
         setFormTemplateId(posting.form_template_id);
@@ -142,7 +145,9 @@ export default function PublicApplicationForm() {
           .select("fields, theme, success_message, settings")
           .eq("id", posting.form_template_id)
           .single();
-        
+
+        if (!mounted) return;
+
         if (!error && template) {
           // Parse settings including core fields and requirements
           const settings = template.settings as unknown as FormSettings | null;
@@ -155,14 +160,14 @@ export default function PublicApplicationForm() {
           if (template.fields) {
             const fields = template.fields as unknown as FormFieldType[];
             setCustomFields(fields);
-            
+
             // Generate layout from fields if not provided (each field gets its own row)
             const generatedLayout: FormRow[] = fields.map(f => ({
               id: `row_${f.id}`,
               fieldIds: [f.id]
             }));
             setCustomLayout(generatedLayout);
-            
+
             // Initialize default values for custom fields
             const defaults: Record<string, unknown> = {};
             fields.forEach(field => {
@@ -189,10 +194,9 @@ export default function PublicApplicationForm() {
         }
       }
     };
-    
-    if (posting) {
-      fetchTemplate();
-    }
+
+    fetchTemplate();
+    return () => { mounted = false; };
   }, [posting]);
 
   const form = useForm({

@@ -94,6 +94,8 @@ export function useFormTranslation({
       return;
     }
 
+    let mounted = true;
+
     const translateContent = async () => {
       // Check cache first
       const cacheKey = getCacheKey(formTemplateId, currentLanguage);
@@ -104,9 +106,9 @@ export function useFormTranslation({
           // Verify the cached translation matches current fields
           const currentFieldIds = customFields.map(f => f.id).sort().join(',');
           const cachedFieldIds = parsed.customFields?.map((f: { id: string }) => f.id).sort().join(',') || '';
-          
+
           if (currentFieldIds === cachedFieldIds) {
-            setTranslations(parsed);
+            if (mounted) setTranslations(parsed);
             return;
           }
         } catch (e) {
@@ -117,7 +119,7 @@ export function useFormTranslation({
       setIsTranslating(true);
       try {
         const langName = SUPPORTED_LANGUAGES.find(l => l.code === currentLanguage)?.name || currentLanguage;
-        
+
         const { data, error } = await supabase.functions.invoke('translate-form', {
           body: {
             content: defaultContent,
@@ -126,6 +128,7 @@ export function useFormTranslation({
           },
         });
 
+        if (!mounted) return;
         if (error) throw error;
         if (data?.error) throw new Error(data.error);
 
@@ -135,14 +138,17 @@ export function useFormTranslation({
           localStorage.setItem(cacheKey, JSON.stringify(data.translations));
         }
       } catch (err: unknown) {
-        toast.error('Translation failed. Showing original content.');
-        setTranslations(null);
+        if (mounted) {
+          toast.error('Translation failed. Showing original content.');
+          setTranslations(null);
+        }
       } finally {
-        setIsTranslating(false);
+        if (mounted) setIsTranslating(false);
       }
     };
 
     translateContent();
+    return () => { mounted = false; };
   }, [currentLanguage, formTemplateId, customFields.length]);
 
   const changeLanguage = useCallback((langCode: LanguageCode) => {

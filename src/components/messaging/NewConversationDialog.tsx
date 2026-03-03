@@ -49,79 +49,75 @@ export function NewConversationDialog({
   const getOrCreateConversation = useGetOrCreateConversation();
 
   useEffect(() => {
-    if (open) {
-      fetchRecipients();
-    }
-  }, [open, recipientType]);
+    if (!open) return;
+    let mounted = true;
+    const loadRecipients = async () => {
+      setIsLoading(true);
+      try {
+        let data: Recipient[] = [];
 
-  const fetchRecipients = async () => {
-    setIsLoading(true);
-    try {
-      let data: Recipient[] = [];
+        if (recipientType === "user") {
+          const { data: profiles } = await supabase
+            .from("profiles")
+            .select("id, first_name, last_name, email")
+            .order("first_name");
+          data = (profiles || []).map((p) => ({
+            id: p.id,
+            name: `${p.first_name} ${p.last_name}`.trim() || "Unknown User",
+            type: "user" as const,
+            subtitle: p.email,
+          }));
+        } else if (recipientType === "personnel") {
+          const { data: personnel } = await supabase
+            .from("personnel")
+            .select("id, first_name, last_name, email, phone")
+            .eq("status", "active")
+            .order("first_name");
+          data = (personnel || []).map((p) => ({
+            id: p.id,
+            name: `${p.first_name} ${p.last_name}`.trim(),
+            type: "personnel" as const,
+            subtitle: p.email || undefined,
+            phone: p.phone || undefined,
+          }));
+        } else if (recipientType === "customer") {
+          const { data: customers } = await supabase
+            .from("customers")
+            .select("id, name, email, company, phone")
+            .is("deleted_at", null)
+            .order("name");
+          data = (customers || []).map((c) => ({
+            id: c.id,
+            name: c.name,
+            type: "customer" as const,
+            subtitle: c.company || c.email,
+            phone: c.phone || undefined,
+          }));
+        } else if (recipientType === "applicant") {
+          const { data: applicants } = await supabase
+            .from("applicants")
+            .select("id, first_name, last_name, email, phone")
+            .not("phone", "is", null)
+            .order("first_name");
+          data = (applicants || []).map((a) => ({
+            id: a.id,
+            name: `${a.first_name} ${a.last_name}`.trim(),
+            type: "applicant" as const,
+            subtitle: a.email || undefined,
+            phone: a.phone || undefined,
+          }));
+        }
 
-      if (recipientType === "user") {
-        const { data: profiles } = await supabase
-          .from("profiles")
-          .select("id, first_name, last_name, email")
-          .order("first_name");
-
-        data = (profiles || []).map((p) => ({
-          id: p.id,
-          name: `${p.first_name} ${p.last_name}`.trim() || "Unknown User",
-          type: "user" as const,
-          subtitle: p.email,
-        }));
-      } else if (recipientType === "personnel") {
-        const { data: personnel } = await supabase
-          .from("personnel")
-          .select("id, first_name, last_name, email, phone")
-          .eq("status", "active")
-          .order("first_name");
-
-        data = (personnel || []).map((p) => ({
-          id: p.id,
-          name: `${p.first_name} ${p.last_name}`.trim(),
-          type: "personnel" as const,
-          subtitle: p.email || undefined,
-          phone: p.phone || undefined,
-        }));
-      } else if (recipientType === "customer") {
-        const { data: customers } = await supabase
-          .from("customers")
-          .select("id, name, email, company, phone")
-          .is("deleted_at", null)
-          .order("name");
-
-        data = (customers || []).map((c) => ({
-          id: c.id,
-          name: c.name,
-          type: "customer" as const,
-          subtitle: c.company || c.email,
-          phone: c.phone || undefined,
-        }));
-      } else if (recipientType === "applicant") {
-        const { data: applicants } = await supabase
-          .from("applicants")
-          .select("id, first_name, last_name, email, phone")
-          .not("phone", "is", null)
-          .order("first_name");
-
-        data = (applicants || []).map((a) => ({
-          id: a.id,
-          name: `${a.first_name} ${a.last_name}`.trim(),
-          type: "applicant" as const,
-          subtitle: a.email || undefined,
-          phone: a.phone || undefined,
-        }));
+        if (mounted) setRecipients(data);
+      } catch {
+        // ignore
+      } finally {
+        if (mounted) setIsLoading(false);
       }
-
-      setRecipients(data);
-    } catch (error) {
-      // Fetch failed silently
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    };
+    loadRecipients();
+    return () => { mounted = false; };
+  }, [open, recipientType]);
 
   const filteredRecipients = recipients.filter(
     (r) =>

@@ -185,7 +185,19 @@ export function useAiDevConversations() {
   };
 
   useEffect(() => {
-    fetchConversations();
+    let mounted = true;
+    const load = async () => {
+      if (!user) return;
+      const { data, error } = await supabase
+        .from("ai_dev_conversations")
+        .select("*")
+        .order("updated_at", { ascending: false });
+      if (error || !mounted) return;
+      setConversations(data || []);
+      setLoading(false);
+    };
+    load();
+    return () => { mounted = false; };
   }, [user]);
 
   return {

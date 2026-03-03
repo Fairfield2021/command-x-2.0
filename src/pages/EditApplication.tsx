@@ -99,6 +99,7 @@ export default function EditApplication() {
 
   // Fetch application by edit token
   useEffect(() => {
+    let mounted = true;
     const fetchApplication = async () => {
       if (!editToken) {
         setError("Invalid edit link");
@@ -139,6 +140,8 @@ export default function EditApplication() {
           .eq("edit_token", editToken)
           .single();
 
+        if (!mounted) return;
+
         if (fetchError || !app) {
           setError("This edit link is invalid or has expired");
           setIsLoading(false);
@@ -156,7 +159,7 @@ export default function EditApplication() {
         }
 
         setApplication(app as unknown as ApplicationData);
-        
+
         // Set missing field labels
         const missing = (app.missing_fields || []) as string[];
         setMissingFieldLabels(missing);
@@ -185,6 +188,8 @@ export default function EditApplication() {
             .eq("id", templateId)
             .single();
 
+          if (!mounted) return;
+
           if (template) {
             const settings = template.settings as unknown as { coreFields?: CoreFieldsConfig } | null;
             if (settings?.coreFields) {
@@ -201,12 +206,15 @@ export default function EditApplication() {
 
         setIsLoading(false);
       } catch (err) {
-        setError("Failed to load application. Please try again.");
-        setIsLoading(false);
+        if (mounted) {
+          setError("Failed to load application. Please try again.");
+          setIsLoading(false);
+        }
       }
     };
 
     fetchApplication();
+    return () => { mounted = false; };
   }, [editToken, form]);
 
   const handleFileUploadStateChange = useCallback((fieldId: string, isUploading: boolean) => {
