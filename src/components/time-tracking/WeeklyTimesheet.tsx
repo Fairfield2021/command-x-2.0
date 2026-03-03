@@ -418,7 +418,7 @@ export function WeeklyTimesheet({
         const entryRowKey = e.personnel_id
           ? `${e.project_id}-${e.personnel_id}`
           : `${e.project_id}-self`;
-        return entryRowKey === rowKey && (e as any).is_holiday === true;
+        return entryRowKey === rowKey && (e as unknown as Record<string, unknown>).is_holiday === true;
       })
       .reduce((sum, e) => sum + Number(e.hours), 0);
   };
@@ -508,7 +508,7 @@ export function WeeklyTimesheet({
   // Calculate total holiday hours
   const weekTotalHoliday = useMemo(() => {
     return entries
-      .filter((e) => (e as any).is_holiday === true)
+      .filter((e) => (e as unknown as Record<string, unknown>).is_holiday === true)
       .reduce((sum, e) => sum + Number(e.hours), 0);
   }, [entries]);
 
@@ -521,7 +521,7 @@ export function WeeklyTimesheet({
       const personnelTotal = getPersonnelTotalWeeklyHours(personnelId);
       // Subtract holiday hours from this personnel's total for regular/OT calculation
       const personnelHoliday = entries
-        .filter((e) => e.personnel_id === personnelId && (e as any).is_holiday === true)
+        .filter((e) => e.personnel_id === personnelId && (e as unknown as Record<string, unknown>).is_holiday === true)
         .reduce((sum, e) => sum + Number(e.hours), 0);
       const nonHolidayTotal = personnelTotal - personnelHoliday;
       totalRegular += Math.min(nonHolidayTotal, weeklyOvertimeThreshold);
@@ -547,7 +547,7 @@ export function WeeklyTimesheet({
         // Calculate regular/OT based on non-holiday hours
         const personnelTotal = getPersonnelTotalWeeklyHours(row.personnelId ?? null);
         const personnelHoliday = entries
-          .filter((e) => e.personnel_id === row.personnelId && (e as any).is_holiday === true)
+          .filter((e) => e.personnel_id === row.personnelId && (e as unknown as Record<string, unknown>).is_holiday === true)
           .reduce((sum, e) => sum + Number(e.hours), 0);
         const personnelNonHoliday = personnelTotal - personnelHoliday;
         
@@ -633,7 +633,7 @@ export function WeeklyTimesheet({
     setIsExporting(true);
     try {
       const exportData: TimeEntryExportData = {
-        entries: entriesToExport as any,
+        entries: entriesToExport as unknown as TimeEntryExportData["entries"],
         weekStart,
         weekEnd,
         overtimeMultiplier,
