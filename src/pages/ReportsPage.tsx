@@ -3,6 +3,7 @@ import { Table2, BarChart3, Clock, AlertTriangle, FileEdit } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { SovStatusReport } from "@/components/reports/SovStatusReport";
+import { JobCostReport } from "@/components/reports/JobCostReport";
 
 type ReportKey = "sov" | "job-cost" | "commitments" | "ap-aging" | "change-orders";
 
@@ -55,7 +56,8 @@ export default function ReportsPage() {
       </div>
 
       {activeReport === "sov" && <SovStatusReport />}
-      {activeReport && activeReport !== "sov" && (
+      {activeReport === "job-cost" && <JobCostReport />}
+      {activeReport && activeReport !== "sov" && activeReport !== "job-cost" && (
         <Card className="p-8 text-center">
           <p className="text-muted-foreground">Coming soon</p>
         </Card>
