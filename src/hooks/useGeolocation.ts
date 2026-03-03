@@ -85,20 +85,33 @@ export function useGeolocation(autoRequest: boolean = true) {
 
   // Check permission state
   useEffect(() => {
+    let permissionStatus: PermissionStatus | null = null;
+
+    const onChange = () => {
+      if (permissionStatus) {
+        setPermissionState(permissionStatus.state);
+      }
+    };
+
     if (navigator.permissions) {
       navigator.permissions
         .query({ name: "geolocation" })
         .then((result) => {
+          permissionStatus = result;
           setPermissionState(result.state);
-          result.addEventListener("change", () => {
-            setPermissionState(result.state);
-          });
+          result.addEventListener("change", onChange);
         })
         .catch(() => {
           // Permissions API not fully supported
           setPermissionState(null);
         });
     }
+
+    return () => {
+      if (permissionStatus) {
+        permissionStatus.removeEventListener("change", onChange);
+      }
+    };
   }, []);
 
   // Auto-request on mount if enabled
