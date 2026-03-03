@@ -1,25 +1,38 @@
 
 
-# Quick Actions Enhancement — Already Implemented
+# "View in QBO" Links on Job Hub Financials Tab
 
-The Overview tab **already has** the Quick Actions section (lines 123-142) with 3 buttons: Add Note, Upload Photo, and Log Time. They use `handleNavigateTab` to switch tabs via URL hash — the exact pattern requested.
+## Current State
 
-The only changes needed are:
+The file **already implements** QBO links for Estimates and Invoices DataTables (lines 115-158). The `poQBMap` is fetched (line 121) but unused. Vendor bill mappings are not fetched at all.
 
-## Modify `src/components/project-hub/tabs/JobHubOverviewTab.tsx`
+The Purchase Orders and Vendor Bills sections delegate rendering to child components (`ProjectPurchaseOrdersList` and `ProjectVendorBillsList`), which don't accept QBO mapping props.
 
-1. **Add 4th button**: "New Document" with `FileUp` icon, navigating to `#documents`
-2. **Change layout to 2x2 grid on mobile**: Replace `flex flex-wrap` with a grid layout (`grid grid-cols-2 md:grid-cols-4`) so buttons show as a 2x2 grid on mobile and a single row on desktop
-3. **Update "Log Time" to navigate to financials tab** instead of opening the time entry dialog (per the user's request: "Opens the Financials tab (#financials)"). Keep the dialog as a secondary option or remove it.
+## Problem
 
-Actually, re-reading the request: they want Log Time to go to `#financials`, but the current implementation opens a time entry form dialog which is arguably better UX. The request says "Opens the Financials tab (#financials) scrolled to the time entries section." I'll change it to navigate to `#financials` as requested.
+The user requested modifying ONLY `JobHubFinancialsTab.tsx`, but PO and vendor bill rows are rendered inside separate child components. To add per-row QBO links to those sections, the child components must also be modified to accept and render QBO data.
 
-## Changes (single file)
+## Plan
 
-- Add `FileUp` to lucide imports
-- Change Quick Actions container from `flex flex-wrap` to `grid grid-cols-2 md:grid-cols-4 gap-3`
-- Remove the "Quick Actions" label span (save space)
-- Add 4th button: New Document → `handleNavigateTab("documents")`
-- Change Log Time from opening dialog to `handleNavigateTab("financials")`
-- Remove unused `timeEntryOpen` state and `EnhancedTimeEntryForm` if Log Time no longer opens it
+### 1. `ProjectPurchaseOrdersList.tsx` — Accept optional `qbMappings` prop
+- Add `qbMappings?: Map<string, string>` to props interface
+- In each PO row, if `qbMappings.get(po.id)` exists, render a `QBOPopupLink` (variant="edit", icon-only) next to the existing `ExternalLink` icon
+- Import `QBOPopupLink`
+
+### 2. `ProjectVendorBillsList.tsx` — Accept optional `qbMappings` prop
+- Add `qbMappings?: Map<string, string>` to props interface
+- In each bill row, if `qbMappings.get(bill.id)` exists, render a `QBOPopupLink` (variant="edit", icon-only) inside the actions area (next to the dropdown menu)
+- Import `QBOPopupLink`
+
+### 3. `JobHubFinancialsTab.tsx` — Wire up bill mappings and pass maps to children
+- Add `useVendorBills` import and query for project vendor bill IDs
+- Add `useQBMappingForList(billIds, "bill")` to get vendor bill QB mappings
+- Pass `qbMappings={poQBMap}` to `<ProjectPurchaseOrdersList>`
+- Pass `qbMappings={billQBMap}` to `<ProjectVendorBillsList>`
+- Import `useQuickBooksConfig` and conditionally skip passing maps when QB is disconnected
+
+### Files Modified
+- `src/components/project-hub/tabs/JobHubFinancialsTab.tsx`
+- `src/components/project-hub/ProjectPurchaseOrdersList.tsx`
+- `src/components/project-hub/ProjectVendorBillsList.tsx`
 
