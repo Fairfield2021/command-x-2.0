@@ -27,6 +27,9 @@ release/
 *.sln
 *.sw?
 
+# Bundle analysis
+bundle-analysis.html
+
 # Environment variables - NEVER commit
 .env
 .env.local
