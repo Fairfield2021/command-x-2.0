@@ -3,7 +3,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SSNInput } from "@/components/personnel/registration/SSNInput";
 import { ITINInput } from "@/components/personnel/registration/ITINInput";
-import { CategoryDocumentUpload } from "@/components/personnel/registration/CategoryDocumentUpload";
+import { CategoryDocumentUpload, type VerificationResult } from "@/components/personnel/registration/CategoryDocumentUpload";
 import type { VendorOnboardingFormData } from "@/integrations/supabase/hooks/useVendorOnboarding";
 import type { RegistrationDocument, DocumentType } from "@/integrations/supabase/hooks/usePersonnelRegistrations";
 
@@ -39,7 +39,7 @@ export const VendorWorkAuthorizationForm = ({
     );
   };
 
-  const getExistingDoc = (docType: string): (RegistrationDocument & { verification?: unknown }) | undefined => {
+  const getExistingDoc = (docType: string): (RegistrationDocument & { verification?: VerificationResult }) | undefined => {
     const doc = (formData.documents || []).find((d) => d.type === docType);
     if (!doc) return undefined;
     return {

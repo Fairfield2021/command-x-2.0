@@ -169,7 +169,7 @@ export function JobHubOverviewTab({
             <CardTitle className="font-heading text-sm text-muted-foreground">Status</CardTitle>
           </CardHeader>
           <CardContent>
-            <StatusBadge status={project.status} />
+            <StatusBadge status={project.status as Parameters<typeof StatusBadge>[0]["status"]} />
             {project.customer_po && (
               <div className="mt-3 flex items-center gap-2 text-sm">
                 <Hash className="h-4 w-4 text-muted-foreground" />

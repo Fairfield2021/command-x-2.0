@@ -203,10 +203,10 @@ export function useContractorCompletionBill(id: string | undefined) {
       if (error) throw error;
 
       return {
-        ...data,
-        room_unit_number: data.project_rooms?.unit_number || "",
-        project_name: data.projects?.name || "",
-        items: data.contractor_completion_bill_items || [],
+        ...(data as Record<string, unknown>),
+        room_unit_number: (data as Record<string, unknown> & { project_rooms?: { unit_number?: string } })?.project_rooms?.unit_number || "",
+        project_name: (data as Record<string, unknown> & { projects?: { name?: string } })?.projects?.name || "",
+        items: (data as Record<string, unknown> & { contractor_completion_bill_items?: unknown[] })?.contractor_completion_bill_items || [],
       } as CompletionBill;
     },
     enabled: !!id && !!subcontractor?.id,
@@ -249,7 +249,7 @@ export function useSubmitCompletion() {
           total_amount: totalAmount,
           status: "submitted",
           submitted_at: new Date().toISOString(),
-        })
+        } as never)
         .select()
         .single();
 
@@ -257,7 +257,7 @@ export function useSubmitCompletion() {
 
       // Create bill items
       const billItems = lineItems.map((item) => ({
-        bill_id: bill.id,
+        bill_id: (bill as Record<string, unknown>).id,
         room_scope_item_id: item.room_scope_item_id,
         job_order_line_item_id: item.job_order_line_item_id,
         description: item.description,
@@ -268,7 +268,7 @@ export function useSubmitCompletion() {
 
       const { error: itemsError } = await supabase
         .from("contractor_completion_bill_items" as never)
-        .insert(billItems);
+        .insert(billItems as never);
 
       if (itemsError) throw itemsError;
 
@@ -281,22 +281,22 @@ export function useSubmitCompletion() {
           .eq("project_role", "field_superintendent")
           .eq("status", "active");
 
-        if (assignments && assignments.length > 0) {
-          const notifications = (assignments as Record<string, unknown>[]).map((a) => ({
-            user_id: a.user_id,
-            title: `Completion submitted for Unit ${params.items[0]?.description || ""}`,
-            message: `${subcontractor.name} submitted a completion bill for $${totalAmount.toFixed(2)}`,
-            notification_type: "completion_submitted",
-            related_id: bill.id,
-            link_url: `/completion-reviews`,
-            metadata: {
-              bill_id: bill.id,
-              contractor_name: subcontractor.name,
-              total_amount: totalAmount,
-            },
-          }));
+          if (assignments && assignments.length > 0) {
+            const notifications = (assignments as Record<string, unknown>[]).map((a) => ({
+              user_id: a.user_id as string,
+              title: `Completion submitted for Unit ${params.items[0]?.description || ""}`,
+              message: `${subcontractor.name} submitted a completion bill for $${totalAmount.toFixed(2)}`,
+              notification_type: "completion_submitted",
+              related_id: (bill as Record<string, unknown>).id as string,
+              link_url: `/completion-reviews`,
+              metadata: {
+                bill_id: (bill as Record<string, unknown>).id as string,
+                contractor_name: subcontractor.name,
+                total_amount: totalAmount,
+              },
+            }));
 
-          await supabase.from("admin_notifications").insert(notifications);
+            await supabase.from("admin_notifications").insert(notifications);
         }
       } catch (e) {
         // ignore
@@ -402,7 +402,7 @@ export function useUpdateCompletionBillStatus() {
 
       const { data, error } = await supabase
         .from("contractor_completion_bills" as never)
-        .update(updates)
+        .update(updates as never)
         .eq("id", params.bill_id)
         .select(`*, projects(name), project_rooms(unit_number), vendors:contractor_id(name, user_id)`)
         .single();
@@ -416,18 +416,19 @@ export function useUpdateCompletionBillStatus() {
           const { data: assignments } = await supabase
             .from("project_assignments" as never)
             .select("user_id")
-            .eq("project_id", data.project_id)
+            .eq("project_id", (data as Record<string, unknown>).project_id as string)
             .eq("project_role", "project_manager")
             .eq("status", "active");
 
           if (assignments?.length) {
+            const d = data as Record<string, unknown> & { project_rooms?: { unit_number?: string }; total_amount?: number; id?: string };
             await supabase.from("admin_notifications").insert(
               (assignments as Record<string, unknown>[]).map((a) => ({
-                user_id: a.user_id,
-                title: `Completion verified for Unit ${data.project_rooms?.unit_number || ""}`,
-                message: `Ready for PM approval - $${data.total_amount.toFixed(2)}`,
+                user_id: a.user_id as string,
+                title: `Completion verified for Unit ${d.project_rooms?.unit_number || ""}`,
+                message: `Ready for PM approval - $${(d.total_amount || 0).toFixed(2)}`,
                 notification_type: "completion_verified",
-                related_id: data.id,
+                related_id: d.id as string,
                 link_url: `/completion-reviews`,
               }))
             );
@@ -440,27 +441,31 @@ export function useUpdateCompletionBillStatus() {
             .eq("role", "accounting");
 
           if (accountingUsers?.length) {
+            const d = data as Record<string, unknown> & { vendors?: { name?: string; user_id?: string }; project_rooms?: { unit_number?: string }; total_amount?: number; id?: string };
             await supabase.from("admin_notifications").insert(
               (accountingUsers as Record<string, unknown>[]).map((u) => ({
-                user_id: u.user_id,
+                user_id: u.user_id as string,
                 title: `Completion approved - ready for payment`,
-                message: `${data.vendors?.name || "Contractor"} - Unit ${data.project_rooms?.unit_number || ""} - $${data.total_amount.toFixed(2)}`,
+                message: `${d.vendors?.name || "Contractor"} - Unit ${d.project_rooms?.unit_number || ""} - $${(d.total_amount || 0).toFixed(2)}`,
                 notification_type: "completion_approved",
-                related_id: data.id,
+                related_id: d.id as string,
                 link_url: `/completion-reviews`,
               }))
             );
           }
-        } else if (params.action === "reject" && data.vendors?.user_id) {
-          // Notify contractor
-          await supabase.from("admin_notifications").insert({
-            user_id: data.vendors.user_id,
-            title: `Completion rejected for Unit ${data.project_rooms?.unit_number || ""}`,
-            message: params.notes || "Your completion was rejected",
-            notification_type: "completion_rejected",
-            related_id: data.id,
-            link_url: `/subcontractor/completions/${data.id}`,
-          });
+        } else if (params.action === "reject") {
+          const d = data as Record<string, unknown> & { vendors?: { name?: string; user_id?: string }; project_rooms?: { unit_number?: string }; id?: string };
+          if (d.vendors?.user_id) {
+            // Notify contractor
+            await supabase.from("admin_notifications").insert({
+              user_id: d.vendors.user_id,
+              title: `Completion rejected for Unit ${d.project_rooms?.unit_number || ""}`,
+              message: params.notes || "Your completion was rejected",
+              notification_type: "completion_rejected",
+              related_id: d.id as string,
+              link_url: `/subcontractor/completions/${d.id}`,
+            });
+          }
         }
       } catch (e) {
         // ignore

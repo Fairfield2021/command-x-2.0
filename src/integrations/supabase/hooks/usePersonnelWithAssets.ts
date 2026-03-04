@@ -166,7 +166,7 @@ export function usePersonnelWithAssets(
         } | null;
 
         // Pay rate priority: assignment pay_rate > personnel pay_rate
-        const payRate = (a as unknown as Record<string, unknown>).pay_rate ?? personnel.pay_rate ?? null;
+        const payRate = ((a as unknown as Record<string, unknown>).pay_rate ?? personnel.pay_rate ?? null) as number | null;
 
         return {
           personnelId: a.personnel_id,
@@ -305,7 +305,7 @@ export function usePersonnelWithAssetsForExport(projectId: string | undefined, i
             endAt: aa.end_at,
             assignmentId: aa.id,
             startAt: aa.start_at,
-            accessCode: isAdmin ? aa.assets.gate_code : undefined,
+            accessCode: isAdmin ? (aa.assets as unknown as Record<string, unknown>).gate_code as string | undefined : undefined,
           });
         }
       });
@@ -330,7 +330,7 @@ export function usePersonnelWithAssetsForExport(projectId: string | undefined, i
         } | null;
 
         // Pay rate priority: assignment pay_rate > personnel pay_rate
-        const payRate = (a as unknown as Record<string, unknown>).pay_rate ?? personnel.pay_rate ?? null;
+        const payRate = ((a as unknown as Record<string, unknown>).pay_rate ?? personnel.pay_rate ?? null) as number | null;
 
         return {
           personnelId: a.personnel_id,

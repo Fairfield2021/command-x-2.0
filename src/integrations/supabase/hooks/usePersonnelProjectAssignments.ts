@@ -305,8 +305,8 @@ export function useBulkAssignPersonnelToProject() {
             const { data: existingSchedule } = await supabase
               .from("personnel_schedules")
               .select("id")
-              .eq("personnel_id", assignment.personnel_id)
-              .eq("project_id", assignment.project_id)
+              .eq("personnel_id", assignment.personnel_id as string)
+              .eq("project_id", assignment.project_id as string)
               .eq("scheduled_date", scheduledDate)
               .maybeSingle();
             
@@ -325,8 +325,8 @@ export function useBulkAssignPersonnelToProject() {
               await supabase
                 .from("personnel_schedules")
                 .insert([{
-                  personnel_id: assignment.personnel_id,
-                  project_id: assignment.project_id,
+                  personnel_id: assignment.personnel_id as string,
+                  project_id: assignment.project_id as string,
                   scheduled_date: scheduledDate,
                   scheduled_start_time: scheduledStartTime,
                   scheduled_end_time: scheduledEndTime || "17:00",

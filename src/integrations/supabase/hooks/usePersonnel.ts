@@ -23,7 +23,7 @@ export const usePersonnel = (filters?: {
         .order("created_at", { ascending: false });
 
       if (filters?.status && filters.status !== "all") {
-        query = query.eq("status", filters.status as string);
+        query = query.eq("status", filters.status as never);
       }
 
       if (filters?.search) {
@@ -47,7 +47,7 @@ export const usePersonnel = (filters?: {
       }
 
       if (filters?.everifyStatus && filters.everifyStatus !== "all") {
-        query = query.eq("everify_status", filters.everifyStatus as string);
+        query = query.eq("everify_status", filters.everifyStatus as never);
       }
 
       if (filters?.vendorId && filters.vendorId !== "all") {
@@ -136,7 +136,7 @@ export const usePersonnelWithRelations = (filters?: {
         .order("created_at", { ascending: false });
 
       if (filters?.status && filters.status !== "all") {
-        query = query.eq("status", filters.status as string);
+        query = query.eq("status", filters.status as never);
       }
 
       if (filters?.search) {

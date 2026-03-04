@@ -50,7 +50,7 @@ export const useProjectSubledgerTotals = (
 
         if (txn.transaction_type === "invoice") {
           recognizedRevenue += line.debit_amount || 0;
-        } else if (["bill", "payroll"].includes(txn.transaction_type)) {
+        } else if (["bill", "payroll"].includes(txn.transaction_type as string)) {
           actualCosts += line.debit_amount || 0;
         }
       }

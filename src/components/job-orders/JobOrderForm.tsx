@@ -99,7 +99,7 @@ export const JobOrderForm = ({
   const { data: products } = useProducts();
   
   const [status, setStatus] = useState<"active" | "in-progress" | "completed" | "on-hold">(
-    initialData?.status || "active"
+    (initialData?.status as "active" | "in-progress" | "completed" | "on-hold") || "active"
   );
   const [taxRate, setTaxRate] = useState<string>(
     initialData?.tax_rate?.toString() || "8.5"
@@ -228,7 +228,7 @@ export const JobOrderForm = ({
   const total = subtotal + taxAmount;
 
   // Calculate remaining amount based on existing invoiced amount
-  const invoicedAmount = initialData?.invoiced_amount || 0;
+  const invoicedAmount = Number(initialData?.invoiced_amount) || 0;
   const remainingAmount = total - invoicedAmount;
 
   const validateForm = () => {
@@ -323,12 +323,12 @@ export const JobOrderForm = ({
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Project:</span>
-                <span className="font-medium">{initialData.project_name}</span>
+                <span className="font-medium">{String(initialData.project_name)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Already Invoiced:</span>
                 <span className="font-medium text-success">
-                  ${invoicedAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  ${Number(invoicedAmount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                 </span>
               </div>
             </div>

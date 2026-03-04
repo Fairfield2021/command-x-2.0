@@ -300,7 +300,7 @@ export const useUpdateInvoice = () => {
           due_date: invoice.due_date ?? oldInvoice.due_date,
           paid_date: invoice.paid_date,
           notes: invoice.notes !== undefined ? invoice.notes : oldInvoice.notes,
-          customer_po: (invoice as unknown as Record<string, unknown>).customer_po !== undefined ? (invoice as unknown as Record<string, unknown>).customer_po : oldInvoice.customer_po,
+          customer_po: (invoice as unknown as Record<string, unknown>).customer_po !== undefined ? (invoice as unknown as Record<string, unknown>).customer_po as string : oldInvoice.customer_po,
           remaining_amount: invoice.total !== undefined 
             ? invoice.total - (oldInvoice.paid_amount || 0) 
             : oldInvoice.remaining_amount,

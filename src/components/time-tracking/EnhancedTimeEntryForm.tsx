@@ -455,7 +455,7 @@ export function EnhancedTimeEntryForm({
           is_holiday,
           is_overhead,
           overhead_category: is_overhead ? (overhead_category || 'other') : null,
-        } as Record<string, unknown>);
+        } as Partial<Record<string, unknown>> & { id: string });
         onOpenChange(false);
         form.reset();
         return;

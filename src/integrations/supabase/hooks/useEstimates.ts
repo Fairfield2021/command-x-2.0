@@ -507,14 +507,14 @@ export const useConvertEstimateToJobOrder = () => {
       // Create job order line items (preserve is_taxable, product_id, and product_name from estimate)
       const jobOrderLineItems = lineItems.map((item: Record<string, unknown>) => ({
         job_order_id: jobOrder.id,
-        product_id: item.product_id || null,
-        product_name: item.product_name || (item.products as Record<string, unknown>)?.name || null,
-        description: item.description,
-        quantity: item.quantity,
-        unit_price: item.unit_price,
-        markup: item.markup,
-        total: item.total,
-        is_taxable: item.is_taxable ?? true,
+        product_id: (item.product_id as string) || null,
+        product_name: (item.product_name as string) || (item.products as Record<string, unknown>)?.name as string || null,
+        description: item.description as string,
+        quantity: item.quantity as number,
+        unit_price: item.unit_price as number,
+        markup: item.markup as number,
+        total: item.total as number,
+        is_taxable: (item.is_taxable as boolean) ?? true,
       }));
 
       const { error: lineItemsInsertError } = await supabase
@@ -622,12 +622,12 @@ export const useConvertEstimateToInvoice = () => {
         
         return {
           invoice_id: invoice.id,
-          product_name: productName,
+          product_name: productName as string | null,
           description: cleanDescription,
-          quantity: item.quantity,
-          unit_price: item.unit_price,
-          markup: item.markup,
-          total: item.total,
+          quantity: item.quantity as number,
+          unit_price: item.unit_price as number,
+          markup: item.markup as number,
+          total: item.total as number,
         };
       });
 

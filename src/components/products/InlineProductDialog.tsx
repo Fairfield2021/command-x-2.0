@@ -147,6 +147,7 @@ export function InlineProductDialog({
       markup: margin,
       price,
       is_taxable: formData.is_taxable,
+      qb_product_mapping_id: null,
     };
 
     const newProduct = await addProduct.mutateAsync(productData);

@@ -93,12 +93,12 @@ export const useDeletedItems = (entityType?: TrashEntityType, limit = 50) => {
             }
             
             items.push({
-              id: item.id,
+              id: item.id as string,
               entity_type: type as TrashEntityType,
-              identifier,
-              name,
-              deleted_at: item.deleted_at,
-              deleted_by: item.deleted_by,
+              identifier: identifier as string,
+              name: name as string,
+              deleted_at: item.deleted_at as string,
+              deleted_by: item.deleted_by as string,
             });
           });
         } catch (err) {
@@ -124,7 +124,7 @@ export const useRestoreItem = () => {
 
       const { error } = await supabase
         .from(table as never)
-        .update({ deleted_at: null, deleted_by: null })
+        .update({ deleted_at: null, deleted_by: null } as never)
         .eq("id", id);
 
       if (error) throw error;

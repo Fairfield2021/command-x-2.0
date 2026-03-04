@@ -265,15 +265,15 @@ export default function EditApplication() {
         .insert([{
           application_id: application.id,
           revision_number: nextRevisionNumber,
-          previous_answers: application.answers as Record<string, unknown>,
-          previous_applicant_data: {
+          previous_answers: application.answers as unknown as Json,
+          previous_applicant_data: ({
             first_name: application.applicants.first_name,
             last_name: application.applicants.last_name,
             email: application.applicants.email,
             phone: application.applicants.phone,
             home_zip: application.applicants.home_zip,
             photo_url: application.applicants.photo_url,
-          } as Record<string, unknown>,
+          }) as unknown as Json,
           changed_by: "applicant",
         }]);
 
@@ -327,11 +327,11 @@ export default function EditApplication() {
       const { error: appError } = await supabase
         .from("applications")
         .update({
-          answers: processedAnswers as Record<string, unknown>,
-          status: "updated" as const,
-          edit_token: null, // Clear token after use (one-time)
+          answers: processedAnswers as unknown as Json,
+          status: "updated" as never,
+          edit_token: null,
           edit_token_expires_at: null,
-          missing_fields: [] as string[],
+          missing_fields: ([] as string[]) as unknown as Json,
           admin_message: null,
         })
         .eq("id", application.id);

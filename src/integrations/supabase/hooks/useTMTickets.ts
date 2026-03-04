@@ -451,7 +451,7 @@ export const useApproveTMTicket = () => {
       const { data, error } = await supabase
         .from("tm_tickets")
         .update({
-          status: 'open' as string,
+          status: 'open' as never,
           approved_by,
           approval_date: new Date().toISOString(),
           cap_hours: newCapHours,

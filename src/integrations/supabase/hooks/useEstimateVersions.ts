@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import type { Json } from "@/integrations/supabase/types";
 
 export interface EstimateVersion {
   id: string;
@@ -149,10 +150,10 @@ export function useRestoreEstimateVersion() {
           : 1;
 
         // Save current state before restoring
-        await supabase.from("estimate_versions").insert({
+        await supabase.from("estimate_versions").insert([{
           estimate_id: estimateId,
           version_number: nextVersionNumber,
-          snapshot: {
+          snapshot: ({
             customer_id: currentEstimate.customer_id,
             customer_name: currentEstimate.customer_name,
             project_id: currentEstimate.project_id,
@@ -175,11 +176,11 @@ export function useRestoreEstimateVersion() {
               is_taxable: item.is_taxable,
               total: item.total,
             })),
-          },
+          }) as unknown as Json,
           created_by: user?.id,
           created_by_email: user?.email,
           change_summary: `Auto-saved before restoring to version ${version.version_number}`,
-        });
+        }]);
       }
 
       // Update the estimate
