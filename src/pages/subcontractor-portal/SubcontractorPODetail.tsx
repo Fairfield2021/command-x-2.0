@@ -124,12 +124,12 @@ export default function SubcontractorPODetail() {
               <CardContent>
                 {po.po_line_items && po.po_line_items.length > 0 ? (
                   <div className="space-y-3">
-                    {po.po_line_items.map((item: Record<string, unknown> & { id: string; description: string; quantity: number; unit_cost: number; total: number }) => (
+                    {(po.po_line_items as unknown as Array<{ id: string; description: string; quantity: number; unit_price: number; total: number }>).map((item) => (
                       <div key={item.id} className="flex justify-between items-start border-b pb-2 last:border-0">
                         <div className="flex-1">
                           <p className="font-medium text-sm">{item.description}</p>
                           <p className="text-xs text-muted-foreground">
-                            {item.quantity} × {formatCurrency(item.unit_cost)}
+                            {item.quantity} × {formatCurrency(item.unit_price)}
                           </p>
                         </div>
                         <p className="font-medium">{formatCurrency(item.total)}</p>

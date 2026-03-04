@@ -650,16 +650,12 @@ const QuickBooksSettings = () => {
                           <p className="text-xs sm:text-sm text-muted-foreground">
                             <span className="inline-block">
                               CommandX: $
-                              {conflict.conflict_data?.commandx_price?.toFixed(
-                                2
-                              )}
+                              {(conflict.conflict_data as Record<string, unknown>)?.commandx_price != null ? Number((conflict.conflict_data as Record<string, unknown>).commandx_price).toFixed(2) : "N/A"}
                             </span>
                             <span className="mx-1">|</span>
                             <span className="inline-block">
                               QB: $
-                              {conflict.conflict_data?.quickbooks_price?.toFixed(
-                                2
-                              )}
+                              {(conflict.conflict_data as Record<string, unknown>)?.quickbooks_price != null ? Number((conflict.conflict_data as Record<string, unknown>).quickbooks_price).toFixed(2) : "N/A"}
                             </span>
                           </p>
                         </div>
@@ -786,7 +782,7 @@ const QuickBooksSettings = () => {
       <ProductConflictDialog
         open={!!selectedConflict}
         onOpenChange={(open) => !open && setSelectedConflict(null)}
-        conflict={selectedConflict}
+        conflict={selectedConflict as never}
       />
     </PageLayout>
   );

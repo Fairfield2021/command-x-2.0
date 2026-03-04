@@ -94,8 +94,8 @@ const OverheadAnalysis = () => {
       const hours = e.hours || 0;
       if ((e as Record<string, unknown>).is_overhead) {
         totalOverhead += hours;
-        const cat = (e as Record<string, unknown>).overhead_category || "other";
-        categoryMap.set(cat, (categoryMap.get(cat) || 0) + hours);
+        const cat = ((e as Record<string, unknown>).overhead_category as string) || "other";
+        categoryMap.set(cat, (categoryMap.get(cat as string) || 0) + hours);
       } else {
         totalProject += hours;
       }

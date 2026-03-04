@@ -276,7 +276,7 @@ export default function ApproveChangeOrderPublic() {
     );
   }
 
-  const lineItems = co.line_items || [];
+  const lineItems = (co.line_items || []) as Record<string, unknown>[];
   const project = co.project as Record<string, unknown> | null;
   const isSignatureValid = signatureType === "type" ? typedSignature.trim().length > 0 : true;
 

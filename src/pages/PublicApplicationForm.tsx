@@ -215,7 +215,7 @@ export default function PublicApplicationForm() {
   const isAnswerCompatible = (answer: unknown, field: FormFieldType): boolean => {
     if (field.type === "radio" || field.type === "dropdown") {
       // Check if the answer is one of the available options
-      return field.options?.includes(answer) || false;
+      return field.options?.includes(answer as string) || false;
     }
     if (field.type === "multiselect") {
       // Check if all selected options exist in current field
@@ -554,7 +554,7 @@ export default function PublicApplicationForm() {
               {field.required && " *"}
             </FormLabel>
             <Input
-              value={value || ""}
+              value={(value as string) || ""}
               onChange={(e) => !isFieldLocked && updateCustomAnswer(field.id, e.target.value)}
               placeholder={translated.placeholder}
               readOnly={isFieldLocked}
@@ -579,7 +579,7 @@ export default function PublicApplicationForm() {
               )}
               <Input
                 type="email"
-                value={value || ""}
+                value={(value as string) || ""}
                 onChange={(e) => !isFieldLocked && updateCustomAnswer(field.id, e.target.value)}
                 placeholder={translated.placeholder}
                 readOnly={isFieldLocked}
@@ -596,7 +596,7 @@ export default function PublicApplicationForm() {
             {field.showIcon !== false ? (
               <FormattedPhoneInput
                 label={translated.label + (field.required ? " *" : "")}
-                value={value || ""}
+                value={(value as string) || ""}
                 onChange={(v) => !isFieldLocked && updateCustomAnswer(field.id, v)}
                 helpText={translated.helpText}
                 showIcon={true}
@@ -611,7 +611,7 @@ export default function PublicApplicationForm() {
                 </FormLabel>
                 <Input
                   type="tel"
-                  value={value || ""}
+                  value={(value as string) || ""}
                   onChange={(e) => !isFieldLocked && updateCustomAnswer(field.id, e.target.value.replace(/\D/g, ""))}
                   placeholder={translated.placeholder}
                   maxLength={10}
@@ -645,7 +645,7 @@ export default function PublicApplicationForm() {
               {field.required && " *"}
             </FormLabel>
             <Textarea
-              value={value || ""}
+              value={(value as string) || ""}
               onChange={(e) => !isFieldLocked && updateCustomAnswer(field.id, e.target.value)}
               placeholder={translated.placeholder}
               className={cn("min-h-[100px]", lockedInputClass)}
@@ -664,7 +664,7 @@ export default function PublicApplicationForm() {
             </FormLabel>
             <Input
               type="number"
-              value={value || ""}
+              value={(value as string) || ""}
               onChange={(e) => !isFieldLocked && updateCustomAnswer(field.id, e.target.value)}
               placeholder={translated.placeholder}
               readOnly={isFieldLocked}
@@ -682,7 +682,7 @@ export default function PublicApplicationForm() {
               {field.required && " *"}
             </FormLabel>
             <Select
-              value={value || ""}
+              value={(value as string) || ""}
               onValueChange={(v) => !isFieldLocked && updateCustomAnswer(field.id, v)}
               disabled={isFieldLocked}
             >
@@ -738,7 +738,7 @@ export default function PublicApplicationForm() {
         return (
           <div key={field.id} className={cn("flex flex-row items-start space-x-3 space-y-0", isFieldLocked && "opacity-70 pointer-events-none")}>
             <Checkbox
-              checked={value || false}
+              checked={(value as boolean) || false}
               disabled={isFieldLocked}
               onCheckedChange={(checked) => !isFieldLocked && updateCustomAnswer(field.id, checked)}
             />
@@ -761,7 +761,7 @@ export default function PublicApplicationForm() {
               {field.required && " *"}
             </FormLabel>
             <RadioGroup
-              value={value || ""}
+              value={(value as string) || ""}
               onValueChange={(v) => !isFieldLocked && updateCustomAnswer(field.id, v)}
               className={optionGridClass}
               disabled={isFieldLocked}
@@ -789,7 +789,7 @@ export default function PublicApplicationForm() {
             </FormLabel>
             <Input
               type="date"
-              value={value || ""}
+              value={(value as string) || ""}
               onChange={(e) => !isFieldLocked && updateCustomAnswer(field.id, e.target.value)}
               readOnly={isFieldLocked}
               className={cn(lockedInputClass)}

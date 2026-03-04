@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { AlertTriangle, CheckCircle2, Loader2, AlertCircle } from "lucide-react";
+import type { Json } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -380,7 +381,7 @@ export default function EditApplication() {
               {isMissing && <span className="ml-2 text-orange-600 text-xs">(Please update)</span>}
             </FormLabel>
             <Input
-              value={value || ""}
+              value={(value as string) || ""}
               onChange={(e) => updateCustomAnswer(field.id, e.target.value)}
               placeholder={field.placeholder}
             />
@@ -398,7 +399,7 @@ export default function EditApplication() {
             </FormLabel>
             <Input
               type="email"
-              value={value || ""}
+              value={(value as string) || ""}
               onChange={(e) => updateCustomAnswer(field.id, e.target.value)}
               placeholder={field.placeholder}
             />
@@ -411,7 +412,7 @@ export default function EditApplication() {
           <div key={field.id} className={wrapperClass}>
             <FormattedPhoneInput
               label={field.label + (field.required ? " *" : "") + (isMissing ? " (Please update)" : "")}
-              value={value || ""}
+              value={(value as string) || ""}
               onChange={(v) => updateCustomAnswer(field.id, v)}
               helpText={field.helpText}
             />
@@ -427,7 +428,7 @@ export default function EditApplication() {
               {isMissing && <span className="ml-2 text-orange-600 text-xs">(Please update)</span>}
             </FormLabel>
             <Textarea
-              value={value || ""}
+              value={(value as string) || ""}
               onChange={(e) => updateCustomAnswer(field.id, e.target.value)}
               placeholder={field.placeholder}
               className="min-h-[100px]"
@@ -446,7 +447,7 @@ export default function EditApplication() {
             </FormLabel>
             <Input
               type="number"
-              value={value || ""}
+              value={(value as string) || ""}
               onChange={(e) => updateCustomAnswer(field.id, e.target.value)}
               placeholder={field.placeholder}
             />
@@ -463,7 +464,7 @@ export default function EditApplication() {
               {isMissing && <span className="ml-2 text-orange-600 text-xs">(Please update)</span>}
             </FormLabel>
             <Select
-              value={value || ""}
+              value={(value as string) || ""}
               onValueChange={(v) => updateCustomAnswer(field.id, v)}
             >
               <SelectTrigger>
@@ -521,7 +522,7 @@ export default function EditApplication() {
               {isMissing && <span className="ml-2 text-orange-600 text-xs">(Please update)</span>}
             </FormLabel>
             <RadioGroup
-              value={value || ""}
+              value={(value as string) || ""}
               onValueChange={(v) => updateCustomAnswer(field.id, v)}
             >
               {field.options?.map((option) => (
@@ -539,7 +540,7 @@ export default function EditApplication() {
         return (
           <div key={field.id} className={cn("flex items-start gap-2", isMissing && "ring-2 ring-orange-400 ring-offset-2 rounded-md p-2 bg-orange-50 dark:bg-orange-950/20")}>
             <Checkbox
-              checked={value || false}
+              checked={(value as boolean) || false}
               onCheckedChange={(checked) => updateCustomAnswer(field.id, checked)}
             />
             <div className="grid gap-1.5 leading-none">
@@ -602,7 +603,7 @@ export default function EditApplication() {
             </FormLabel>
             <Input
               type="date"
-              value={value || ""}
+              value={(value as string) || ""}
               onChange={(e) => updateCustomAnswer(field.id, e.target.value)}
               placeholder={field.placeholder}
             />

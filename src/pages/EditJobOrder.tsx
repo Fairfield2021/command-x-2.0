@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { JobOrderForm } from "@/components/job-orders/JobOrderForm";
-import { useJobOrder, useUpdateJobOrder } from "@/integrations/supabase/hooks/useJobOrders";
+import { useJobOrder, useUpdateJobOrder, JobOrderLineItem } from "@/integrations/supabase/hooks/useJobOrders";
 import { Loader2 } from "lucide-react";
 
 const EditJobOrder = () => {
@@ -16,7 +16,7 @@ const EditJobOrder = () => {
     await updateJobOrder.mutateAsync({
       id,
       jobOrder: data.jobOrder,
-      lineItems: data.lineItems,
+      lineItems: data.lineItems as unknown as Omit<JobOrderLineItem, "created_at">[],
     });
 
     navigate(`/job-orders/${id}`);
@@ -52,7 +52,7 @@ const EditJobOrder = () => {
       description={`${jobOrder.customer_name} - ${jobOrder.project_name}`}
     >
       <JobOrderForm
-        initialData={jobOrder}
+        initialData={jobOrder as never}
         onSubmit={handleSubmit}
         onCancel={handleCancel}
         isSubmitting={updateJobOrder.isPending}

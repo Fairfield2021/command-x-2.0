@@ -49,7 +49,7 @@ const JobOrderDetail = () => {
   const { data: allInvoices = [], isLoading: loadingInvoices } = useInvoicesByJobOrder(id || "");
   const { data: allPOs = [], isLoading: loadingPOs } = usePurchaseOrders();
   
-  const relatedPOs = allPOs.filter((po) => (po as Record<string, unknown>).job_order_id === id);
+  const relatedPOs = allPOs.filter((po) => (po as unknown as Record<string, unknown>).job_order_id === id);
   const relatedInvoices = allInvoices;
 
   if (loadingJobOrder || loadingInvoices || loadingPOs) {
@@ -209,7 +209,7 @@ const JobOrderDetail = () => {
           {isMobile ? (
             <div className="space-y-3">
               {jobOrder.line_items.map((item) => {
-                const billed = Number((item as Record<string, unknown>).billed_quantity || 0);
+                const billed = Number((item as unknown as Record<string, unknown>).billed_quantity || 0);
                 const remaining = Math.max(0, Number(item.quantity) - billed);
                 const billedPct = item.quantity > 0 ? (billed / item.quantity) * 100 : 0;
                 return (
@@ -227,7 +227,7 @@ const JobOrderDetail = () => {
                       </div>
                       <div>
                         <span className="block text-xs mb-0.5">Margin</span>
-                        <span>{(item as Record<string, unknown>).markup as number ?? 0}%</span>
+                        <span>{(item as unknown as Record<string, unknown>).markup as number ?? 0}%</span>
                       </div>
                       <div>
                         <span className="block text-xs mb-0.5">Billed</span>
@@ -261,7 +261,7 @@ const JobOrderDetail = () => {
               </TableHeader>
               <TableBody>
                 {jobOrder.line_items.map((item) => {
-                  const billed = Number((item as Record<string, unknown>).billed_quantity || 0);
+                  const billed = Number((item as unknown as Record<string, unknown>).billed_quantity || 0);
                   const remaining = Math.max(0, Number(item.quantity) - billed);
                   const billedPct = item.quantity > 0 ? (billed / item.quantity) * 100 : 0;
                   return (
@@ -278,7 +278,7 @@ const JobOrderDetail = () => {
                         {formatCurrency(item.unit_price)}
                       </TableCell>
                       <TableCell className="text-right">
-                        <span className="text-muted-foreground">{(item as Record<string, unknown>).markup as number ?? 0}%</span>
+                        <span className="text-muted-foreground">{(item as unknown as Record<string, unknown>).markup as number ?? 0}%</span>
                       </TableCell>
                       <TableCell className="text-right font-medium">
                         {formatCurrency(item.total)}
@@ -313,7 +313,7 @@ const JobOrderDetail = () => {
       {/* Vendor Billing Summary */}
       {(() => {
         const totalBilled = jobOrder.line_items.reduce((sum: number, item) =>
-          sum + (Number((item as Record<string, unknown>).billed_quantity || 0) * Number(item.unit_price)), 0);
+          sum + (Number((item as unknown as Record<string, unknown>).billed_quantity || 0) * Number(item.unit_price)), 0);
         const vendorBillingPct = jobOrder.subtotal > 0 ? (totalBilled / jobOrder.subtotal) * 100 : 0;
         return (
           <Card className="glass border-border/50 mt-6">

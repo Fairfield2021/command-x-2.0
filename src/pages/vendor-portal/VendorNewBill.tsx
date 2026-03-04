@@ -47,7 +47,7 @@ export default function VendorNewBill() {
           id: crypto.randomUUID(),
           description: item.description,
           quantity: item.quantity,
-          unit_cost: item.unit_cost || item.unit_price || 0,
+          unit_cost: (item as unknown as Record<string, unknown>).unit_cost as number || item.unit_price || 0,
           total: item.total,
           po_line_item_id: item.id,
         }))

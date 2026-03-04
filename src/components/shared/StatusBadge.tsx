@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-type Status = 
+export type Status = 
   | "draft" 
   | "pending" 
   | "pending_approval"
@@ -97,23 +97,29 @@ const statusLabels: Record<Status, string> = {
   void: "Void",
 };
 
+const fallbackBadgeStyle = "bg-muted text-muted-foreground border-muted-foreground/20";
+const fallbackCellStyle = "bg-muted-foreground text-white";
+
 interface StatusBadgeProps {
-  status: Status;
+  status: string;
   variant?: 'badge' | 'cell';
   className?: string;
 }
 
 export function StatusBadge({ status, variant = 'badge', className }: StatusBadgeProps) {
+  const s = status as Status;
+  const label = statusLabels[s] || status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+
   if (variant === 'cell') {
     return (
       <div
         className={cn(
           "inline-flex items-center justify-center px-2 py-0.5 text-xs font-medium rounded",
-          cellStyles[status],
+          cellStyles[s] || fallbackCellStyle,
           className
         )}
       >
-        {statusLabels[status]}
+        {label}
       </div>
     );
   }
@@ -122,11 +128,11 @@ export function StatusBadge({ status, variant = 'badge', className }: StatusBadg
     <span
       className={cn(
         "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium",
-        badgeStyles[status],
+        badgeStyles[s] || fallbackBadgeStyle,
         className
       )}
     >
-      {statusLabels[status]}
+      {label}
     </span>
   );
 }

@@ -240,8 +240,8 @@ const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
     if (!sortKey) return filteredProducts;
 
     return [...filteredProducts].sort((a, b) => {
-      const aVal = String((a as Record<string, unknown>)[sortKey] || "").toLowerCase();
-      const bVal = String((b as Record<string, unknown>)[sortKey] || "").toLowerCase();
+      const aVal = String((a as unknown as Record<string, unknown>)[sortKey] || "").toLowerCase();
+      const bVal = String((b as unknown as Record<string, unknown>)[sortKey] || "").toLowerCase();
 
       if (sortDirection === "asc") {
         return aVal.localeCompare(bVal);
@@ -341,7 +341,7 @@ const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
       unit: product.unit,
       category: product.category,
       is_taxable: product.is_taxable ?? true,
-      qb_product_mapping_id: (product as Record<string, unknown>).qb_product_mapping_id as string || "",
+      qb_product_mapping_id: (product as unknown as Record<string, unknown>).qb_product_mapping_id as string || "",
     });
     setShowCustomMargin(!marginPresets.includes(marginStr));
     setIsDialogOpen(true);
@@ -1167,7 +1167,7 @@ const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
         <ProductConflictDialog
           open={!!selectedConflict}
           onOpenChange={(open) => !open && setSelectedConflict(null)}
-          conflict={selectedConflict}
+          conflict={selectedConflict as { product_id: string; products: { id: string; name: string; price: number; sku: string }; conflict_data: { commandx_price: number; quickbooks_price: number; quickbooks_name: string } } | null}
         />
 
         {/* Bulk Delete Confirmation Dialog */}
