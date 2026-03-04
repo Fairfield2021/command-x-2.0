@@ -96,10 +96,10 @@ const ProjectDetail = () => {
       let fieldCost = 0;
       for (const entry of data || []) {
         if ((entry as Record<string, unknown>).is_overhead) continue;
-        const p = entry.personnel as Record<string, unknown> | null;
-        const rate = (entry as Record<string, unknown>).hourly_rate as number ?? p?.hourly_rate as number ?? 0;
+        const p = (entry as unknown as Record<string, unknown>).personnel as Record<string, unknown> | null;
+        const rate = (entry as unknown as Record<string, unknown>).hourly_rate as number ?? (p?.hourly_rate as number) ?? 0;
         const cost = (entry.hours || 0) * rate;
-        const title = (p?.title || "").toLowerCase();
+        const title = (String(p?.title || "")).toLowerCase();
         const isSupervision = title.includes("superintendent") || title.includes("supervisor") || title.includes("foreman");
         if (isSupervision) supervisionCost += cost;
         else fieldCost += cost;
@@ -167,13 +167,13 @@ const ProjectDetail = () => {
     const changeOrdersTotal = (changeOrders || [])
       .filter((co) => co.status === "approved")
       .reduce((sum, co) => {
-        const changeType = (co as Record<string, unknown>).change_type as string || 'additive';
+        const changeType = (co as unknown as Record<string, unknown>).change_type as string || 'additive';
         return changeType === 'deductive' ? sum - co.total : sum + co.total;
       }, 0);
     const tmTicketsTotal = (tmTickets || [])
       .filter((t) => ["approved", "signed", "invoiced"].includes(t.status))
       .reduce((sum, t) => {
-        const changeType = (t as Record<string, unknown>).change_type as string || 'additive';
+        const changeType = (t as unknown as Record<string, unknown>).change_type as string || 'additive';
         return changeType === 'deductive' ? sum - t.total : sum + t.total;
       }, 0);
     const totalContractValue = originalContractValue + changeOrdersTotal + tmTicketsTotal;
@@ -366,7 +366,7 @@ const ProjectDetail = () => {
             projectInvoices={projectInvoices}
             changeOrders={changeOrders || []}
             tmTickets={tmTickets || []}
-            projectPurchaseOrders={projectPurchaseOrders}
+            projectPurchaseOrders={projectPurchaseOrders as never}
             onAddTMTicket={() => setIsTMTicketDialogOpen(true)}
             onAddJobOrder={() => setIsJobOrderDialogOpen(true)}
             onAddInvoice={() => setIsCreateInvoiceDialogOpen(true)}
@@ -431,7 +431,7 @@ const ProjectDetail = () => {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="status">Status</Label>
-                <Select value={milestoneFormData.status} onValueChange={(value: string) => setMilestoneFormData({ ...milestoneFormData, status: value })}>
+                <Select value={milestoneFormData.status} onValueChange={(value: string) => setMilestoneFormData({ ...milestoneFormData, status: value as "pending" | "in-progress" | "completed" | "delayed" })}>
                   <SelectTrigger className="bg-secondary border-border"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="pending">Pending</SelectItem>

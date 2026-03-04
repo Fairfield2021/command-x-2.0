@@ -490,7 +490,7 @@ export default function StaffingApplications() {
                         variant="ghost"
                         size="sm"
                         className="h-9 w-9 p-0"
-                        onClick={() => handleEditTaskOrder(posting)}
+                        onClick={() => handleEditTaskOrder(posting as never)}
                         title="Edit task order details"
                       >
                         <Settings className="h-4 w-4" />
@@ -499,7 +499,7 @@ export default function StaffingApplications() {
                         variant="ghost"
                         size="sm"
                         className="h-9 w-9 p-0"
-                        onClick={() => handleEditPosting(posting)}
+                        onClick={() => handleEditPosting(posting as never)}
                         title="Edit form template"
                       >
                         <Pencil className="h-4 w-4" />

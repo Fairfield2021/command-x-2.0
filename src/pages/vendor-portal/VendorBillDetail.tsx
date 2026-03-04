@@ -124,7 +124,7 @@ export default function VendorBillDetail() {
                       <tr key={item.id} className="border-b">
                         <td className="py-2">{item.description}</td>
                         <td className="text-right py-2">{item.quantity}</td>
-                        <td className="text-right py-2">{formatCurrency(item.unit_price)}</td>
+                        <td className="text-right py-2">{formatCurrency(item.unit_cost)}</td>
                         <td className="text-right py-2 font-medium">{formatCurrency(item.total)}</td>
                       </tr>
                     ))}

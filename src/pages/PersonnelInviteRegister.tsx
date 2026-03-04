@@ -129,7 +129,7 @@ const PersonnelInviteRegister = () => {
         personnel_number: "",
       };
 
-      await addPersonnel.mutateAsync(personnelData);
+      await addPersonnel.mutateAsync(personnelData as never);
 
       // Mark invite as completed
       if (token) {

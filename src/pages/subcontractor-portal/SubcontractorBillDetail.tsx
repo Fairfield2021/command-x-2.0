@@ -65,7 +65,7 @@ export default function SubcontractorBillDetail() {
                 <StatusBadge status={bill.status as string} />
               </div>
               <p className="text-muted-foreground">
-                PO: {poInfo?.number} • {poInfo?.project_name}
+                PO: {String(poInfo?.number)} • {String(poInfo?.project_name)}
               </p>
             </div>
           </div>

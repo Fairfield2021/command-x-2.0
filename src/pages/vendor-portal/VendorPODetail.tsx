@@ -188,7 +188,7 @@ export default function VendorPODetail() {
                       </div>
                       <div className="text-right">
                         <p className="font-semibold">{formatCurrency(addendum.amount)}</p>
-                        <StatusBadge status={addendum.status} />
+                        <StatusBadge status={(addendum as unknown as Record<string, unknown>).status as string || addendum.approval_status} />
                       </div>
                     </div>
                   ))}

@@ -185,7 +185,7 @@ export default function UserManagement() {
           // Only show notifications for important events from other users
           if (newLog.performed_by !== currentUserId) {
             // Check if we should notify for this event
-            if (!shouldNotifyForEvent(newLog.action, notificationPreferences)) {
+            if (!shouldNotifyForEvent(newLog.action as string, notificationPreferences as never)) {
               return;
             }
 
@@ -229,7 +229,7 @@ export default function UserManagement() {
 
             const notification = getNotificationMessage();
             if (notification) {
-              triggerNotification(notification, notificationPreferences, toast);
+              triggerNotification(notification, notificationPreferences as never, toast);
             }
           }
           
@@ -1379,7 +1379,7 @@ export default function UserManagement() {
                     onClick={() => {
                       try {
                         const filename = `activity-logs-${new Date().toISOString().split('T')[0]}`;
-                        exportToCSV(activityLogs, filename);
+                        exportToCSV(activityLogs as never, filename);
                         toast({
                           title: "Export successful",
                           description: "Activity logs exported as CSV",
@@ -1403,7 +1403,7 @@ export default function UserManagement() {
                     onClick={() => {
                       try {
                         const filename = `activity-logs-${new Date().toISOString().split('T')[0]}`;
-                        exportToJSON(activityLogs, filename);
+                        exportToJSON(activityLogs as never, filename);
                         toast({
                           title: "Export successful",
                           description: "Activity logs exported as JSON",
@@ -1458,7 +1458,7 @@ export default function UserManagement() {
                  ) : isMobile ? (
                    <div className="space-y-4">
                       {activityLogs.map((log, index) => (
-                        <ActivityLogCard key={log.id} log={log} index={index} />
+                        <ActivityLogCard key={String(log.id)} log={log as never} index={index} />
                       ))}
                       {/* Pagination Controls */}
                       {activityTotal > activityPerPage && (
@@ -1535,28 +1535,28 @@ export default function UserManagement() {
 
                         return (
                           <div
-                            key={log.id}
+                            key={String(log.id)}
                             className="flex items-start gap-4 p-4 rounded-lg border bg-card"
                           >
                             <div className="mt-1">{getActionIcon()}</div>
                             <div className="flex-1 space-y-1">
                               <div className="flex items-center justify-between">
-                                <p className="font-medium">{getActionLabel()}</p>
+                                <p className="font-medium">{String(getActionLabel())}</p>
                                 <span className="text-sm text-muted-foreground">
-                                  {new Date(log.created_at).toLocaleDateString()} at{' '}
-                                  {new Date(log.created_at).toLocaleTimeString()}
+                                  {new Date(String(log.created_at)).toLocaleDateString()} at{' '}
+                                  {new Date(String(log.created_at)).toLocaleTimeString()}
                                 </span>
                               </div>
                               <div className="text-sm text-muted-foreground">
-                                <span className="font-medium">{log.target_email}</span>
+                                <span className="font-medium">{String(log.target_email)}</span>
                                 {' • '}
                                 <Badge variant="outline" className="capitalize">
-                                  {log.target_role}
+                                  {String(log.target_role)}
                                 </Badge>
                               </div>
                               {log.performed_by_email && (
                                 <p className="text-xs text-muted-foreground">
-                                  By: {log.performed_by_email}
+                                  By: {String(log.performed_by_email)}
                                 </p>
                               )}
                             </div>
@@ -1611,7 +1611,7 @@ export default function UserManagement() {
             {currentUserId && (
               <NotificationPreferences 
                 userId={currentUserId} 
-                onSave={(prefs) => setNotificationPreferences(prefs)}
+                onSave={(prefs) => setNotificationPreferences(prefs as never)}
               />
             )}
           </TabsContent>
