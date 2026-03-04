@@ -76,8 +76,8 @@ export function EntityMergeDialog({
   const mergeMutation = useEntityMerge();
   const { data: preview, isLoading: previewLoading } = useMergePreview(
     entityType,
-    sourceEntity?.id,
-    targetEntity?.id
+    sourceEntity?.id as string,
+    targetEntity?.id as string
   );
 
   const fields = MERGE_FIELDS[entityType];
@@ -128,8 +128,8 @@ export function EntityMergeDialog({
     try {
       await mergeMutation.mutateAsync({
         entityType,
-        sourceId: sourceEntity.id,
-        targetId: targetEntity.id,
+        sourceId: sourceEntity.id as string,
+        targetId: targetEntity.id as string,
         fieldResolutions,
         mergeReason: mergeReason || undefined,
       });

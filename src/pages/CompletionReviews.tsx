@@ -76,7 +76,7 @@ export default function CompletionReviews() {
                 </Card>
               ) : (
                 <div className="space-y-4">
-                  {bills.map((bill: Record<string, unknown> & { id: string; room_unit_number?: string; project_name?: string; total_amount?: number; contractor_name?: string; submitted_at?: string; items?: Array<Record<string, unknown> & { id: string; description?: string; quantity?: number; unit_cost?: number; total?: number }> }) => (
+                  {(bills as unknown as Array<Record<string, unknown> & { id: string; room_unit_number?: string; project_name?: string; total_amount?: number; contractor_name?: string; submitted_at?: string; items?: Array<Record<string, unknown> & { id: string; description?: string; quantity?: number; unit_cost?: number; total?: number }> }>).map((bill) => (
                     <Card key={bill.id} className="overflow-hidden">
                       <div className="p-4 border-b bg-muted/30">
                         <div className="flex items-center justify-between">

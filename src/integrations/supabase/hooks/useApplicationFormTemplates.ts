@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 
 // Conditional logic types
 export interface FieldCondition {
@@ -204,19 +205,19 @@ export const useCreateApplicationFormTemplate = () => {
     }) => {
       const { data, error } = await supabase
         .from("application_form_templates")
-        .insert({
+        .insert([{
           name: template.name,
           description: template.description || null,
-          fields: template.fields as unknown as Record<string, unknown>[],
-          layout: (template.layout || []) as unknown as Record<string, unknown>[],
-          theme: (template.theme || {}) as unknown as Record<string, unknown>,
+          fields: template.fields as unknown as Json,
+          layout: (template.layout || []) as unknown as Json,
+          theme: (template.theme || {}) as unknown as Json,
           category: template.category || null,
           success_message: template.success_message || "Thank you for your submission!",
-          settings: (template.settings || {}) as unknown as Record<string, unknown>,
+          settings: (template.settings || {}) as unknown as Json,
           is_active: true,
           is_draft: true,
           version: 1,
-        })
+        }])
         .select()
         .single();
 

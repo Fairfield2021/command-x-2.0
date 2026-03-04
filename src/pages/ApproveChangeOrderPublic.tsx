@@ -190,7 +190,7 @@ export default function ApproveChangeOrderPublic() {
           <CardContent className="pt-6 text-center">
             <CheckCircle className="h-12 w-12 mx-auto text-green-600 mb-4" />
             <h2 className="text-xl font-semibold mb-2">Already Signed</h2>
-            <p className="text-muted-foreground">This change order was signed on {format(new Date(co.field_supervisor_signed_at), "PPP")}.</p>
+            <p className="text-muted-foreground">This change order was signed on {format(new Date(co.field_supervisor_signed_at as string), "PPP")}.</p>
             <Badge variant="default" className="mt-4">Signed</Badge>
           </CardContent>
         </Card>
@@ -205,7 +205,7 @@ export default function ApproveChangeOrderPublic() {
           <CardContent className="pt-6 text-center">
             <CheckCircle className="h-12 w-12 mx-auto text-green-600 mb-4" />
             <h2 className="text-xl font-semibold mb-2">Already Signed</h2>
-            <p className="text-muted-foreground">This change order was signed on {format(new Date(co.customer_pm_signed_at), "PPP")}.</p>
+            <p className="text-muted-foreground">This change order was signed on {format(new Date(co.customer_pm_signed_at as string), "PPP")}.</p>
             <Badge variant="default" className="mt-4">Signed</Badge>
           </CardContent>
         </Card>
@@ -289,7 +289,7 @@ export default function ApproveChangeOrderPublic() {
           </div>
           <h1 className="text-3xl font-bold">Change Order Approval</h1>
           <p className="text-muted-foreground mt-2">
-            {signerRole} — Review and sign CO {co.number}
+            {signerRole} — Review and sign CO {String(co.number)}
           </p>
         </div>
 
@@ -302,11 +302,11 @@ export default function ApproveChangeOrderPublic() {
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-muted-foreground">CO Number:</span>
-                <p className="font-semibold">{co.number}</p>
+                <p className="font-semibold">{String(co.number)}</p>
               </div>
               <div>
                 <span className="text-muted-foreground">Project:</span>
-                <p className="font-semibold">{project?.name || "N/A"}</p>
+                <p className="font-semibold">{String(project?.name) || "N/A"}</p>
               </div>
               <div>
                 <span className="text-muted-foreground">Type:</span>
@@ -314,7 +314,7 @@ export default function ApproveChangeOrderPublic() {
               </div>
               <div>
                 <span className="text-muted-foreground">Date:</span>
-                <p className="font-semibold">{format(new Date(co.created_at), "PPP")}</p>
+                <p className="font-semibold">{format(new Date(co.created_at as string), "PPP")}</p>
               </div>
             </div>
 
@@ -322,23 +322,23 @@ export default function ApproveChangeOrderPublic() {
 
             <div>
               <span className="text-muted-foreground text-sm">Reason:</span>
-              <p className="mt-1">{co.reason}</p>
+              <p className="mt-1">{String(co.reason)}</p>
             </div>
             {co.description && (
               <div>
                 <span className="text-muted-foreground text-sm">Description:</span>
-                <p className="mt-1">{co.description}</p>
+                <p className="mt-1">{String(co.description)}</p>
               </div>
             )}
 
             {/* Photos */}
-            {co.photos && co.photos.length > 0 && (
+            {co.photos && (co.photos as unknown as string[]).length > 0 && (
               <>
                 <Separator />
                 <div>
-                  <h4 className="font-semibold mb-3">Photos ({co.photos.length})</h4>
+                  <h4 className="font-semibold mb-3">Photos ({(co.photos as unknown as string[]).length})</h4>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                    {co.photos.map((photo: string, i: number) => {
+                    {(co.photos as unknown as string[]).map((photo: string, i: number) => {
                       const { data: urlData } = supabase.storage.from("form-uploads").getPublicUrl(photo);
                       return (
                         <img
@@ -370,18 +370,18 @@ export default function ApproveChangeOrderPublic() {
                   </thead>
                   <tbody>
                     {lineItems.map((item: Record<string, unknown>) => (
-                      <tr key={item.id} className="border-t">
-                        <td className="px-4 py-2">{item.description}</td>
-                        <td className="px-4 py-2 text-right">{item.quantity}</td>
-                        <td className="px-4 py-2 text-right">{formatCurrency(item.unit_price)}</td>
-                        <td className="px-4 py-2 text-right">{formatCurrency(item.total)}</td>
+                      <tr key={String(item.id)} className="border-t">
+                        <td className="px-4 py-2">{String(item.description)}</td>
+                        <td className="px-4 py-2 text-right">{String(item.quantity)}</td>
+                        <td className="px-4 py-2 text-right">{formatCurrency(Number(item.unit_price))}</td>
+                        <td className="px-4 py-2 text-right">{formatCurrency(Number(item.total))}</td>
                       </tr>
                     ))}
                   </tbody>
                   <tfoot className="bg-secondary/30">
                     <tr className="border-t font-bold">
                       <td colSpan={3} className="px-4 py-2 text-right">Total:</td>
-                      <td className="px-4 py-2 text-right text-lg text-primary">{formatCurrency(co.total)}</td>
+                      <td className="px-4 py-2 text-right text-lg text-primary">{formatCurrency(Number(co.total))}</td>
                     </tr>
                   </tfoot>
                 </table>
@@ -394,7 +394,7 @@ export default function ApproveChangeOrderPublic() {
                 <Separator />
                 <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 p-3 rounded-lg">
                   <CheckCircle className="h-4 w-4" />
-                  <span>Field Supervisor signed on {format(new Date(co.field_supervisor_signed_at), "PPP")}</span>
+                  <span>Field Supervisor signed on {format(new Date(co.field_supervisor_signed_at as string), "PPP")}</span>
                 </div>
               </>
             )}

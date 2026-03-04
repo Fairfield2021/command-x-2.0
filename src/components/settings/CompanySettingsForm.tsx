@@ -21,7 +21,7 @@ export const CompanySettingsForm = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   const { register, handleSubmit, formState: { errors } } = useForm<Record<string, unknown>>({
-    values: settings || {},
+    values: (settings || {}) as Record<string, unknown>,
   });
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -47,10 +47,10 @@ export const CompanySettingsForm = () => {
       await updateSettings.mutateAsync({
         ...data,
         logo_url: logoUrl,
-        default_tax_rate: parseFloat(data.default_tax_rate) || 0,
-        overtime_threshold: parseFloat(data.overtime_threshold) || 8,
-        weekly_overtime_threshold: parseFloat(data.weekly_overtime_threshold) || 40,
-        overtime_multiplier: parseFloat(data.overtime_multiplier) || 1.5,
+        default_tax_rate: parseFloat(data.default_tax_rate as string) || 0,
+        overtime_threshold: parseFloat(data.overtime_threshold as string) || 8,
+        weekly_overtime_threshold: parseFloat(data.weekly_overtime_threshold as string) || 40,
+        overtime_multiplier: parseFloat(data.overtime_multiplier as string) || 1.5,
       });
     } catch (error) {
       // Error handled by mutation's onError

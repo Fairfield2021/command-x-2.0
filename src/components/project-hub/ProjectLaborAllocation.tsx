@@ -58,7 +58,7 @@ export function ProjectLaborAllocation({ projectId }: ProjectLaborAllocationProp
 
       for (const entry of data || []) {
         if (!entry.personnel_id || !entry.personnel) continue;
-        const p = entry.personnel as { id: string; first_name: string; last_name: string; hourly_rate: number | null; title: string | null };
+        const p = entry.personnel as unknown as { id: string; first_name: string; last_name: string; hourly_rate: number | null; title: string | null };
         const rate = entry.hourly_rate ?? p.hourly_rate ?? 0;
         const isOverhead = entry.is_overhead === true;
         

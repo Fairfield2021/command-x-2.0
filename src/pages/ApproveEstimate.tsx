@@ -153,9 +153,9 @@ const ApproveEstimate = () => {
                 </thead>
                 <tbody>
                   {estimate.estimate_line_items?.map((item: Record<string, unknown>) => (
-                    <tr key={item.id} className="border-b border-border/50">
-                      <td className="py-3 px-2 text-sm">{item.description}</td>
-                      <td className="py-3 px-2 text-sm text-center">{item.quantity}</td>
+                    <tr key={String(item.id)} className="border-b border-border/50">
+                      <td className="py-3 px-2 text-sm">{String(item.description)}</td>
+                      <td className="py-3 px-2 text-sm text-center">{String(item.quantity)}</td>
                       <td className="py-3 px-2 text-sm text-right">${Number(item.unit_price).toFixed(2)}</td>
                       <td className="py-3 px-2 text-sm text-right font-semibold">${Number(item.total).toFixed(2)}</td>
                     </tr>

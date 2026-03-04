@@ -38,7 +38,7 @@ export function ProjectLaborExpensesList({ projectId }: ProjectLaborExpensesList
   const { data: paymentsData, isLoading } = usePersonnelPaymentsByProject(projectId);
 
   const payments = useMemo(() => {
-    return ((paymentsData || []) as PaymentWithAllocation[]).map((p, idx) => ({
+    return ((paymentsData || []) as unknown as PaymentWithAllocation[]).map((p, idx) => ({
       id: p.payment?.id || `payment-${idx}`,
       payment: p.payment,
       allocated_amount: p.allocated_amount,

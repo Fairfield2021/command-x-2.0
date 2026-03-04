@@ -125,7 +125,7 @@ export function JobHubFinancialsTab({
   const tmOpenCount = useMemo(() =>
     tmTicketsData?.filter(t => (t.status as string) === 'open' || (t.status as string) === 'draft').length ?? 0, [tmTicketsData]);
   const hasCapReached = useMemo(() =>
-    tmTicketsData?.some(t => t.status === 'cap_reached') ?? false, [tmTicketsData]);
+    tmTicketsData?.some(t => (t.status as string) === 'cap_reached') ?? false, [tmTicketsData]);
 
   useEffect(() => {
     let mounted = true;
@@ -440,7 +440,7 @@ export function JobHubFinancialsTab({
           <AlertDialogHeader>
             <AlertDialogTitle>Approve Change Order {approveConfirmCO?.number}?</AlertDialogTitle>
             <AlertDialogDescription>
-              Approving this CO will add {approveConfirmCO?.line_items?.length ?? 0} new SOV line(s) and{" "}
+              Approving this CO will add {((approveConfirmCO as unknown as Record<string, unknown>)?.line_items as unknown[] | undefined)?.length ?? 0} new SOV line(s) and{" "}
               {approveConfirmCO?.change_type === "additive" ? "increase" : "decrease"} the contract value by{" "}
               {formatCurrency(Number(approveConfirmCO?.co_value) || 0)}. Proceed?
             </AlertDialogDescription>
@@ -506,7 +506,7 @@ export function JobHubFinancialsTab({
                 {sortedTMTickets.map((t) => (
                   <TMTicketCard
                     key={t.id}
-                    ticket={t}
+                    ticket={t as unknown as Parameters<typeof TMTicketCard>[0]["ticket"]}
                     currentUserId={currentUserId}
                     projectId={projectId}
                     contractId={summary?.contract_id}
@@ -526,7 +526,7 @@ export function JobHubFinancialsTab({
         open={tmDialogOpen}
         onOpenChange={setTmDialogOpen}
       />
-      <ProjectPurchaseOrdersList purchaseOrders={projectPurchaseOrders} projectId={projectId} qbMappings={poQBMap} />
+      <ProjectPurchaseOrdersList purchaseOrders={projectPurchaseOrders as unknown as Parameters<typeof ProjectPurchaseOrdersList>[0]["purchaseOrders"]} projectId={projectId} qbMappings={poQBMap} />
       <ProjectTimeEntriesList projectId={projectId} />
     </div>
   );

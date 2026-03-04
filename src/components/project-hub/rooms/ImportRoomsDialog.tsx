@@ -151,7 +151,7 @@ function parseSpreadsheet(workbook: XLSX.WorkBook): ImportRoomRow[] {
       } else if (field === 'ceiling_height') {
         room.ceiling_height = val ? parseInt(String(val)) || null : null;
       } else {
-        (room as Record<string, string | number | null>)[field] = val ? parseFloat(String(val)) || 0 : 0;
+        (room as unknown as Record<string, string | number | null>)[field] = val ? parseFloat(String(val)) || 0 : 0;
       }
     }
 

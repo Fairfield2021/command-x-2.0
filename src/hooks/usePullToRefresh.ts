@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useIsMobile } from "./use-mobile";
 
 interface UsePullToRefreshOptions {
-  onRefresh: () => void | Promise<void>;
+  onRefresh: () => void | Promise<unknown>;
   isRefreshing?: boolean;
   threshold?: number;
   maxPull?: number;
