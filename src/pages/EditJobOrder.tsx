@@ -1,25 +1,34 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { JobOrderForm } from "@/components/job-orders/JobOrderForm";
 import { useJobOrder, useUpdateJobOrder } from "@/integrations/supabase/hooks/useJobOrders";
 import { Loader2 } from "lucide-react";
+import { NoPOWarningDialog } from "@/components/job-orders/NoPOWarningDialog";
 
 const EditJobOrder = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { data: jobOrder, isLoading } = useJobOrder(id || "");
   const updateJobOrder = useUpdateJobOrder();
+  const [showNoPOWarning, setShowNoPOWarning] = useState(false);
 
   const handleSubmit = async (data: { jobOrder: Record<string, unknown>; lineItems: Record<string, unknown>[] }) => {
     if (!id) return;
 
-    await updateJobOrder.mutateAsync({
-      id,
-      jobOrder: data.jobOrder,
-      lineItems: data.lineItems,
-    });
+    try {
+      await updateJobOrder.mutateAsync({
+        id,
+        jobOrder: data.jobOrder,
+        lineItems: data.lineItems,
+      });
 
-    navigate(`/job-orders/${id}`);
+      navigate(`/job-orders/${id}`);
+    } catch (error: unknown) {
+      if (error instanceof Error && error.message.includes("NO_PO_NO_WORK")) {
+        setShowNoPOWarning(true);
+      }
+    }
   };
 
   const handleCancel = () => {
@@ -57,6 +66,13 @@ const EditJobOrder = () => {
         onCancel={handleCancel}
         isSubmitting={updateJobOrder.isPending}
       />
+      {id && (
+        <NoPOWarningDialog
+          open={showNoPOWarning}
+          onOpenChange={setShowNoPOWarning}
+          jobOrderId={id}
+        />
+      )}
     </PageLayout>
   );
 };

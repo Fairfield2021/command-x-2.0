@@ -18,6 +18,7 @@ import {
 import { format } from "date-fns";
 import { formatCurrency } from "@/lib/utils";
 import { useJobCostSummary } from "@/hooks/useJobCostSummary";
+import { BillingCycleManager } from "@/components/billing/BillingCycleManager";
 import { ProjectLaborAllocation } from "@/components/project-hub/ProjectLaborAllocation";
 import { JobCostChart } from "@/components/project-hub/contract/JobCostChart";
 import { useTMTicketsByProject } from "@/integrations/supabase/hooks/useTMTickets";
@@ -528,6 +529,7 @@ export function JobHubFinancialsTab({
       />
       <ProjectPurchaseOrdersList purchaseOrders={projectPurchaseOrders} projectId={projectId} qbMappings={poQBMap} />
       <ProjectTimeEntriesList projectId={projectId} />
+      <BillingCycleManager projectId={projectId} />
     </div>
   );
 }

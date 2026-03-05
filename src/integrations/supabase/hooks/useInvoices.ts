@@ -16,6 +16,7 @@ export interface InvoiceLineItem {
   markup: number;
   total: number;
   display_order?: number;
+  sov_line_id?: string | null;
 }
 
 export interface InvoicePayment {

@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { Button } from "@/components/ui/button";
-import { Plus, Lightbulb, FileText, Clock, CheckCircle, AlertTriangle } from "lucide-react";
+import { Plus, Lightbulb, FileText, Clock, CheckCircle, AlertTriangle, Download } from "lucide-react";
 import { SearchInput } from "@/components/ui/search-input";
 import { useVendorBills, VendorBillFilters as FilterType } from "@/integrations/supabase/hooks/useVendorBills";
 import { VendorBillEmptyState } from "@/components/vendor-bills/VendorBillEmptyState";
@@ -11,7 +11,7 @@ import { VendorBillFilters } from "@/components/vendor-bills/VendorBillFilters";
 import { VendorBillTable } from "@/components/vendor-bills/VendorBillTable";
 import { SmartVendorBillDialog } from "@/components/vendor-bills/SmartVendorBillDialog";
 import { useUrlFilters } from "@/hooks/useUrlFilters";
-import { useQuickBooksConfig } from "@/integrations/supabase/hooks/useQuickBooks";
+import { useQuickBooksConfig, useImportBillsFromQB, useImportExpensesFromQB } from "@/integrations/supabase/hooks/useQuickBooks";
 import { QBOPopupLink } from "@/components/quickbooks/QBOPopupLink";
 
 type CardFilter = "all" | "open" | "paid" | "overdue";
@@ -37,6 +37,8 @@ const defaultFilterValues = {
 export default function VendorBills() {
   const navigate = useNavigate();
   const { data: qbConfig } = useQuickBooksConfig();
+  const importBills = useImportBillsFromQB();
+  const importExpenses = useImportExpensesFromQB();
   const [smartDialogOpen, setSmartDialogOpen] = useState(false);
   
   // Use URL-based filter persistence
@@ -148,13 +150,31 @@ export default function VendorBills() {
               Smart Create
             </Button>
             {qbConfig?.is_connected && (
-              <QBOPopupLink
-                docType="bill"
-                variant="create"
-                onClose={() => {
-                  // bills refetch handled by query invalidation from webhook
-                }}
-              />
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => importBills.mutate()}
+                  disabled={importBills.isPending}
+                >
+                  <Download className="h-4 w-4 mr-1" />
+                  {importBills.isPending ? "Importing..." : "Import Bills"}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => importExpenses.mutate()}
+                  disabled={importExpenses.isPending}
+                >
+                  <Download className="h-4 w-4 mr-1" />
+                  {importExpenses.isPending ? "Importing..." : "Import Expenses"}
+                </Button>
+                <QBOPopupLink
+                  docType="bill"
+                  variant="create"
+                  onClose={() => {
+                    // bills refetch handled by query invalidation from webhook
+                  }}
+                />
+              </>
             )}
           </div>
         </div>

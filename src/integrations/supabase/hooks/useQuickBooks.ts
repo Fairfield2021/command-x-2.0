@@ -797,3 +797,94 @@ export const useImportAccountsFromQB = () => {
     },
   });
 };
+
+// Import vendor bills from QuickBooks
+export const useImportBillsFromQB = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke('quickbooks-import-bills', {
+        body: { action: 'import' },
+      });
+
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["vendor-bills"] });
+      queryClient.invalidateQueries({ queryKey: ["quickbooks-sync-logs"] });
+      const message = `Imported ${data.imported} bills, updated ${data.updated}${data.skipped > 0 ? `, skipped ${data.skipped}` : ''}`;
+      if (data.unmappedVendors?.length > 0) {
+        toast.warning(`${message}. ${data.unmappedVendors.length} unmapped vendor(s).`);
+      } else {
+        toast.success(message);
+      }
+    },
+    onError: (error: Error) => {
+      toast.error(`Bill import failed: ${error.message}`);
+    },
+  });
+};
+
+// Import purchase orders from QuickBooks
+export const useImportPurchaseOrdersFromQB = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke('quickbooks-import-purchase-orders', {
+        body: { action: 'import' },
+      });
+
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["purchase-orders"] });
+      queryClient.invalidateQueries({ queryKey: ["quickbooks-sync-logs"] });
+      queryClient.invalidateQueries({ queryKey: ["quickbooks-po-mappings"] });
+      const message = `Imported ${data.imported} POs, updated ${data.updated}${data.skipped > 0 ? `, skipped ${data.skipped}` : ''}`;
+      if (data.unmappedVendors?.length > 0) {
+        toast.warning(`${message}. ${data.unmappedVendors.length} unmapped vendor(s).`);
+      } else {
+        toast.success(message);
+      }
+    },
+    onError: (error: Error) => {
+      toast.error(`PO import failed: ${error.message}`);
+    },
+  });
+};
+
+// Import expenses (QB Purchase entities) from QuickBooks
+export const useImportExpensesFromQB = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke('quickbooks-import-expenses', {
+        body: { action: 'import' },
+      });
+
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["vendor-bills"] });
+      queryClient.invalidateQueries({ queryKey: ["quickbooks-sync-logs"] });
+      const message = `Imported ${data.imported} expenses, updated ${data.updated}${data.skipped > 0 ? `, skipped ${data.skipped}` : ''}`;
+      if (data.unmappedVendors?.length > 0) {
+        toast.warning(`${message}. ${data.unmappedVendors.length} unmapped vendor(s).`);
+      } else {
+        toast.success(message);
+      }
+    },
+    onError: (error: Error) => {
+      toast.error(`Expense import failed: ${error.message}`);
+    },
+  });
+};

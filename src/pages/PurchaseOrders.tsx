@@ -5,7 +5,7 @@ import { PageLayout } from "@/components/layout/PageLayout";
 import { EnhancedDataTable, EnhancedColumn } from "@/components/shared/EnhancedDataTable";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { Plus, Eye, ShoppingCart, Loader2, Wrench } from "lucide-react";
+import { Plus, Eye, ShoppingCart, Loader2, Wrench, Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { SearchInput } from "@/components/ui/search-input";
 import { usePurchaseOrders, PurchaseOrder } from "@/integrations/supabase/hooks/usePurchaseOrders";
@@ -15,7 +15,7 @@ import { PullToRefreshWrapper } from "@/components/shared/PullToRefreshWrapper";
 import { PurchaseOrderCard } from "@/components/purchase-orders/PurchaseOrderCard";
 import { PurchaseOrderStats } from "@/components/purchase-orders/PurchaseOrderStats";
 import { PurchaseOrderEmptyState } from "@/components/purchase-orders/PurchaseOrderEmptyState";
-import { useQuickBooksConfig } from "@/integrations/supabase/hooks/useQuickBooks";
+import { useQuickBooksConfig, useImportPurchaseOrdersFromQB } from "@/integrations/supabase/hooks/useQuickBooks";
 import { QBOPopupLink } from "@/components/quickbooks/QBOPopupLink";
 import { useQBMappingForList } from "@/integrations/supabase/hooks/useQBMappingForList";
 
@@ -25,6 +25,7 @@ const PurchaseOrders = () => {
   const { data: vendors } = useVendors();
   const { data: projects } = useProjects();
   const { data: qbConfig } = useQuickBooksConfig();
+  const importPOs = useImportPurchaseOrdersFromQB();
 
   const [search, setSearch] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("all");
@@ -225,11 +226,22 @@ const PurchaseOrders = () => {
               />
             </div>
             {qbConfig?.is_connected && (
-              <QBOPopupLink
-                docType="purchase_order"
-                variant="create"
-                onClose={() => refetch()}
-              />
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => importPOs.mutate()}
+                  disabled={importPOs.isPending}
+                >
+                  <Download className="h-4 w-4 mr-1" />
+                  {importPOs.isPending ? "Importing..." : "Import from QB"}
+                </Button>
+                <QBOPopupLink
+                  docType="purchase_order"
+                  variant="create"
+                  onClose={() => refetch()}
+                />
+              </>
             )}
           </div>
         }

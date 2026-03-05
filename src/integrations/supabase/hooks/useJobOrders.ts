@@ -234,6 +234,23 @@ export const useUpdateJobOrder = () => {
         .eq("id", data.id)
         .single();
 
+      // "No PO, no work" — block transition to 'in-progress' without a PO
+      if (
+        data.jobOrder.status === "in-progress" &&
+        originalData?.status !== "in-progress"
+      ) {
+        const { count } = await supabase
+          .from("purchase_orders")
+          .select("id", { count: "exact", head: true })
+          .eq("job_order_id", data.id);
+
+        if (!count || count === 0) {
+          throw new Error(
+            "NO_PO_NO_WORK: Cannot start work without at least one Purchase Order. Create a PO first."
+          );
+        }
+      }
+
       // Update job order
       const { data: jobOrderData, error: jobOrderError } = await supabase
         .from("job_orders")

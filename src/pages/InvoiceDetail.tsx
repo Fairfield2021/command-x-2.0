@@ -30,6 +30,7 @@ import {
 import { useState } from "react";
 import { QBOPopupLink } from "@/components/quickbooks/QBOPopupLink";
 import { useQBMappingForList } from "@/integrations/supabase/hooks/useQBMappingForList";
+import { LinkLineItemsToSOV } from "@/components/shared/LinkLineItemsToSOV";
 
 const InvoiceDetail = () => {
   const { id } = useParams();
@@ -379,6 +380,25 @@ const InvoiceDetail = () => {
         <div className="glass rounded-xl p-4 sm:p-8 max-w-4xl mt-6">
           <h3 className="text-lg font-semibold mb-4">Payment History</h3>
           <InvoicePaymentHistory payments={invoice.payments} invoiceId={id!} />
+        </div>
+      )}
+
+      {/* SOV Linking */}
+      {invoice.project_id && invoice.line_items.length > 0 && (
+        <div className="max-w-4xl mt-6">
+          <LinkLineItemsToSOV
+            lineItems={invoice.line_items.map((item) => ({
+              id: item.id,
+              description: item.description,
+              quantity: Number(item.quantity),
+              unit_price: Number(item.unit_price),
+              total: Number(item.total),
+              sov_line_id: item.sov_line_id ?? null,
+            }))}
+            projectId={invoice.project_id}
+            contextType="invoice"
+            disabled={invoice.status === "paid"}
+          />
         </div>
       )}
 

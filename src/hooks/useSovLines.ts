@@ -140,3 +140,81 @@ export const useDeleteSovLine = () => {
     },
   });
 };
+
+// Validate progressive billing server-side
+export const useValidateProgressiveBilling = () => {
+  return useMutation({
+    mutationFn: async ({
+      sovLineId,
+      amount,
+      excludeId,
+    }: {
+      sovLineId: string;
+      amount: number;
+      excludeId?: string;
+    }) => {
+      const { data, error } = await supabase.rpc("validate_progressive_billing", {
+        p_sov_line_id: sovLineId,
+        p_amount: amount,
+        p_exclude_id: excludeId ?? null,
+      });
+      if (error) throw error;
+      return data as { allowed: boolean; message: string; remaining: number };
+    },
+  });
+};
+
+// Get SoV line with budget info (remaining capacity per context type)
+export const useSovLineWithBudget = (sovLineId: string | null) => {
+  return useQuery({
+    queryKey: ["sov_line_budget", sovLineId],
+    queryFn: async () => {
+      if (!sovLineId) return null;
+      const { data, error } = await supabase
+        .from("sov_lines")
+        .select("*")
+        .eq("id", sovLineId)
+        .single();
+      if (error) throw error;
+      const line = data as SovLine;
+      return {
+        ...line,
+        committedRemaining: (line.total_value ?? 0) - line.committed_cost,
+        billedRemaining: (line.total_value ?? 0) - line.billed_to_date,
+        invoicedRemaining: (line.total_value ?? 0) - line.invoiced_to_date,
+      };
+    },
+    enabled: !!sovLineId,
+  });
+};
+
+// Get all SoV lines for a project (across all contracts)
+export const useSovLinesByProject = (projectId: string | null) => {
+  return useQuery({
+    queryKey: ["sov_lines_by_project", projectId],
+    queryFn: async () => {
+      if (!projectId) return [];
+
+      // First get contracts for this project
+      const { data: contracts, error: contractsError } = await supabase
+        .from("contracts")
+        .select("id")
+        .eq("project_id", projectId);
+
+      if (contractsError) throw contractsError;
+      if (!contracts || contracts.length === 0) return [];
+
+      const contractIds = contracts.map((c) => c.id);
+
+      const { data, error } = await supabase
+        .from("sov_lines")
+        .select("*")
+        .in("contract_id", contractIds)
+        .order("line_number", { ascending: true });
+
+      if (error) throw error;
+      return data as SovLine[];
+    },
+    enabled: !!projectId,
+  });
+};

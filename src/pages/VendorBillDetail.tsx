@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { ArrowLeft, Trash2, DollarSign, Calendar, Building2, FileText, ChevronDown } from "lucide-react";
 import { formatLocalDate } from "@/lib/dateUtils";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useVendorBill, useDeleteVendorBill } from "@/integrations/supabase/hooks/useVendorBills";
 import { usePersonnelForVendor } from "@/integrations/supabase/hooks/useVendorPersonnelData";
 import { VendorBillPaymentDialog } from "@/components/vendor-bills/VendorBillPaymentDialog";
@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { QBOPopupLink } from "@/components/quickbooks/QBOPopupLink";
 import { useQBMappingForList } from "@/integrations/supabase/hooks/useQBMappingForList";
+import { LinkLineItemsToSOV } from "@/components/shared/LinkLineItemsToSOV";
 
 export default function VendorBillDetail() {
   const { id } = useParams();
@@ -38,6 +39,11 @@ export default function VendorBillDetail() {
   // QB mapping for "Edit in QBO" button
   const qbMappings = useQBMappingForList(id ? [id] : [], "bill");
   const qbTxnId = id ? qbMappings.get(id) : undefined;
+
+  // Derive project_id from first line item that has one (for SoV linking)
+  const billProjectId = useMemo(() => {
+    return bill?.line_items?.find((li) => li.project_id)?.project_id ?? null;
+  }, [bill?.line_items]);
 
   const handleDelete = () => {
     if (id) {
@@ -232,6 +238,23 @@ export default function VendorBillDetail() {
             </div>
           </CardContent>
         </Card>
+
+        {/* SOV Linking */}
+        {billProjectId && bill.line_items && bill.line_items.length > 0 && (
+          <LinkLineItemsToSOV
+            lineItems={bill.line_items.map((item) => ({
+              id: item.id!,
+              description: item.description,
+              quantity: Number(item.quantity),
+              unit_price: Number(item.unit_cost),
+              total: Number(item.total),
+              sov_line_id: item.sov_line_id ?? null,
+            }))}
+            projectId={billProjectId}
+            contextType="bill"
+            disabled={bill.status === "paid"}
+          />
+        )}
 
         {/* Payment History */}
         {bill.payments && bill.payments.length > 0 && (

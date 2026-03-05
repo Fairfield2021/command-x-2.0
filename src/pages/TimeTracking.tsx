@@ -18,6 +18,7 @@ import { PersonnelAssignmentDialog } from "@/components/time-tracking/PersonnelA
 import { CreateVendorBillFromTimeDialog } from "@/components/time-tracking/CreateVendorBillFromTimeDialog";
 import { CreateCustomerInvoiceFromTimeDialog } from "@/components/time-tracking/CreateCustomerInvoiceFromTimeDialog";
 import { BulkCustomerInvoiceDialog } from "@/components/time-tracking/BulkCustomerInvoiceDialog";
+import { TimeAllocationManager } from "@/components/time-tracking/TimeAllocationManager";
 import { MobileActionBar } from "@/components/layout/MobileActionBar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
@@ -210,9 +211,12 @@ export default function TimeTracking() {
 
         {/* Tabs */}
         <Tabs defaultValue="entries" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 lg:w-[400px] h-auto overflow-x-auto">
+          <TabsList className={`grid w-full ${canManageTeam ? "grid-cols-4 lg:w-[520px]" : "grid-cols-3 lg:w-[400px]"} h-auto overflow-x-auto`}>
             <TabsTrigger value="entries" className="text-xs sm:text-sm py-2.5 sm:py-1.5">Time Entries</TabsTrigger>
             <TabsTrigger value="weekly" className="text-xs sm:text-sm py-2.5 sm:py-1.5">Weekly View</TabsTrigger>
+            {canManageTeam && (
+              <TabsTrigger value="allocation" className="text-xs sm:text-sm py-2.5 sm:py-1.5">Allocation</TabsTrigger>
+            )}
             <TabsTrigger value="assignments" className="text-xs sm:text-sm py-2.5 sm:py-1.5">My Assignments</TabsTrigger>
           </TabsList>
 
@@ -292,6 +296,18 @@ export default function TimeTracking() {
               onWeekChange={setWeeklyViewWeek}
             />
           </TabsContent>
+
+          {canManageTeam && (
+            <TabsContent value="allocation" className="space-y-4 mt-4">
+              <div className="flex justify-center">
+                <WeekNavigator
+                  currentWeek={weeklyViewWeek}
+                  onWeekChange={setWeeklyViewWeek}
+                />
+              </div>
+              <TimeAllocationManager weekDate={weeklyViewWeek} />
+            </TabsContent>
+          )}
 
           <TabsContent value="assignments" className="mt-4">
             <ProjectAssignmentsSection />

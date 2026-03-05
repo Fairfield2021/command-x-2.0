@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { crypto } from "https://deno.land/std@0.168.0/crypto/mod.ts";
 import { encode } from "https://deno.land/std@0.168.0/encoding/base64.ts";
+import { autoLinkBillToPO } from "../_shared/billAutoLinker.ts";
 
 const ALLOWED_ORIGINS = ["https://commandx-craft.lovable.app", "https://id-preview--76ab7580-4e0f-4011-980d-d7fa0d216db7.lovable.app"];
 function getCors(req: Request) {
@@ -1823,6 +1824,16 @@ async function processBillUpdate(
           status: "success",
           details: { qb_bill_id: qbBillId, qb_doc_number: qbBill.DocNumber, operation },
         });
+
+        // Auto-link bill to PO
+        try {
+          const linkResult = await autoLinkBillToPO(supabase, newBill.id, vendorId);
+          if (linkResult.linked) {
+            console.log(`[Webhook] Auto-linked bill ${newBill.id} to PO ${linkResult.poNumber} (${linkResult.method})`);
+          }
+        } catch (linkErr) {
+          console.warn("[Webhook] Auto-link failed (non-fatal):", linkErr);
+        }
 
         console.log("[Webhook] Imported new vendor bill from QBO:", newBill.id);
         return { success: true, action: "created", billId: newBill.id };
