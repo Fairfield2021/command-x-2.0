@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { JobOrderForm } from "@/components/job-orders/JobOrderForm";
-import { useJobOrder, useUpdateJobOrder } from "@/integrations/supabase/hooks/useJobOrders";
+import { useJobOrder, useUpdateJobOrder, JobOrderLineItem } from "@/integrations/supabase/hooks/useJobOrders";
 import { Loader2 } from "lucide-react";
 import { NoPOWarningDialog } from "@/components/job-orders/NoPOWarningDialog";
 
@@ -20,7 +20,7 @@ const EditJobOrder = () => {
       await updateJobOrder.mutateAsync({
         id,
         jobOrder: data.jobOrder,
-        lineItems: data.lineItems,
+        lineItems: data.lineItems as unknown as Omit<JobOrderLineItem, "created_at">[],
       });
 
       navigate(`/job-orders/${id}`);
