@@ -266,19 +266,62 @@ export function DashboardThemeEditor({
 
         {/* Preset Themes */}
         <div className="p-4 border-b shrink-0">
-          <Label className="text-sm font-medium mb-2 block">Quick Presets</Label>
-          <div className="flex flex-wrap gap-2">
-            {PRESET_THEMES.map((preset) => (
-              <Button
-                key={preset.name}
-                variant="outline"
-                size="sm"
-                onClick={() => updateTheme(preset.theme)}
-                className="h-10 sm:h-8 px-3 active:scale-[0.96] transition-transform"
-              >
-                {preset.name}
-              </Button>
-            ))}
+          <Label className="text-sm font-medium mb-3 block">Quick Presets</Label>
+          <div className="space-y-1.5">
+            <p className="text-xs text-muted-foreground mb-2">☀️ Light</p>
+            <div className="flex flex-wrap gap-1.5">
+              {PRESET_THEMES.filter(p => p.type === "light").map((preset) => (
+                <Button
+                  key={preset.name}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => updateTheme(preset.theme)}
+                  className="h-10 sm:h-8 px-3 active:scale-[0.96] transition-transform gap-1.5 border-border/60"
+                >
+                  <span
+                    className="w-3 h-3 rounded-full shrink-0 border border-border/40"
+                    style={{ backgroundColor: preset.theme.accentColor || "#6366f1" }}
+                  />
+                  {preset.name}
+                </Button>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground mb-2 mt-3">🌙 Dark</p>
+            <div className="flex flex-wrap gap-1.5">
+              {PRESET_THEMES.filter(p => p.type === "dark").map((preset) => (
+                <Button
+                  key={preset.name}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => updateTheme(preset.theme)}
+                  className="h-10 sm:h-8 px-3 active:scale-[0.96] transition-transform gap-1.5"
+                >
+                  <span
+                    className="w-3 h-3 rounded-full shrink-0 border border-border/40"
+                    style={{ backgroundColor: preset.theme.accentColor || "#6366f1" }}
+                  />
+                  {preset.name}
+                </Button>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground mb-2 mt-3">🌗 Mixed</p>
+            <div className="flex flex-wrap gap-1.5">
+              {PRESET_THEMES.filter(p => p.type === "mixed").map((preset) => (
+                <Button
+                  key={preset.name}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => updateTheme(preset.theme)}
+                  className="h-10 sm:h-8 px-3 active:scale-[0.96] transition-transform gap-1.5"
+                >
+                  <span
+                    className="w-3 h-3 rounded-full shrink-0 border border-border/40"
+                    style={{ backgroundColor: preset.theme.accentColor || "#6366f1" }}
+                  />
+                  {preset.name}
+                </Button>
+              ))}
+            </div>
           </div>
         </div>
 
