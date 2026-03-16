@@ -37,13 +37,19 @@ const FONT_OPTIONS = [
   { value: "montserrat", label: "Montserrat" },
 ];
 
-const PRESET_THEMES: Array<{ name: string; theme: Partial<DashboardTheme> }> = [
+const PRESET_THEMES: Array<{ name: string; type: "light" | "dark" | "mixed"; theme: Partial<DashboardTheme> }> = [
+  // ── Light Themes ──
   {
-    name: "Default",
+    name: "Clean Light",
+    type: "light",
     theme: {
-      backgroundColor: undefined,
-      cardBackground: undefined,
-      accentColor: undefined,
+      accentColor: "#3b82f6",
+      cardBackground: "#ffffff",
+      cardTextColor: "#1a1a2e",
+      leftSidebarBackground: "#f8fafc",
+      leftSidebarTextColor: "#334155",
+      menuBackground: "#f1f5f9",
+      menuTextColor: "#334155",
       fontSize: "medium",
       spacing: "normal",
       borderRadius: "medium",
@@ -51,56 +57,158 @@ const PRESET_THEMES: Array<{ name: string; theme: Partial<DashboardTheme> }> = [
     },
   },
   {
-    name: "2K1 View",
-    theme: {
-      fontFamily: "default",
-      fontSize: "small",
-      spacing: "compact",
-      borderRadius: "small",
-      density: "2k1",
-    },
-  },
-  {
-    name: "Compact",
-    theme: {
-      fontSize: "small",
-      spacing: "compact",
-      borderRadius: "small",
-      density: "normal",
-    },
-  },
-  {
-    name: "Spreadsheet",
-    theme: {
-      fontSize: "small",
-      spacing: "compact",
-      borderRadius: "none",
-      density: "spreadsheet",
-      cardOpacity: 100,
-    },
-  },
-  {
-    name: "Spacious",
-    theme: {
-      fontSize: "large",
-      spacing: "relaxed",
-      borderRadius: "large",
-      density: "normal",
-    },
-  },
-  {
-    name: "Dark Accent",
+    name: "Soft Gray",
+    type: "light",
     theme: {
       accentColor: "#6366f1",
+      cardBackground: "#f9fafb",
+      cardTextColor: "#111827",
+      leftSidebarBackground: "#f3f4f6",
+      leftSidebarTextColor: "#374151",
+      menuBackground: "#e5e7eb",
+      menuTextColor: "#374151",
+      fontSize: "medium",
+      spacing: "normal",
       borderRadius: "medium",
       density: "normal",
     },
   },
   {
-    name: "Warm",
+    name: "Warm Cream",
+    type: "light",
+    theme: {
+      accentColor: "#d97706",
+      cardBackground: "#fffbf5",
+      cardTextColor: "#422006",
+      leftSidebarBackground: "#fef3c7",
+      leftSidebarTextColor: "#78350f",
+      menuBackground: "#fde68a",
+      menuTextColor: "#78350f",
+      fontSize: "medium",
+      spacing: "normal",
+      borderRadius: "large",
+      density: "normal",
+    },
+  },
+  {
+    name: "Cool Mint",
+    type: "light",
+    theme: {
+      accentColor: "#14b8a6",
+      cardBackground: "#f0fdfa",
+      cardTextColor: "#134e4a",
+      leftSidebarBackground: "#ccfbf1",
+      leftSidebarTextColor: "#115e59",
+      menuBackground: "#99f6e4",
+      menuTextColor: "#115e59",
+      fontSize: "medium",
+      spacing: "normal",
+      borderRadius: "medium",
+      density: "normal",
+    },
+  },
+  {
+    name: "Sky Blue",
+    type: "light",
+    theme: {
+      accentColor: "#0284c7",
+      cardBackground: "#f0f9ff",
+      cardTextColor: "#0c4a6e",
+      leftSidebarBackground: "#e0f2fe",
+      leftSidebarTextColor: "#075985",
+      menuBackground: "#bae6fd",
+      menuTextColor: "#075985",
+      fontSize: "medium",
+      spacing: "normal",
+      borderRadius: "medium",
+      density: "normal",
+    },
+  },
+  // ── Dark Themes ──
+  {
+    name: "Default Dark",
+    type: "dark",
+    theme: {
+      backgroundColor: undefined,
+      cardBackground: undefined,
+      cardTextColor: undefined,
+      accentColor: undefined,
+      leftSidebarBackground: undefined,
+      leftSidebarTextColor: undefined,
+      menuBackground: undefined,
+      menuTextColor: undefined,
+      fontSize: "medium",
+      spacing: "normal",
+      borderRadius: "medium",
+      density: "normal",
+    },
+  },
+  {
+    name: "Midnight",
+    type: "dark",
+    theme: {
+      accentColor: "#6366f1",
+      cardBackground: "#1e293b",
+      cardTextColor: "#f1f5f9",
+      leftSidebarBackground: "#0f172a",
+      leftSidebarTextColor: "#e2e8f0",
+      menuBackground: "#1e293b",
+      menuTextColor: "#e2e8f0",
+      fontSize: "medium",
+      spacing: "normal",
+      borderRadius: "medium",
+      density: "normal",
+    },
+  },
+  {
+    name: "Emerald Dark",
+    type: "dark",
+    theme: {
+      accentColor: "#10b981",
+      cardBackground: "#1a2e1a",
+      cardTextColor: "#d1fae5",
+      leftSidebarBackground: "#0a1f0a",
+      leftSidebarTextColor: "#a7f3d0",
+      menuBackground: "#14532d",
+      menuTextColor: "#a7f3d0",
+      fontSize: "medium",
+      spacing: "normal",
+      borderRadius: "medium",
+      density: "normal",
+    },
+  },
+  // ── Mixed Themes ──
+  {
+    name: "Sunset",
+    type: "mixed",
     theme: {
       accentColor: "#f59e0b",
-      borderRadius: "large",
+      cardBackground: "#1c1917",
+      cardTextColor: "#fef3c7",
+      leftSidebarBackground: "#292524",
+      leftSidebarTextColor: "#fcd34d",
+      menuBackground: "#292524",
+      menuTextColor: "#fcd34d",
+      fontSize: "medium",
+      spacing: "normal",
+      borderRadius: "medium",
+      density: "normal",
+    },
+  },
+  {
+    name: "Nord",
+    type: "mixed",
+    theme: {
+      accentColor: "#88c0d0",
+      cardBackground: "#2e3440",
+      cardTextColor: "#eceff4",
+      leftSidebarBackground: "#3b4252",
+      leftSidebarTextColor: "#d8dee9",
+      menuBackground: "#3b4252",
+      menuTextColor: "#d8dee9",
+      fontSize: "medium",
+      spacing: "normal",
+      borderRadius: "medium",
       density: "normal",
     },
   },
@@ -158,19 +266,62 @@ export function DashboardThemeEditor({
 
         {/* Preset Themes */}
         <div className="p-4 border-b shrink-0">
-          <Label className="text-sm font-medium mb-2 block">Quick Presets</Label>
-          <div className="flex flex-wrap gap-2">
-            {PRESET_THEMES.map((preset) => (
-              <Button
-                key={preset.name}
-                variant="outline"
-                size="sm"
-                onClick={() => updateTheme(preset.theme)}
-                className="h-10 sm:h-8 px-3 active:scale-[0.96] transition-transform"
-              >
-                {preset.name}
-              </Button>
-            ))}
+          <Label className="text-sm font-medium mb-3 block">Quick Presets</Label>
+          <div className="space-y-1.5">
+            <p className="text-xs text-muted-foreground mb-2">☀️ Light</p>
+            <div className="flex flex-wrap gap-1.5">
+              {PRESET_THEMES.filter(p => p.type === "light").map((preset) => (
+                <Button
+                  key={preset.name}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => updateTheme(preset.theme)}
+                  className="h-10 sm:h-8 px-3 active:scale-[0.96] transition-transform gap-1.5 border-border/60"
+                >
+                  <span
+                    className="w-3 h-3 rounded-full shrink-0 border border-border/40"
+                    style={{ backgroundColor: preset.theme.accentColor || "#6366f1" }}
+                  />
+                  {preset.name}
+                </Button>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground mb-2 mt-3">🌙 Dark</p>
+            <div className="flex flex-wrap gap-1.5">
+              {PRESET_THEMES.filter(p => p.type === "dark").map((preset) => (
+                <Button
+                  key={preset.name}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => updateTheme(preset.theme)}
+                  className="h-10 sm:h-8 px-3 active:scale-[0.96] transition-transform gap-1.5"
+                >
+                  <span
+                    className="w-3 h-3 rounded-full shrink-0 border border-border/40"
+                    style={{ backgroundColor: preset.theme.accentColor || "#6366f1" }}
+                  />
+                  {preset.name}
+                </Button>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground mb-2 mt-3">🌗 Mixed</p>
+            <div className="flex flex-wrap gap-1.5">
+              {PRESET_THEMES.filter(p => p.type === "mixed").map((preset) => (
+                <Button
+                  key={preset.name}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => updateTheme(preset.theme)}
+                  className="h-10 sm:h-8 px-3 active:scale-[0.96] transition-transform gap-1.5"
+                >
+                  <span
+                    className="w-3 h-3 rounded-full shrink-0 border border-border/40"
+                    style={{ backgroundColor: preset.theme.accentColor || "#6366f1" }}
+                  />
+                  {preset.name}
+                </Button>
+              ))}
+            </div>
           </div>
         </div>
 
